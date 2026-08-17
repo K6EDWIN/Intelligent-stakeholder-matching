@@ -1,2 +1,1 @@
-# Intelligent-stakeholder-matching
-Hybrid recommendation system (content-based + collaborative filtering) for intelligent stakeholder matching in mentorship and professional networking contexts. Capstone project, Strathmore University.
+A web-based intelligent stakeholder matching prototype that connects Kenya Airways Pride Centre alumni, current staff, former employees, administrators, and verified frequent flyers for mentorship and professional networking. Built with Next.js, PostgreSQL, and a hybrid (content-based + collaborative filtering) recommendation engine. Developed as a capstone project for the Degree in Informatics and Computer Sciences, Strathmore University.
