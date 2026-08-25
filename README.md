@@ -109,5 +109,4 @@ This software prototype was developed solely for academic research and capstone 
 ---
 
 ## License
-
 Distributed under the MIT License. See the LICENSE file for details.
