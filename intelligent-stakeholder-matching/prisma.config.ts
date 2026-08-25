@@ -1,9 +1,15 @@
-import { config } from "dotenv"; 
-import { defineConfig } from "prisma/config"; 
-config({ path: ".env" }); 
-console.log("DATABASE_URL loaded:", process.env.DATABASE_URL); 
-export default defineConfig({ 
-    schema: "prisma/schema.prisma", 
-    migrations: { path: "prisma/migrations", }, 
-    datasource: { url: process.env.DATABASE_URL, }, 
-}); 
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+
+const connectionString = process.env.DATABASE_URL;
+
+const adapter = new PrismaPg({ connectionString });
+
+const globalForPrisma = globalThis;
+
+export const prisma =
+  globalForPrisma.prisma || new PrismaClient({ adapter });
+
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
