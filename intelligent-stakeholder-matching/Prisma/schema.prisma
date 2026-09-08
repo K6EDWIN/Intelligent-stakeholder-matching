@@ -33,7 +33,6 @@ enum MentorshipRole {
 
 // ---------- CORE USER & PROFILE ----------
 
-// Object: User
 model User {
   id            String   @id @default(cuid())
   email         String   @unique
@@ -45,16 +44,14 @@ model User {
 
   profile       Profile?
   sessions      AuthSession[]
+  verificationTokens VerificationToken[]
 
-  // Mentorship requests sent/received
   sentMentorshipRequests     MentorshipRequest[] @relation("MentorshipSender")
   receivedMentorshipRequests MentorshipRequest[] @relation("MentorshipReceiver")
 
-  // Connection requests sent/received
   sentConnectionRequests     ConnectionRequest[] @relation("ConnectionSender")
   receivedConnectionRequests ConnectionRequest[] @relation("ConnectionReceiver")
 
-  // Recommendations generated for this user
   recommendationsReceived Recommendation[] @relation("RecommendationOwner")
   recommendationsAsMatch  Recommendation[] @relation("RecommendationMatch")
 
@@ -66,11 +63,9 @@ model User {
 
   flightReconnects FlightReconnect[]
 
-  // Only populated when role = ADMIN
   adminActions AdminAction[]
 }
 
-// Object: Stakeholder Profile (covers Mentor/Mentee profile via mentorshipRole)
 model Profile {
   id                   String          @id @default(cuid())
   userId               String          @unique
@@ -83,7 +78,7 @@ model Profile {
   trainingHistory       String?
   careerGoals           String?
   mentorshipNeeds       String?
-  mentorshipRole         MentorshipRole?  // Mentor / Mentee / Both — null if not participating
+  mentorshipRole         MentorshipRole?
   availability           String?
   isPublic               Boolean         @default(true)
 
@@ -94,14 +89,12 @@ model Profile {
   updatedAt            DateTime @updatedAt
 }
 
-// Object: Skill
 model Skill {
   id       String         @id @default(cuid())
   name     String         @unique
   profiles ProfileSkill[]
 }
 
-// Join table: Profile <-> Skill (many-to-many with no extra fields needed yet)
 model ProfileSkill {
   profileId String
   skillId   String
@@ -112,14 +105,12 @@ model ProfileSkill {
   @@id([profileId, skillId])
 }
 
-// Object: Interest
 model Interest {
   id       String            @id @default(cuid())
   name     String            @unique
   profiles ProfileInterest[]
 }
 
-// Join table: Profile <-> Interest
 model ProfileInterest {
   profileId  String
   interestId String
@@ -132,7 +123,6 @@ model ProfileInterest {
 
 // ---------- MENTORSHIP & NETWORKING ----------
 
-// Object: Mentorship Request
 model MentorshipRequest {
   id         String        @id @default(cuid())
   senderId   String
@@ -148,7 +138,6 @@ model MentorshipRequest {
   feedback   Feedback[]
 }
 
-// Object: Connection Request (general professional networking, not mentorship-specific)
 model ConnectionRequest {
   id         String        @id @default(cuid())
   senderId   String
@@ -163,17 +152,16 @@ model ConnectionRequest {
 
 // ---------- RECOMMENDATION ENGINE ----------
 
-// Object: Recommendation — stores the hybrid score per (owner, candidate) pair
 model Recommendation {
   id                 String   @id @default(cuid())
-  ownerId            String   // the user receiving the recommendation
-  matchedUserId      String   // the recommended stakeholder
+  ownerId            String
+  matchedUserId      String
 
-  contentScore       Float    // content-based filtering score
-  collaborativeScore Float    // collaborative filtering score
-  hybridScore        Float    // weighted combination (alpha * content + beta * collaborative)
+  contentScore       Float
+  collaborativeScore Float
+  hybridScore        Float
 
-  rank               Int?     // position after ranking, 1 = top match
+  rank               Int?
   createdAt          DateTime @default(now())
 
   owner              User @relation("RecommendationOwner", fields: [ownerId], references: [id], onDelete: Cascade)
@@ -184,14 +172,13 @@ model Recommendation {
   @@unique([ownerId, matchedUserId])
 }
 
-// Object: Feedback — user feedback on a recommendation or completed mentorship
 model Feedback {
   id               String   @id @default(cuid())
   userId           String
   recommendationId String?
   mentorshipRequestId String?
 
-  rating           Int      // e.g. 1-5
+  rating           Int
   comment          String?
   createdAt        DateTime @default(now())
 
@@ -202,19 +189,17 @@ model Feedback {
 
 // ---------- OPPORTUNITIES & EVENTS ----------
 
-// Deliverable: Opportunity Sharing Module
 model Opportunity {
   id          String   @id @default(cuid())
   postedById  String
   title       String
   description String
-  type        String   // e.g. "training", "job", "career development"
+  type        String
   createdAt   DateTime @default(now())
 
   postedBy    User @relation(fields: [postedById], references: [id], onDelete: Cascade)
 }
 
-// Deliverable: Event Management Module
 model Event {
   id          String   @id @default(cuid())
   createdById String
@@ -228,7 +213,6 @@ model Event {
   participants EventParticipant[]
 }
 
-// Join table: Event <-> User (attendance)
 model EventParticipant {
   eventId String
   userId  String
@@ -242,11 +226,10 @@ model EventParticipant {
 
 // ---------- FLIGHT RECONNECT ----------
 
-// Deliverable: Flight Reconnect Module — consent-based reconnection by shared travel
 model FlightReconnect {
   id         String   @id @default(cuid())
   userId     String
-  flightRoute String  // e.g. "NBO-LHR"
+  flightRoute String
   travelDate DateTime
   consentToShare Boolean @default(false)
   createdAt  DateTime @default(now())
@@ -256,7 +239,6 @@ model FlightReconnect {
 
 // ---------- AUTH & ADMIN ----------
 
-// Object: Authentication Session
 model AuthSession {
   id        String   @id @default(cuid())
   userId    String
@@ -267,12 +249,22 @@ model AuthSession {
   user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// Object: Administrator (actions performed by admins, e.g. verifying users, moderating content)
+// Email verification tokens issued at registration
+model VerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model AdminAction {
   id          String   @id @default(cuid())
   adminId     String
-  actionType  String   // e.g. "VERIFY_USER", "REMOVE_CONTENT", "SUSPEND_USER"
-  targetId    String?  // id of the affected user/opportunity/event, etc.
+  actionType  String
+  targetId    String?
   notes       String?
   createdAt   DateTime @default(now())
 

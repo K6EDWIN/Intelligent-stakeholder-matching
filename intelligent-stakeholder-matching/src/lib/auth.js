@@ -35,6 +35,12 @@ export const authOptions = {
           throw new Error("Incorrect password");
         }
 
+        if (!user.isVerified) {
+          throw new Error(
+            "Please verify your email before logging in. Check your inbox for the verification link."
+          );
+        }
+
         return {
           id: user.id,
           email: user.email,

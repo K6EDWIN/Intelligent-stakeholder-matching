@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -13,6 +11,7 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -37,8 +36,20 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push("/login");
+    setSubmitted(true);
   };
+
+  if (submitted) {
+    return (
+      <div className="max-w-md mx-auto mt-16 p-6 text-center">
+        <h1 className="text-2xl font-bold mb-4">Check your email</h1>
+        <p className="text-gray-600">
+          We sent a verification link to <strong>{form.email}</strong>.
+          Click it to activate your account, then come back and log in.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto mt-16 p-6">
