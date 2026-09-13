@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Kenya Airways Stakeholder Matching — Web App Wireframes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-950:#0a1c30;
+    --navy-900:#0e2740;
+    --navy-800:#15334f;
+    --navy-700:#1d4166;
+    --gold:#bd7238;
+    --gold-dark:#a25f2c;
+    --cream:#f6f3ec;
+    --paper:#fbfaf6;
+    --line:#dedbd0;
+    --ink:#182231;
+    --ink-soft:#5b6472;
+    --teal:#2f8f7a;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'IBM Plex Sans', sans-serif;
+    background:var(--navy-950);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.serif{font-family:'Fraunces', serif;}
+
+  /* ---------- prototype chrome ---------- */
+  .proto-nav{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:14px 20px;
+    background:var(--navy-950);
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+  .proto-nav .proto-title{
+    color:rgba(255,255,255,0.5);
+    font-size:12px;
+    letter-spacing:.02em;
+    margin-right:14px;
+    white-space:nowrap;
+  }
+  .proto-tab{
+    appearance:none;
+    border:1px solid rgba(255,255,255,0.14);
+    background:transparent;
+    color:rgba(255,255,255,0.72);
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:13px;
+    padding:8px 14px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .proto-tab:hover{border-color:rgba(255,255,255,0.35);}
+  .proto-tab.active{
+    background:var(--gold);
+    border-color:var(--gold);
+    color:#fff;
+  }
+  .proto-tab .step-num{opacity:.65; margin-right:6px; font-variant-numeric:tabular-nums;}
+
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  /* ================= SCREEN 1 — SIGN UP / LOGIN ================= */
+  #screen-login{
+    display:none;
+    min-height:calc(100vh - 53px);
+  }
+  #screen-login.active{display:grid;}
+  .login-grid{
+    display:grid;
+    grid-template-columns: 1.05fr 1fr;
+    min-height:calc(100vh - 53px);
+  }
+  .login-brand{
+    background:
+      radial-gradient(600px 400px at 15% 10%, rgba(189,114,56,0.18), transparent 60%),
+      var(--navy-900);
+    position:relative;
+    overflow:hidden;
+    padding:64px 56px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+  }
+  .login-brand svg.routes{
+    position:absolute; inset:0; width:100%; height:100%;
+    opacity:.35;
+  }
+  .brand-mark{
+    display:flex; align-items:center; gap:10px;
+    color:#fff; font-size:14px; letter-spacing:.06em; z-index:1;
+  }
+  .brand-mark .dot{width:8px;height:8px;border-radius:50%;background:var(--gold);}
+  .login-brand h1{
+    color:#fff;
+    font-size:42px;
+    line-height:1.15;
+    font-weight:500;
+    max-width:9.5em;
+    margin:40px 0 18px;
+    z-index:1;
+  }
+  .login-brand p{
+    color:rgba(255,255,255,0.62);
+    font-size:15px;
+    line-height:1.6;
+    max-width:30em;
+    z-index:1;
+  }
+  .brand-quote{
+    z-index:1;
+    border-top:1px solid rgba(255,255,255,0.12);
+    padding-top:20px;
+    color:rgba(255,255,255,0.55);
+    font-size:13px;
+  }
+  .brand-quote b{color:rgba(255,255,255,0.85); font-weight:600;}
+
+  .login-panel{
+    background:var(--paper);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:48px;
+  }
+  .login-card{width:100%; max-width:380px;}
+  .login-card .eyebrow{
+    color:var(--ink-soft); font-size:13px; margin-bottom:6px;
+  }
+  .login-card h2{font-size:26px; font-weight:500; margin:0 0 26px;}
+
+  .authtoggle{
+    display:flex;
+    background:#eee9dd;
+    border-radius:999px;
+    padding:4px;
+    margin-bottom:28px;
+  }
+  .authtoggle button{
+    flex:1; border:0; background:transparent; padding:9px 0;
+    font-family:'IBM Plex Sans'; font-size:13px; font-weight:600;
+    color:var(--ink-soft); border-radius:999px; cursor:pointer;
+  }
+  .authtoggle button.active{background:var(--navy-900); color:#fff;}
+
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block; font-size:12.5px; font-weight:600;
+    color:var(--ink); margin-bottom:6px;
+  }
+  .field input, .field select{
+    width:100%;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:8px;
+    padding:11px 13px;
+    font-family:'IBM Plex Sans'; font-size:14px; color:var(--ink);
+  }
+  .field input:focus, .field select:focus{
+    outline:2px solid var(--gold); outline-offset:1px; border-color:var(--gold);
+  }
+  .row-between{display:flex; justify-content:space-between; align-items:center; font-size:12.5px; margin:2px 0 22px;}
+  .row-between a{color:var(--navy-700); text-decoration:none; font-weight:600;}
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:100%;
+    background:var(--gold); color:#fff; border:0;
+    padding:13px 18px; border-radius:8px;
+    font-family:'IBM Plex Sans'; font-size:14.5px; font-weight:600;
+    cursor:pointer;
+    transition:background .15s ease, transform .05s ease;
+  }
+  .btn:hover{background:var(--gold-dark);}
+  .btn.ghost{
+    background:transparent; border:1px solid var(--navy-900); color:var(--navy-900);
+  }
+  .btn.ghost:hover{background:var(--navy-900); color:#fff;}
+  .btn.small{width:auto; padding:9px 16px; font-size:13px;}
+
+  .role-note{
+    margin-top:22px; font-size:12px; color:var(--ink-soft);
+    display:flex; flex-wrap:wrap; gap:6px; align-items:center;
+  }
+  .chip{
+    border:1px solid var(--line); border-radius:999px;
+    padding:4px 10px; font-size:11.5px; color:var(--ink-soft); background:#fff;
+  }
+
+  /* ================= SHARED APP SHELL ================= */
+  .app-shell{
+    display:grid;
+    grid-template-columns: 240px 1fr;
+    min-height:calc(100vh - 53px);
+    background:var(--cream);
+  }
+  .app-sidebar{
+    background:var(--navy-900);
+    color:rgba(255,255,255,0.8);
+    padding:26px 18px;
+    display:flex; flex-direction:column;
+  }
+  .app-sidebar .brand-mark{margin-bottom:34px;}
+  .nav-group{margin-bottom:22px;}
+  .nav-label{
+    font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    color:rgba(255,255,255,0.35); margin:0 0 8px 10px;
+  }
+  .nav-item{
+    display:flex; align-items:center; gap:10px;
+    padding:9px 10px; border-radius:8px; font-size:13.5px;
+    color:rgba(255,255,255,0.75); text-decoration:none; margin-bottom:2px;
+    cursor:default;
+  }
+  .nav-item .ic{
+    width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center;
+    opacity:.8;
+  }
+  .nav-item.active{background:rgba(255,255,255,0.09); color:#fff;}
+  .nav-item.active .ic{opacity:1;}
+  .sidebar-foot{
+    margin-top:auto; padding-top:16px; border-top:1px solid rgba(255,255,255,0.1);
+    display:flex; align-items:center; gap:10px;
+  }
+  .avatar{
+    width:32px;height:32px;border-radius:50%;
+    background:var(--gold); color:#fff; display:flex; align-items:center; justify-content:center;
+    font-size:12.5px; font-weight:700; flex-shrink:0;
+  }
+  .sidebar-foot .who{font-size:12.5px; line-height:1.3;}
+  .sidebar-foot .who .name{color:#fff; font-weight:600;}
+  .sidebar-foot .who .role{color:rgba(255,255,255,0.5);}
+
+  .app-main{padding:34px 44px; max-width:1180px;}
+  .app-topbar{
+    display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:30px;
+  }
+  .app-topbar .eyebrow{color:var(--ink-soft); font-size:12.5px; margin-bottom:4px;}
+  .app-topbar h2{font-size:26px; font-weight:500; margin:0;}
+  .search-box{
+    display:flex; align-items:center; gap:8px;
+    background:#fff; border:1px solid var(--line); border-radius:999px;
+    padding:9px 16px; font-size:13px; color:var(--ink-soft); min-width:230px;
+  }
+
+  /* Steps */
+  .steps{display:flex; gap:0; margin-bottom:34px;}
+  .step{
+    flex:1; display:flex; align-items:center; gap:10px; position:relative; padding-bottom:12px;
+    border-bottom:2px solid var(--line);
+  }
+  .step .num{
+    width:22px;height:22px;border-radius:50%; background:#fff; border:1.5px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700; color:var(--ink-soft);
+  }
+  .step.done{border-color:var(--teal);}
+  .step.done .num{background:var(--teal); border-color:var(--teal); color:#fff;}
+  .step.current{border-color:var(--gold);}
+  .step.current .num{background:var(--gold); border-color:var(--gold); color:#fff;}
+  .step .label{font-size:13px; font-weight:600; color:var(--ink-soft);}
+  .step.current .label, .step.done .label{color:var(--ink);}
+
+  /* ================= SCREEN 2 — CREATE PROFILE ================= */
+  .profile-layout{display:grid; grid-template-columns: 1fr 300px; gap:28px;}
+  .card{
+    background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+    padding:28px;
+  }
+  .card h3{font-size:16px; font-weight:600; margin:0 0 4px;}
+  .card .sub{font-size:12.5px; color:var(--ink-soft); margin:0 0 22px;}
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:16px 18px;}
+  .field textarea{
+    width:100%; border:1px solid var(--line); border-radius:8px; padding:11px 13px;
+    font-family:'IBM Plex Sans'; font-size:14px; color:var(--ink); resize:vertical; min-height:80px;
+  }
+  .tag-input{
+    display:flex; flex-wrap:wrap; gap:6px; border:1px solid var(--line); border-radius:8px;
+    padding:8px 10px; background:#fff;
+  }
+  .tag{
+    background:var(--cream); border:1px solid var(--line); border-radius:999px;
+    font-size:12px; padding:4px 10px; display:flex; align-items:center; gap:6px; color:var(--ink);
+  }
+  .tag button{border:0; background:none; color:var(--ink-soft); cursor:pointer; font-size:13px; line-height:1;}
+  .tag-input input{border:0; outline:0; flex:1; min-width:100px; font-size:13px; padding:4px;}
+
+  .avail-options{display:flex; gap:10px; margin-top:4px;}
+  .avail-opt{
+    flex:1; border:1px solid var(--line); border-radius:8px; padding:12px; cursor:default;
+    font-size:12.5px; text-align:center; color:var(--ink-soft);
+  }
+  .avail-opt.selected{border-color:var(--gold); background:#fdf3ea; color:var(--gold-dark); font-weight:600;}
+
+  .form-actions{display:flex; justify-content:flex-end; gap:12px; margin-top:26px;}
+  .form-actions .btn{width:auto; padding:12px 26px;}
+
+  .helper-card{padding:22px;}
+  .helper-card h3{font-size:14px;}
+  .helper-list{list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:12px;}
+  .helper-list li{display:flex; gap:10px; font-size:12.5px; color:var(--ink-soft); line-height:1.5;}
+  .helper-list .tick{
+    width:16px;height:16px;border-radius:50%;background:var(--teal); color:#fff; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:10px; margin-top:1px;
+  }
+  .progress-ring{
+    display:flex; align-items:center; gap:14px; margin-bottom:18px;
+  }
+  .ring{
+    width:52px;height:52px;border-radius:50%;
+    background:conic-gradient(var(--teal) 0% 65%, var(--line) 65% 100%);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .ring span{
+    width:38px;height:38px;border-radius:50%;background:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--ink);
+  }
+
+  /* ================= SCREEN 3 — RECOMMENDED MATCHES ================= */
+  .filters-bar{
+    display:flex; gap:10px; align-items:center; margin-bottom:24px; flex-wrap:wrap;
+  }
+  .filters-bar select, .filters-bar .search-box{
+    border:1px solid var(--line); background:#fff; border-radius:8px; padding:9px 12px;
+    font-size:13px; color:var(--ink); font-family:'IBM Plex Sans';
+  }
+  .filters-bar .spacer{flex:1;}
+  .filters-bar .search-box{border-radius:999px;}
+
+  .match-grid{display:flex; flex-direction:column; gap:14px;}
+  .match-card{
+    background:#fff; border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px 22px; display:flex; align-items:center; gap:18px;
+  }
+  .match-card .avatar{width:44px;height:44px; font-size:15px;}
+  .match-info{flex:1; min-width:0;}
+  .match-info .name{font-size:15px; font-weight:600; color:var(--ink); margin-bottom:2px;}
+  .match-info .role{font-size:12.5px; color:var(--ink-soft); margin-bottom:10px;}
+  .match-info .tags{display:flex; gap:6px; flex-wrap:wrap;}
+  .match-info .tags .tag{background:var(--cream); font-size:11px; padding:3px 9px;}
+
+  .match-score{width:150px; flex-shrink:0;}
+  .match-score .pct{font-size:13px; font-weight:700; color:var(--teal); margin-bottom:6px;}
+  .score-bar{height:6px; border-radius:999px; background:var(--line); overflow:hidden;}
+  .score-bar > div{height:100%; background:var(--teal); border-radius:999px;}
+
+  .match-actions{display:flex; flex-direction:column; gap:8px; flex-shrink:0;}
+  .icon-btn{
+    width:34px;height:34px;border-radius:8px; border:1px solid var(--line); background:#fff;
+    display:flex; align-items:center; justify-content:center; color:var(--ink-soft); cursor:default;
+  }
+
+  @media (max-width: 980px){
+    .login-grid{grid-template-columns:1fr;}
+    .login-brand{display:none;}
+    .app-shell{grid-template-columns:1fr;}
+    .app-sidebar{display:none;}
+    .profile-layout{grid-template-columns:1fr;}
+    .match-card{flex-wrap:wrap;}
+  }
+</style>
+</head>
+<body>
+
+  <nav class="proto-nav">
+    <span class="proto-title">Kutana-style prototype &middot; KQ Stakeholder Matching &middot; Web App</span>
+    <button class="proto-tab active" data-target="screen-login"><span class="step-num">1</span>Sign Up / Login</button>
+    <button class="proto-tab" data-target="screen-profile"><span class="step-num">2</span>Create Profile</button>
+    <button class="proto-tab" data-target="screen-matches"><span class="step-num">3</span>Recommended Matches</button>
+  </nav>
+
+  <!-- ================= SCREEN 1 ================= -->
+  <section id="screen-login" class="screen active">
+    <div class="login-grid">
+      <div class="login-brand">
+        <svg class="routes" viewBox="0 0 500 700" fill="none">
+          <path d="M20,600 C150,500 120,300 260,220 C360,160 420,120 480,40" stroke="#bd7238" stroke-width="1"/>
+          <path d="M10,120 C120,180 180,260 260,220 C340,180 420,260 490,320" stroke="#ffffff" stroke-width="1" opacity="0.4"/>
+          <circle cx="20" cy="600" r="3" fill="#bd7238"/>
+          <circle cx="480" cy="40" r="3" fill="#bd7238"/>
+          <circle cx="260" cy="220" r="3" fill="#ffffff"/>
+        </svg>
+        <div class="brand-mark"><span class="dot"></span>KENYA AIRWAYS &nbsp;·&nbsp; STAKEHOLDER NETWORK</div>
+        <div>
+          <h1>Mentorship and professional&nbsp;networking, matched&nbsp;intelligently.</h1>
+          <p>Connect with alumni, current staff, former employees, and administrators across the Kenya Airways community — matched by skills, interests, and career goals.</p>
+        </div>
+        <div class="brand-quote">
+          <b>1,200+ stakeholders</b> already building mentorship connections through the Pride Centre network.
+        </div>
+      </div>
+
+      <div class="login-panel">
+        <div class="login-card">
+          <div class="eyebrow">Welcome back</div>
+          <h2>Sign in to your account</h2>
+
+          <div class="authtoggle">
+            <button class="active">Log in</button>
+            <button>Create account</button>
+          </div>
+
+          <div class="field">
+            <label>Email address</label>
+            <input type="email" placeholder="you@kenya-airways.com">
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input type="password" placeholder="••••••••">
+          </div>
+          <div class="row-between">
+            <label style="display:flex; align-items:center; gap:6px; font-weight:400; color:var(--ink-soft);">
+              <input type="checkbox" style="width:auto;"> Remember me
+            </label>
+            <a href="#">Forgot password?</a>
+          </div>
+          <button class="btn">Log in</button>
+
+          <div class="role-note">
+            <span>Signing in as:</span>
+            <span class="chip">Alumni</span>
+            <span class="chip">Staff</span>
+            <span class="chip">Former staff</span>
+            <span class="chip">Verified flyer</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN 2 ================= -->
+  <section id="screen-profile" class="screen">
+    <div class="app-shell">
+      <aside class="app-sidebar">
+        <div class="brand-mark"><span class="dot"></span>KQ&nbsp;NETWORK</div>
+        <div class="nav-group">
+          <p class="nav-label">Workspace</p>
+          <div class="nav-item">Dashboard</div>
+          <div class="nav-item active">My Profile</div>
+          <div class="nav-item">Member Directory</div>
+        </div>
+        <div class="nav-group">
+          <p class="nav-label">Connect</p>
+          <div class="nav-item">Mentorship</div>
+          <div class="nav-item">Recommended Matches</div>
+          <div class="nav-item">Messages</div>
+        </div>
+        <div class="nav-group">
+          <p class="nav-label">Community</p>
+          <div class="nav-item">Opportunities</div>
+          <div class="nav-item">Events</div>
+          <div class="nav-item">Flight Reconnect</div>
+        </div>
+        <div class="sidebar-foot">
+          <div class="avatar">EK</div>
+          <div class="who"><div class="name">Edwin Kamau</div><div class="role">Alumni</div></div>
+        </div>
+      </aside>
+
+      <main class="app-main">
+        <div class="app-topbar">
+          <div>
+            <div class="eyebrow">Onboarding · Step 2 of 4</div>
+            <h2>Create your profile</h2>
+          </div>
+          <div class="search-box">🔍 Search directory</div>
+        </div>
+
+        <div class="steps">
+          <div class="step done"><div class="num">✓</div><div class="label">Account</div></div>
+          <div class="step current"><div class="num">2</div><div class="label">Profile</div></div>
+          <div class="step"><div class="num">3</div><div class="label">Preferences</div></div>
+          <div class="step"><div class="num">4</div><div class="label">Review</div></div>
+        </div>
+
+        <div class="profile-layout">
+          <div class="card">
+            <h3>Tell us about yourself</h3>
+            <p class="sub">This information powers your match recommendations — the more complete, the better your suggestions.</p>
+
+            <div class="grid-2">
+              <div class="field"><label>Full name</label><input placeholder="e.g. Edwin Kamau"></div>
+              <div class="field"><label>Department / Role</label><input placeholder="e.g. Cargo Operations"></div>
+
+              <div class="field" style="grid-column:1/-1;">
+                <label>Skills / tags</label>
+                <div class="tag-input">
+                  <span class="tag">Data Analysis <button>×</button></span>
+                  <span class="tag">Product Design <button>×</button></span>
+                  <span class="tag">Ops Strategy <button>×</button></span>
+                  <input placeholder="Add a skill…">
+                </div>
+              </div>
+
+              <div class="field" style="grid-column:1/-1;">
+                <label>Interests / focus areas</label>
+                <div class="tag-input">
+                  <span class="tag">Aviation Tech <button>×</button></span>
+                  <span class="tag">Leadership <button>×</button></span>
+                  <input placeholder="Add an interest…">
+                </div>
+              </div>
+
+              <div class="field" style="grid-column:1/-1;">
+                <label>Career goals</label>
+                <textarea placeholder="What are you hoping to get from mentorship or networking on this platform?"></textarea>
+              </div>
+
+              <div class="field" style="grid-column:1/-1;">
+                <label>Mentorship availability</label>
+                <div class="avail-options">
+                  <div class="avail-opt">Seeking a mentor</div>
+                  <div class="avail-opt selected">Open to mentoring</div>
+                  <div class="avail-opt">Networking only</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button class="btn ghost small">Save as draft</button>
+              <button class="btn small">Save profile &amp; continue</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="card helper-card">
+              <div class="progress-ring">
+                <div class="ring"><span>65%</span></div>
+                <div>
+                  <h3 style="margin-bottom:2px;">Profile strength</h3>
+                  <p class="sub" style="margin:0;">Add your goals to reach 100%</p>
+                </div>
+              </div>
+              <ul class="helper-list">
+                <li><span class="tick">✓</span>Basic details added</li>
+                <li><span class="tick">✓</span>Skills &amp; interests tagged</li>
+                <li><span class="tick" style="background:var(--line); color:var(--ink-soft);">3</span>Career goals — in progress</li>
+                <li><span class="tick" style="background:var(--line); color:var(--ink-soft);">4</span>Mentorship preferences pending</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN 3 ================= -->
+  <section id="screen-matches" class="screen">
+    <div class="app-shell">
+      <aside class="app-sidebar">
+        <div class="brand-mark"><span class="dot"></span>KQ&nbsp;NETWORK</div>
+        <div class="nav-group">
+          <p class="nav-label">Workspace</p>
+          <div class="nav-item">Dashboard</div>
+          <div class="nav-item">My Profile</div>
+          <div class="nav-item">Member Directory</div>
+        </div>
+        <div class="nav-group">
+          <p class="nav-label">Connect</p>
+          <div class="nav-item">Mentorship</div>
+          <div class="nav-item active">Recommended Matches</div>
+          <div class="nav-item">Messages</div>
+        </div>
+        <div class="nav-group">
+          <p class="nav-label">Community</p>
+          <div class="nav-item">Opportunities</div>
+          <div class="nav-item">Events</div>
+          <div class="nav-item">Flight Reconnect</div>
+        </div>
+        <div class="sidebar-foot">
+          <div class="avatar">EK</div>
+          <div class="who"><div class="name">Edwin Kamau</div><div class="role">Alumni</div></div>
+        </div>
+      </aside>
+
+      <main class="app-main">
+        <div class="app-topbar">
+          <div>
+            <div class="eyebrow">Hybrid recommendation engine</div>
+            <h2>Recommended matches</h2>
+          </div>
+          <div class="search-box">🔍 Search by name or skill</div>
+        </div>
+
+        <div class="filters-bar">
+          <select><option>All roles</option><option>Mentor</option><option>Alumni</option><option>Staff</option></select>
+          <select><option>All departments</option><option>Ops</option><option>Training</option><option>Cargo</option></select>
+          <select><option>Match score: Any</option><option>90%+</option><option>75%+</option></select>
+          <div class="spacer"></div>
+          <div class="search-box" style="min-width:auto;">Sort: Best match ↓</div>
+        </div>
+
+        <div class="match-grid">
+          <div class="match-card">
+            <div class="avatar">GM</div>
+            <div class="match-info">
+              <div class="name">Grace M.</div>
+              <div class="role">Mentor · Operations</div>
+              <div class="tags"><span class="tag">Leadership</span><span class="tag">Aviation Ops</span><span class="tag">+2 shared</span></div>
+            </div>
+            <div class="match-score">
+              <div class="pct">92% match</div>
+              <div class="score-bar"><div style="width:92%;"></div></div>
+            </div>
+            <div class="match-actions">
+              <button class="btn small">Connect</button>
+            </div>
+          </div>
+
+          <div class="match-card">
+            <div class="avatar">PC</div>
+            <div class="match-info">
+              <div class="name">Peter C.</div>
+              <div class="role">Alumni Network</div>
+              <div class="tags"><span class="tag">Data Analysis</span><span class="tag">Product</span><span class="tag">+1 shared</span></div>
+            </div>
+            <div class="match-score">
+              <div class="pct">87% match</div>
+              <div class="score-bar"><div style="width:87%;"></div></div>
+            </div>
+            <div class="match-actions">
+              <button class="btn small">Connect</button>
+            </div>
+          </div>
+
+          <div class="match-card">
+            <div class="avatar">WS</div>
+            <div class="match-info">
+              <div class="name">Wanjeru S.</div>
+              <div class="role">Staff · Training</div>
+              <div class="tags"><span class="tag">Onboarding</span><span class="tag">Coaching</span></div>
+            </div>
+            <div class="match-score">
+              <div class="pct">81% match</div>
+              <div class="score-bar"><div style="width:81%;"></div></div>
+            </div>
+            <div class="match-actions">
+              <button class="btn small">Connect</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+<script>
+  const tabs = document.querySelectorAll('.proto-tab');
+  const screens = document.querySelectorAll('.screen');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      screens.forEach(s => s.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.target).classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
