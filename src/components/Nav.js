@@ -14,6 +14,12 @@ export default function Nav() {
       <div className="flex items-center gap-4 text-sm">
         {status === "authenticated" ? (
           <>
+            <Link href="/recommendations" className="underline">
+              Matches
+            </Link>
+            <Link href="/directory" className="underline">
+              Directory
+            </Link>
             <Link href="/profile" className="underline">
               My Profile
             </Link>
