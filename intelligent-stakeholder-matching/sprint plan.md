@@ -6,7 +6,7 @@
 
 ---
 
-## Completed Sprints (from Git history)
+## Completed Sprints 
 
 | Sprint | Dates | Goal | Delivered | Status |
 |---|---|---|---|---|
