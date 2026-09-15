@@ -165,6 +165,75 @@ const testUsers = [
   },
 ];
 
+// Simulated mentorship requests -- real KQ interaction data isn't available
+// (see docs/DATA.md), so this is fabricated but directionally realistic:
+// mostly follows shared skills/interests between sender and receiver, with a
+// deliberate mix of accepted/declined/pending so later evaluation work has
+// both positive and negative examples to score against, not just a clean
+// success case. Feedback is only attached to ACCEPTED requests, left by the
+// sender (the person who sought mentorship).
+const MENTORSHIP_REQUESTS = [
+  {
+    senderEmail: "peter.kamau@example.com",
+    receiverEmail: "david.otieno@example.com",
+    status: "ACCEPTED",
+    message: "I'd love guidance on financial reporting basics for logistics budgeting.",
+    feedback: {
+      rating: 5,
+      comment: "David helped me understand financial reporting fundamentals relevant to logistics budgeting.",
+    },
+  },
+  {
+    senderEmail: "peter.kamau@example.com",
+    receiverEmail: "grace.mwangi@example.com",
+    status: "PENDING",
+    message: "Would love guidance on transitioning into a leadership track.",
+  },
+  {
+    senderEmail: "esther.njoroge@example.com",
+    receiverEmail: "wanjiru.simiyu@example.com",
+    status: "ACCEPTED",
+    message: "Could you help me build confidence presenting to larger groups?",
+    feedback: {
+      rating: 4,
+      comment: "Wanjiru gave practical tips on structuring mentorship conversations.",
+    },
+  },
+  {
+    senderEmail: "esther.njoroge@example.com",
+    receiverEmail: "john.mutua@example.com",
+    status: "DECLINED",
+    message: "Interested in learning more about the tech side of customer platforms.",
+  },
+  {
+    senderEmail: "samuel.ochieng@example.com",
+    receiverEmail: "david.otieno@example.com",
+    status: "ACCEPTED",
+    message: "Looking to sharpen my negotiation approach with enterprise clients.",
+    feedback: {
+      rating: 5,
+      comment: "Sharpened my negotiation approach significantly -- highly recommend.",
+    },
+  },
+  {
+    senderEmail: "amina.hassan@example.com",
+    receiverEmail: "john.mutua@example.com",
+    status: "DECLINED",
+    message: "Would love an intro to the tech side of the digital platforms team.",
+  },
+];
+
+// Simulated (non-mentorship) networking connections -- same rationale as
+// above, roughly following shared interests.
+const CONNECTION_REQUESTS = [
+  { senderEmail: "grace.mwangi@example.com", receiverEmail: "wanjiru.simiyu@example.com", status: "ACCEPTED" },
+  { senderEmail: "amina.hassan@example.com", receiverEmail: "samuel.ochieng@example.com", status: "ACCEPTED" },
+  { senderEmail: "david.otieno@example.com", receiverEmail: "faith.wambui@example.com", status: "ACCEPTED" },
+  { senderEmail: "brian.kiptoo@example.com", receiverEmail: "john.mutua@example.com", status: "PENDING" },
+  { senderEmail: "esther.njoroge@example.com", receiverEmail: "peter.kamau@example.com", status: "ACCEPTED" },
+  { senderEmail: "amina.hassan@example.com", receiverEmail: "faith.wambui@example.com", status: "PENDING" },
+];
+
 async function main() {
   // 1. Seed skills and interests
   for (const name of skills) {
@@ -227,6 +296,70 @@ async function main() {
   }
 
   console.log(`Seeded ${testUsers.length} test stakeholder profiles.`);
+
+  // 3. Seed simulated mentorship/connection requests and feedback -- the
+  // interaction history collaborative filtering scores against. Neither
+  // model has a unique constraint on (senderId, receiverId) -- real users
+  // can legitimately send another request after a decline -- so re-running
+  // the seed checks for an existing request between the same pair first
+  // rather than relying on upsert, keeping this idempotent like the rest of
+  // the script.
+  const seededUsers = await prisma.user.findMany({
+    where: { email: { in: testUsers.map((t) => t.email) } },
+  });
+  const userIdByEmail = Object.fromEntries(seededUsers.map((u) => [u.email, u.id]));
+
+  for (const r of MENTORSHIP_REQUESTS) {
+    const senderId = userIdByEmail[r.senderEmail];
+    const receiverId = userIdByEmail[r.receiverEmail];
+
+    let mentorshipRequest = await prisma.mentorshipRequest.findFirst({
+      where: { senderId, receiverId },
+    });
+    if (!mentorshipRequest) {
+      mentorshipRequest = await prisma.mentorshipRequest.create({
+        data: {
+          senderId,
+          receiverId,
+          status: r.status,
+          message: r.message || null,
+        },
+      });
+    }
+
+    if (r.feedback) {
+      const existingFeedback = await prisma.feedback.findFirst({
+        where: { userId: senderId, mentorshipRequestId: mentorshipRequest.id },
+      });
+      if (!existingFeedback) {
+        await prisma.feedback.create({
+          data: {
+            userId: senderId,
+            mentorshipRequestId: mentorshipRequest.id,
+            rating: r.feedback.rating,
+            comment: r.feedback.comment,
+          },
+        });
+      }
+    }
+  }
+  console.log(`Seeded ${MENTORSHIP_REQUESTS.length} mentorship requests.`);
+
+  for (const c of CONNECTION_REQUESTS) {
+    const senderId = userIdByEmail[c.senderEmail];
+    const receiverId = userIdByEmail[c.receiverEmail];
+
+    const existing = await prisma.connectionRequest.findFirst({
+      where: { senderId, receiverId },
+    });
+    if (!existing) {
+      await prisma.connectionRequest.create({
+        data: { senderId, receiverId, status: c.status },
+      });
+    }
+  }
+  console.log(`Seeded ${CONNECTION_REQUESTS.length} connection requests.`);
+
   console.log(`All test accounts use the password: ${TEST_PASSWORD}`);
 }
 
