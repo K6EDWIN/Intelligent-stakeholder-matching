@@ -90,6 +90,47 @@ The effectiveness and accuracy of the intelligent matching framework are evaluat
 
 ---
 
+## Getting Started
+
+### Prerequisites
+- Node.js 22+ (pinned in [`.nvmrc`](.nvmrc) / `engines` in [`package.json`](package.json) — run `nvm use` if you use nvm)
+- Docker (for the bundled PostgreSQL, or provide your own connection string)
+
+### Setup
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+   This also runs `prisma generate` automatically via the `postinstall` script.
+
+2. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+   Fill in `NEXTAUTH_SECRET` and `RESEND_API_KEY` (see [`.env.example`](.env.example) for what each variable is for). The default `DATABASE_URL` already matches step 3 below.
+
+3. **Start a local PostgreSQL database**
+   ```bash
+   docker compose up -d
+   ```
+   This starts a `postgres` container matching the `DATABASE_URL` in `.env.example`. Already have Postgres running elsewhere? Just point `DATABASE_URL` at it instead and skip this step.
+
+4. **Apply database migrations**
+   ```bash
+   npx prisma migrate dev
+   ```
+
+5. **Seed the database** with the synthetic skills/interests dataset (see [`docs/DATA.md`](docs/DATA.md) for what this loads and why it's synthetic)
+   ```bash
+   npm run seed
+   ```
+
+6. **Start the dev server**
+   ```bash
+   npm run dev
+   ```
+   The app runs at [http://localhost:3000](http://localhost:3000).
+
 ## Academic Information
 
 - **Project Title:** Intelligent Stakeholder Matching for Mentorship and Professional Networking Using Hybrid Recommendation Techniques: A Case of Kenya Airways
