@@ -20,6 +20,9 @@ export default function Nav() {
             <Link href="/directory" className="underline">
               Directory
             </Link>
+            <Link href="/requests" className="underline">
+              Requests
+            </Link>
             <Link href="/profile" className="underline">
               My Profile
             </Link>
