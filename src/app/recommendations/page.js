@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import RequestActions from "@/components/RequestActions";
 
 const ROLE_LABELS = {
   ALUMNI: "Alumni",
@@ -131,6 +132,7 @@ export default function RecommendationsPage() {
               <div className="flex flex-col items-end gap-2 shrink-0">
                 <span className="text-lg font-bold">{r.matchPercent}%</span>
                 <span className="text-xs text-gray-400">match</span>
+                <RequestActions userId={r.userId} />
               </div>
             </div>
           ))}
