@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import RequestActions from "@/components/RequestActions";
 
 const ROLE_LABELS = {
   ALUMNI: "Alumni",
@@ -149,46 +150,55 @@ export default function DirectoryPage() {
       ) : (
         <div className="flex flex-col gap-4">
           {profiles.map((p) => (
-            <div key={p.userId} className="border rounded-lg p-4">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold">{p.fullName}</p>
-                <span className="text-xs text-gray-500">
-                  {ROLE_LABELS[p.role] || p.role}
-                </span>
-              </div>
-              {p.department && (
-                <p className="text-sm text-gray-600">{p.department}</p>
-              )}
-              {p.bio && <p className="text-sm text-gray-700 mt-1">{p.bio}</p>}
-              {p.mentorshipRole && (
-                <span className="inline-block mt-1 text-xs bg-gray-100 rounded-full px-2 py-0.5">
-                  {p.mentorshipRole === "BOTH"
-                    ? "Mentor & Mentee"
-                    : p.mentorshipRole === "MENTOR"
-                    ? "Mentor"
-                    : "Mentee"}
-                </span>
-              )}
-              {(p.skills.length > 0 || p.interests.length > 0) && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {p.skills.map((s) => (
-                    <span
-                      key={`skill-${s}`}
-                      className="text-xs bg-black text-white rounded-full px-2 py-0.5"
-                    >
-                      {s}
-                    </span>
-                  ))}
-                  {p.interests.map((i) => (
-                    <span
-                      key={`interest-${i}`}
-                      className="text-xs border border-gray-300 rounded-full px-2 py-0.5"
-                    >
-                      {i}
-                    </span>
-                  ))}
+            <div
+              key={p.userId}
+              className="border rounded-lg p-4 flex items-start justify-between gap-4"
+            >
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold">{p.fullName}</p>
+                  <span className="text-xs text-gray-500">
+                    {ROLE_LABELS[p.role] || p.role}
+                  </span>
                 </div>
-              )}
+                {p.department && (
+                  <p className="text-sm text-gray-600">{p.department}</p>
+                )}
+                {p.bio && (
+                  <p className="text-sm text-gray-700 mt-1">{p.bio}</p>
+                )}
+                {p.mentorshipRole && (
+                  <span className="inline-block mt-1 text-xs bg-gray-100 rounded-full px-2 py-0.5">
+                    {p.mentorshipRole === "BOTH"
+                      ? "Mentor & Mentee"
+                      : p.mentorshipRole === "MENTOR"
+                      ? "Mentor"
+                      : "Mentee"}
+                  </span>
+                )}
+                {(p.skills.length > 0 || p.interests.length > 0) && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {p.skills.map((s) => (
+                      <span
+                        key={`skill-${s}`}
+                        className="text-xs bg-black text-white rounded-full px-2 py-0.5"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                    {p.interests.map((i) => (
+                      <span
+                        key={`interest-${i}`}
+                        className="text-xs border border-gray-300 rounded-full px-2 py-0.5"
+                      >
+                        {i}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <RequestActions userId={p.userId} />
             </div>
           ))}
         </div>
