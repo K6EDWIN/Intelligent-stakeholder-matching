@@ -4,6 +4,8 @@
 **Student:** Kamau Edwin Kamau — 152803
 **Methodology:** Agile (Sprint Planning → Sprint Development → Sprint Review), one module per sprint, weekly cycles
 
+> For current task-level status and sequencing, see [`ROADMAP.md`](ROADMAP.md) — it's reconciled against the GitHub issue tracker and kept up to date; this file is the higher-level narrative.
+
 ---
 
 ## Completed Sprints 
@@ -14,18 +16,19 @@
 | Sprint 1 | 18–25 Aug | Authentication foundation | NextAuth integration, register/login pages, Prisma client wiring | ✅ Done |
 | Sprint 2 | 26 Aug – 8 Sep | Account verification | Resend email verification on registration, login gated on verified accounts | ✅ Done |
 | Sprint 3 | 9–13 Sep | Profiles & seed data | Profile management page, nav component, database seeding script, config updates | ✅ Done |
+| Sprint 4 | 9–15 Sep | Recommendation Engine: Content-Based Filtering | Weighted Jaccard similarity over skills/interests (`src/lib/recommendation.js`), `/api/recommendations`, `/recommendations` page | ✅ Done (landed alongside Sprint 3, ahead of the original 14–20 Sep estimate) |
+
+**Correction:** Sprint 3's "profiles" delivery did not include a working member
+directory, despite GitHub issue #2 having been marked closed — `Nav.js` links
+to `/directory` but no such page or listing API exists. Reopened as #2; see
+[`ROADMAP.md`](ROADMAP.md).
 
 ---
 
 ## Upcoming Sprints
 
-### Sprint 4 — Recommendation Engine: Content-Based Filtering (14–20 Sep)
-- Extend `prisma/seed.cjs` with realistic skill/interest/interaction data so recommendations have something to score against — this doubles as your "dataset"
-- Build a `src/lib/recommend/cbf.js` module: vector similarity over profile attributes (skills, department, interests)
-- Add a `/api/recommendations` route that returns CBF-ranked matches for a given user
-- Commit in small increments (setup → similarity function → API route → test data) so sprint progress is visible in Git
-
-### Sprint 5 — Recommendation Engine: Collaborative Filtering + Hybrid Score (21–27 Sep)
+### Sprint 5 — Member Directory + Recommendation Engine: Collaborative Filtering + Hybrid Score (16–27 Sep)
+- Build the member directory: a page listing public profiles with search/filter by role, skill, or interest (#2)
 - Implement CF scoring from accepted connections / mentorship interactions
 - Combine CBF + CF using the weighted hybrid formula (Hybrid = α·CBF + β·CF) from the proposal
 - Build the recommendations UI page showing ranked matches
