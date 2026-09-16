@@ -7,14 +7,14 @@ import {
   buildConnectionsByUser,
   computeCollaborativeScore,
 } from "@/lib/collaborative";
+import { computeHybridWeights, computeHybridScore } from "@/lib/hybrid";
 
 // GET /api/recommendations
-// Computes content-based similarity between the logged-in user and every
-// other eligible stakeholder, plus user-based collaborative filtering over
-// accepted mentorship/connection interactions, and persists both scores to
-// the Recommendation table. Ranking here is still by contentScore alone --
-// combining the two into hybridScore and re-ranking by it is #8, a separate
-// step so each is independently reviewable.
+// Computes content-based similarity and user-based collaborative filtering
+// between the logged-in user and every other eligible stakeholder, combines
+// them into a hybrid score (cold-start-aware weighting -- see
+// src/lib/hybrid.js), persists all three scores to the Recommendation
+// table, and ranks the "Suggested for you" list by hybridScore.
 export async function GET() {
   const session = await getServerSession(authOptions);
 
@@ -63,6 +63,9 @@ export async function GET() {
     ...acceptedMentorships,
     ...acceptedConnections,
   ]);
+  const hybridWeights = computeHybridWeights(
+    acceptedMentorships.length + acceptedConnections.length
+  );
 
   const scored = candidates.map((candidate) => {
     const candidateAttrs = {
@@ -75,6 +78,11 @@ export async function GET() {
       connectionsByUser,
       session.user.id,
       candidate.user.id
+    );
+    const hybridScore = computeHybridScore(
+      contentScore,
+      collaborativeScore,
+      hybridWeights
     );
     const { sharedSkillIds, sharedInterestIds } = sharedAttributes(
       ownerAttrs,
@@ -92,17 +100,16 @@ export async function GET() {
       candidate,
       contentScore,
       collaborativeScore,
+      hybridScore,
       sharedSkillNames,
       sharedInterestNames,
     };
   });
 
-  // Persist scores so this data is available for hybrid scoring (#8).
-  // hybridScore is still just contentScore for now -- combining it with
-  // collaborativeScore and re-ranking by the result is #8's job, kept
-  // separate so each step is independently reviewable.
+  // Persist all three scores. hybridScore -- not contentScore -- is now the
+  // ranking signal, per the weighted formula in src/lib/hybrid.js.
   await prisma.$transaction(
-    scored.map(({ candidate, contentScore, collaborativeScore }) =>
+    scored.map(({ candidate, contentScore, collaborativeScore, hybridScore }) =>
       prisma.recommendation.upsert({
         where: {
           ownerId_matchedUserId: {
@@ -113,21 +120,21 @@ export async function GET() {
         update: {
           contentScore,
           collaborativeScore,
-          hybridScore: contentScore,
+          hybridScore,
         },
         create: {
           ownerId: session.user.id,
           matchedUserId: candidate.user.id,
           contentScore,
           collaborativeScore,
-          hybridScore: contentScore,
+          hybridScore,
         },
       })
     )
   );
 
   const ranked = scored
-    .sort((a, b) => b.contentScore - a.contentScore)
+    .sort((a, b) => b.hybridScore - a.hybridScore)
     .slice(0, 10)
     .map((s) => ({
       userId: s.candidate.user.id,
@@ -135,7 +142,7 @@ export async function GET() {
       fullName: s.candidate.fullName,
       department: s.candidate.department,
       mentorshipRole: s.candidate.mentorshipRole,
-      matchPercent: Math.round(s.contentScore * 100),
+      matchPercent: Math.round(s.hybridScore * 100),
       sharedSkills: s.sharedSkillNames,
       sharedInterests: s.sharedInterestNames,
     }));
