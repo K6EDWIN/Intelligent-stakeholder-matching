@@ -70,9 +70,9 @@ export default function RecommendationsPage() {
     <div className="max-w-3xl mx-auto mt-10 p-6">
       <h1 className="text-2xl font-bold mb-2">Suggested for you</h1>
       <p className="text-gray-500 text-sm mb-8">
-        Ranked by shared skills and interests. This will improve further once
-        mentorship and connection activity starts feeding into the
-        recommendation engine.
+        Ranked by a blend of shared skills/interests and mentorship or
+        connection activity across the platform -- the mix leans more on
+        activity as more requests get accepted platform-wide.
       </p>
 
       {recommendations.length === 0 ? (
