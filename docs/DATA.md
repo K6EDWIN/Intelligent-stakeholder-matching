@@ -2,12 +2,12 @@
 
 ## What data exists
 
-All data for local development and demos comes from [`prisma/seed.cjs`](../prisma/seed.cjs), which loads four things:
+All data for local development, demos, and evaluation comes from two CSV files in [`prisma/data/`](../prisma/data/), loaded by [`prisma/seed.cjs`](../prisma/seed.cjs):
 
-1. **Skills** — a reference list of 20 skill tags (e.g. `Leadership`, `Flight Operations`, `Cybersecurity`), stored in the `Skill` model.
-2. **Interests** — a reference list of 15 interest tags (e.g. `Career Development`, `Aviation Industry Trends`), stored in the `Interest` model.
-3. **Test stakeholders** — 10 fabricated `User` + `Profile` records spanning every `UserRole` (`STAFF`, `ALUMNI`, `FORMER_STAFF`, `FREQUENT_FLYER`), each with a name, department, bio, mentorship role/availability, and a handful of skills/interests linked via `ProfileSkill`/`ProfileInterest`. All are pre-verified (`isVerified: true`) so they're usable immediately without clicking an email link, and all share the password `Test1234!`.
-4. **Simulated interaction history** — 6 `MentorshipRequest` and 6 `ConnectionRequest` records between pairs of test stakeholders, plus `Feedback` on the 3 accepted mentorship requests. Deliberately mixed status (`ACCEPTED`/`DECLINED`/`PENDING`) rather than all-success, and mostly follows shared skills/interests between sender and receiver so the signal is directionally realistic. This is what collaborative filtering scores against.
+1. **`stakeholders.csv`** — 150 fabricated stakeholders spanning every `UserRole` (`STAFF`, `ALUMNI`, `FORMER_STAFF`, `FREQUENT_FLYER`), each with a name, department, bio, mentorship role/availability, and skills/interests. Seeded as `User` + `Profile` (+ `ProfileSkill`/`ProfileInterest` links). All are pre-verified (`isVerified: true`) so they're usable immediately without clicking an email link, and all share the password `Test1234!`. The `Skill`/`Interest` reference lists themselves are *derived* from this file (every unique value used across all 150 rows), not maintained separately — one source of truth, no risk of the two drifting apart.
+2. **`interactions.csv`** — 441 simulated `MentorshipRequest`/`ConnectionRequest` records between pairs of those stakeholders (208 mentorship, 233 connection), with a realistic mix of `PENDING`/`ACCEPTED`/`DECLINED` status rather than all-success. The 198 `ACCEPTED` rows carry a 1–5 rating, seeded as `Feedback`. This is what collaborative filtering scores against, and what Precision@K/Recall@K/NDCG evaluation (#11) will eventually score against too.
+
+A much smaller hand-written version of this (10 users, 12 interactions) shipped first; this CSV dataset replaces it with something big enough to give collaborative filtering real signal to work with.
 
 ## Why it's synthetic
 
@@ -16,18 +16,21 @@ No real Kenya Airways organizational data is available or appropriate for a stud
 ## Schema it populates
 
 See [`prisma/schema.prisma`](../prisma/schema.prisma) for the full data model. The seed script touches:
-- `Skill`, `Interest` — the reference lists above.
-- `User`, `Profile` — one of each per test stakeholder.
+- `Skill`, `Interest` — derived from `stakeholders.csv`.
+- `User`, `Profile` — one of each per stakeholder row.
 - `ProfileSkill`, `ProfileInterest` — join tables linking a profile to its skills/interests.
-- `MentorshipRequest`, `ConnectionRequest` — the simulated interaction history above.
-- `Feedback` — ratings/comments on the accepted mentorship requests.
+- `MentorshipRequest`, `ConnectionRequest` — from `interactions.csv`.
+- `Feedback` — ratings on `ACCEPTED` rows, linked via `mentorshipRequestId` or the newer `connectionRequestId` (see below).
 
 It does not seed `Recommendation` (computed live by `/api/recommendations`, see [`src/lib/recommendation.js`](../src/lib/recommendation.js)), `Opportunity`, `Event`, or `FlightReconnect` rows — those modules don't exist yet (see [`ROADMAP.md`](ROADMAP.md)).
 
+**Schema change that came out of importing this dataset:** `Feedback` could previously only attach to a `MentorshipRequest`. Over half of `interactions.csv`'s rated rows (104 of 198) are accepted *connections*, which had nowhere to go under the old schema. Added `Feedback.connectionRequestId` (nullable, same pattern as `mentorshipRequestId`) via migration `20260916120000_add_connection_request_feedback` rather than silently dropping that half of the data.
+
 ## How to regenerate or extend it
 
-- Add entries to the `skills`/`interests` arrays, new objects to `testUsers`, or new entries to `MENTORSHIP_REQUESTS`/`CONNECTION_REQUESTS`, in `prisma/seed.cjs`.
-- Re-run it with `npm run seed` (wraps `node prisma/seed.cjs`). Skills/interests/users use `upsert`/`skipDuplicates`; requests and feedback aren't backed by a unique constraint (a real user can legitimately send a second request after a decline), so the script checks for an existing request between the same sender/receiver pair before creating one instead. Either way, re-running is safe and idempotent — it won't create duplicates on repeated runs.
+- Edit `prisma/data/stakeholders.csv` / `prisma/data/interactions.csv` directly, or replace them with a fresh export in the same shape (see the header row of each for the exact columns expected).
+- Re-run with `npm run seed` (wraps `node prisma/seed.cjs`). Skills/interests/users use `upsert`/`skipDuplicates`; requests and feedback aren't backed by a unique constraint (a real user can legitimately send a second request after a decline), so the script checks for existing sender/receiver pairs up front instead. Either way, re-running is safe and idempotent — it won't create duplicates on repeated runs.
+- `prisma/seed.cjs`'s CSV parser is intentionally minimal (handles the one quoted `bio` field these files use, not general CSV escaping) — if a replacement export contains an embedded literal quote character in any field, extend the parser or switch to a real CSV library first.
 
 ## Schema versioning
 
@@ -35,4 +38,4 @@ It does not seed `Recommendation` (computed live by `/api/recommendations`, see 
 
 ## Follow-up (not in scope now)
 
-The README's evaluation framework calls for Precision@K, Recall@K, and NDCG metrics once the recommendation engine has real interaction data to evaluate against. That requires either a larger synthetic interaction-history dataset (planned alongside the collaborative-filtering work) or a real evaluation dataset — deliberately deferred rather than bolted on under Sprint 1 pressure.
+The README's evaluation framework calls for Precision@K, Recall@K, and NDCG metrics against real interaction data. The 441-row `interactions.csv` dataset above is sized for exactly that; actually computing and reporting those metrics is #11, not yet done.
