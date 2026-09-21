@@ -133,7 +133,29 @@ async function main() {
   }
   console.log(`Seeded ${stakeholderRows.length} stakeholder profiles.`);
 
-  // 3. Seed mentorship/connection requests and feedback on accepted ones --
+  // 3. Seed one admin account -- none of the CSV rows use UserRole.ADMIN
+  // (real KQ admins aren't part of the synthetic stakeholder dataset), so
+  // without this there'd be no way to log in and test the admin dashboard.
+  await prisma.user.upsert({
+    where: { email: "admin@example.com" },
+    update: {},
+    create: {
+      email: "admin@example.com",
+      passwordHash,
+      role: "ADMIN",
+      isVerified: true,
+      profile: {
+        create: {
+          fullName: "Platform Admin",
+          department: "Administration",
+          isPublic: false,
+        },
+      },
+    },
+  });
+  console.log("Seeded 1 admin account (admin@example.com).");
+
+  // 4. Seed mentorship/connection requests and feedback on accepted ones --
   // the interaction history collaborative filtering scores against. Neither
   // request model has a unique constraint on (senderId, receiverId) -- a
   // real user can legitimately re-request after a decline -- so idempotency
