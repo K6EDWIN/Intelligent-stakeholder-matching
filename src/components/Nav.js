@@ -29,6 +29,9 @@ export default function Nav() {
             <Link href="/events" className="underline">
               Events
             </Link>
+            <Link href="/flight-reconnect" className="underline">
+              Flight Reconnect
+            </Link>
             <Link href="/profile" className="underline">
               My Profile
             </Link>
