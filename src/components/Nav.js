@@ -26,6 +26,9 @@ export default function Nav() {
             <Link href="/opportunities" className="underline">
               Opportunities
             </Link>
+            <Link href="/events" className="underline">
+              Events
+            </Link>
             <Link href="/profile" className="underline">
               My Profile
             </Link>
