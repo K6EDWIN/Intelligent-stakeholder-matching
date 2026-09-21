@@ -21,7 +21,7 @@ Verified against the code, not just against what issues say:
 | Collaborative filtering, hybrid scoring | ✅ Done | `src/lib/collaborative.js`, `src/lib/hybrid.js` — closes #7, #8 |
 | Opportunity board, Events + RSVP | ✅ Done | `/api/opportunities`, `/api/events` — closes #9, #20 |
 | Flight Reconnect | ✅ Done | `/api/flight-reconnect`, mutual opt-in matching — closes #10 |
-| Admin & moderation dashboard | 🔶 In review | `/admin`, `User.isSuspended` migration — [PR #43](https://github.com/K6EDWIN/Intelligent-stakeholder-matching/pull/43) open, needs a manual DB-migration verification pass before merging (closes #21) |
+| Admin & moderation dashboard | ✅ Done | `/admin`, `User.isSuspended` migration — closes #21. Manually verified against a live DB before merging |
 | Trained NCF model (accept/decline prediction) | ✅ Done | `ml/train_recommender.ipynb`, [`ML_MODEL.md`](ML_MODEL.md) — closes #46. Standalone research artifact, not wired into live ranking |
 | Evaluation metrics, UAT, deployment | ⬜ Not started | #11, #12, #22 |
 
@@ -30,11 +30,8 @@ Verified against the code, not just against what issues say:
 ### [Interactions & Recommendation Engine](https://github.com/K6EDWIN/Intelligent-stakeholder-matching/milestone/1) — ✅ complete
 #2, #4, #5, #6, #7, #8 all closed.
 
-### [Supporting Modules](https://github.com/K6EDWIN/Intelligent-stakeholder-matching/milestone/2) — nearly complete
-#9, #20, #10 closed. #21 done pending the manual-verification pass on
-[PR #43](https://github.com/K6EDWIN/Intelligent-stakeholder-matching/pull/43)
-(a `User.isSuspended` migration — same "needs a live DB to actually confirm"
-situation as prior schema changes this project has hit).
+### [Supporting Modules](https://github.com/K6EDWIN/Intelligent-stakeholder-matching/milestone/2) — ✅ complete
+#9, #20, #10, #21 all closed.
 
 ### [Evaluation & Launch](https://github.com/K6EDWIN/Intelligent-stakeholder-matching/milestone/3) — due ~Nov 7
 - #11 — Precision@K/Recall@K/F1/NDCG evaluation against seed/simulated data.
