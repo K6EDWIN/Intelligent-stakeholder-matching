@@ -32,6 +32,11 @@ export default function Nav() {
             <Link href="/flight-reconnect" className="underline">
               Flight Reconnect
             </Link>
+            {session.user.role === "ADMIN" && (
+              <Link href="/admin" className="underline">
+                Admin
+              </Link>
+            )}
             <Link href="/profile" className="underline">
               My Profile
             </Link>
