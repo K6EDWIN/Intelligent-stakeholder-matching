@@ -9,6 +9,8 @@ All data for local development, demos, and evaluation comes from two CSV files i
 
 A much smaller hand-written version of this (10 users, 12 interactions) shipped first; this CSV dataset replaces it with something big enough to give collaborative filtering real signal to work with.
 
+3. **`admin@example.com`** — one seeded `UserRole.ADMIN` account (password `Test1234!`, same as everyone else), created directly in `prisma/seed.cjs` rather than the CSV. None of the 150 CSV rows use the `ADMIN` role — real KQ admins aren't part of the synthetic stakeholder dataset — so without this there'd be no account able to log in and test `/admin`.
+
 ## Why it's synthetic
 
 No real Kenya Airways organizational data is available or appropriate for a student capstone project. Using fabricated stakeholders is a deliberate design choice, not a gap — it follows the same data-minimization principle the README's "Privacy, Security, and Ethical Considerations" section states for the product itself: real names, emails, skills, and travel data belonging to real people should never end up in a student project's database or git history. The synthetic dataset is realistic enough (varied roles, departments, skills, interests) to exercise search, filtering, directory listing, and the content-based recommendation engine end-to-end.
@@ -24,7 +26,9 @@ See [`prisma/schema.prisma`](../prisma/schema.prisma) for the full data model. T
 
 It does not seed `Recommendation` (computed live by `/api/recommendations`, see [`src/lib/recommendation.js`](../src/lib/recommendation.js)), `Opportunity`, `Event`, or `FlightReconnect` rows — those modules don't exist yet (see [`ROADMAP.md`](ROADMAP.md)).
 
-**Schema change that came out of importing this dataset:** `Feedback` could previously only attach to a `MentorshipRequest`. Over half of `interactions.csv`'s rated rows (104 of 198) are accepted *connections*, which had nowhere to go under the old schema. Added `Feedback.connectionRequestId` (nullable, same pattern as `mentorshipRequestId`) via migration `20260916120000_add_connection_request_feedback` rather than silently dropping that half of the data.
+**Schema changes that came out of building against this data:**
+- `Feedback` could previously only attach to a `MentorshipRequest`. Over half of `interactions.csv`'s rated rows (104 of 198) are accepted *connections*, which had nowhere to go under the old schema. Added `Feedback.connectionRequestId` (nullable, same pattern as `mentorshipRequestId`) via migration `20260916120000_add_connection_request_feedback` rather than silently dropping that half of the data.
+- `User` had no way to represent a suspended account, needed for the admin dashboard's moderation actions (#21). Added `User.isSuspended` (boolean, default `false`) via migration `20260921063000_add_user_is_suspended`. Login now rejects suspended users the same way it already rejects unverified ones (see `src/lib/auth.js`).
 
 ## How to regenerate or extend it
 
