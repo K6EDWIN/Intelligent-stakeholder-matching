@@ -1,25 +1,27 @@
 # AI Usage Across the Development Pipeline
 
 This documents how AI assistance was actually used in this project, stage by
-stage. It follows the standard dataset → prep → local dev → version control →
-training → deployment pipeline shape, adapted to what this project actually
-is: **there is no trained model here**. `src/lib/recommendation.js` (content
-similarity) and `src/lib/collaborative.js` (collaborative filtering) are
-deterministic scoring functions over profile/interaction data, not a model
-with weights, a training loop, or checkpoints. So the pipeline below drops the
-Colab/GPU-training stage and GDrive checkpoint sync that a trained-model
-project would have — there's nothing to train, and adding that
-infrastructure for a model that doesn't exist would be exactly the kind of
-unnecessary complexity the [ROADMAP](ROADMAP.md) already argues against for
-this project's deployment target.
+stage, following the standard dataset → prep → local dev → version control →
+training → deployment pipeline shape.
+
+One distinction worth stating up front: the **live app's** recommendation
+engine (`src/lib/recommendation.js`, `collaborative.js`, `hybrid.js`) is
+still entirely hand-specified similarity/weighting math — no training loop,
+no weights, nothing learned. But there is now a genuinely **trained** model
+in this project too: [`ml/train_recommender.ipynb`](../ml/train_recommender.ipynb),
+a Colab-trained Neural Collaborative Filtering model, kept deliberately
+separate from the live app (see [`ML_MODEL.md`](ML_MODEL.md) for what it is,
+why it's separate, and what it found). So the pipeline below includes a real
+Colab/GPU-training/GDrive-checkpoint stage — it's just scoped to that one
+standalone research artifact, not to the product itself.
 
 ## The actual flow
 
 ```
-Dataset & Prep → Local (dev) → GitHub → Testing (manual + CI) → Deployment (Vercel)
+Dataset & Prep → Local (dev) → GitHub → Colab (training) → Testing → Deployment (Vercel)
+                                              ↕
+                                        GDrive (checkpoints)
 ```
-
-No Colab/GDrive stage: there's no model to train or checkpoint.
 
 ## Where AI tools fit at each stage
 
@@ -57,7 +59,21 @@ and is being corrected going forward rather than rewritten into already
 -merged branches. The PR descriptions are the more complete record: each one
 states what changed, why, and how it was verified.
 
-### 4. Testing
+### 4. Colab (training)
+Claude Code wrote the full training notebook (`ml/train_recommender.ipynb`)
+— data loading, the NCF model definition, the training loop with GDrive
+checkpointing, evaluation, and plotting — and then actually **ran it**
+locally (CPU, no GPU available in that sandbox) against the real
+`prisma/data/*.csv` files before ever assembling it into notebook form, to
+confirm the code was correct rather than shipping untested training code.
+That run surfaced a real finding (every interaction pair in the dataset
+occurs exactly once, so the model can't beat random guessing) that's
+reported honestly in `ML_MODEL.md` rather than hidden or hand-waved past.
+Colab-specific pieces it can't execute itself (Drive mounting, GPU
+allocation) are written correctly per Colab's documented API but rely on
+the student's own Colab run to exercise for real.
+
+### 5. Testing
 Claude Code wrote and ran `npm run lint` / `npm run build` before every PR,
 plus browser-based smoke tests (auth-redirect checks) where a live database
 wasn't available in its sandboxed environment. For changes involving a
@@ -68,7 +84,7 @@ reported results back before those PRs were merged. That division of labor
 (AI for what's mechanically checkable, human for what requires a real
 environment) is deliberate, not a limitation to hide.
 
-### 5. Deployment
+### 6. Deployment
 Not yet done ([#22](https://github.com/K6EDWIN/Intelligent-stakeholder-matching/issues/22)).
 When it happens: Vercel (frontend/API) + a managed Postgres (Neon/Supabase/
 Railway), not the AWS/Azure/GCP/HuggingFace stack a trained-model project
@@ -80,17 +96,21 @@ product itself.
 ## The framing this section exists to support
 
 AI assistance here is a development accelerant across the pipeline — used
-for scripting, debugging, documentation, CI/CD configuration, and repo
-hygiene — not part of the recommendation engine's logic itself. The content-
-based, collaborative, and hybrid scoring functions are hand-specified
-similarity/weighting formulas (see the doc comments in
-[`recommendation.js`](../src/lib/recommendation.js),
+for scripting, debugging, documentation, CI/CD configuration, repo hygiene,
+and (for the one place a real model exists) writing and running the
+training/evaluation code — not as a black box standing in for the work
+itself. The **live** content-based, collaborative, and hybrid scoring
+functions are hand-specified similarity/weighting formulas (see the doc
+comments in [`recommendation.js`](../src/lib/recommendation.js),
 [`collaborative.js`](../src/lib/collaborative.js), and
-[`hybrid.js`](../src/lib/hybrid.js)), not something an AI trained or tuned
-against data. That's the same distinction the original pipeline sketch draws
-between "AI as tooling" and "AI as the thing being evaluated" — it just
-applies here to Claude Code rather than ChatGPT, since Claude Code is what
-actually has an auditable trail (PR descriptions, this repo's commit
-history) of doing the work, and ChatGPT or other tools may separately have
-been used by the student for planning, brainstorming, or report drafting
-outside the codebase itself.
+[`hybrid.js`](../src/lib/hybrid.js)) that no training touched. The one
+trained model in the project (`ml/train_recommender.ipynb`) was built,
+run, and evaluated by Claude Code, with its honestly-reported result kept
+deliberately out of the live serving path — see [`ML_MODEL.md`](ML_MODEL.md).
+That's the same distinction the original pipeline sketch draws between "AI
+as tooling" and "AI as the thing being evaluated" — it just applies here to
+Claude Code rather than ChatGPT, since Claude Code is what actually has an
+auditable trail (PR descriptions, this repo's commit history) of doing the
+work, and ChatGPT or other tools may separately have been used by the
+student for planning, brainstorming, or report drafting outside the
+codebase itself.
