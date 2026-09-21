@@ -131,6 +131,8 @@ The effectiveness and accuracy of the intelligent matching framework are evaluat
    ```
    The app runs at [http://localhost:3000](http://localhost:3000).
 
+See also: [`docs/ROADMAP.md`](docs/ROADMAP.md) for current status and what's next, [`docs/DATA.md`](docs/DATA.md) for the seeded dataset, and [`docs/AI_USAGE.md`](docs/AI_USAGE.md) for how AI assistance was used across this project's development pipeline.
+
 ## Academic Information
 
 - **Project Title:** Intelligent Stakeholder Matching for Mentorship and Professional Networking Using Hybrid Recommendation Techniques: A Case of Kenya Airways
