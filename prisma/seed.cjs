@@ -3,9 +3,17 @@ const fs = require("fs");
 const path = require("path");
 const { PrismaClient } = require("@prisma/client");
 const { PrismaPg } = require("@prisma/adapter-pg");
+const { PrismaNeon } = require("@prisma/adapter-neon");
+const { neonConfig } = require("@neondatabase/serverless");
+const ws = require("ws");
 const bcrypt = require("bcryptjs");
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+neonConfig.webSocketConstructor = ws;
+
+const connectionString = process.env.DATABASE_URL;
+const adapter = connectionString?.includes("neon.tech")
+  ? new PrismaNeon({ connectionString })
+  : new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
 // Synthetic stakeholder/interaction dataset -- see docs/DATA.md for what

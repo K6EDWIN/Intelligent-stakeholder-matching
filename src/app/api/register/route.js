@@ -52,6 +52,7 @@ export async function POST(request) {
     });
 
     const verifyUrl = `${process.env.APP_URL}/api/auth/verify?token=${token}`;
+    console.log(`\n======================================================\n🔗 [EMAIL VERIFICATION LINK]:\n${verifyUrl}\n======================================================\n`);
 
     try {
       await resend.emails.send({
