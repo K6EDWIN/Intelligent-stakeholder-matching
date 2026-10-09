@@ -1,4 +1,5 @@
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
@@ -7,6 +8,20 @@ export const authOptions = {
     strategy: "jwt",
   },
   providers: [
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : [
+          // Fallback provider placeholder if Google keys are not yet configured in env
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID || "placeholder_client_id",
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "placeholder_secret",
+          }),
+        ]),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -56,6 +71,45 @@ export const authOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        if (!user.email) return false;
+
+        let existingUser = await prisma.user.findUnique({
+          where: { email: user.email },
+        });
+
+        if (!existingUser) {
+          // Auto-provision verified user from Google OAuth
+          existingUser = await prisma.user.create({
+            data: {
+              email: user.email,
+              passwordHash: "",
+              role: "STAFF",
+              isVerified: true,
+              isSuspended: false,
+              profile: {
+                create: {
+                  fullName: user.name || "Kenya Airways Member",
+                  department: "Flight Operations",
+                  mentorshipRole: "BOTH",
+                  isPublic: true,
+                },
+              },
+            },
+          });
+        }
+
+        if (existingUser.isSuspended) {
+          return false;
+        }
+
+        user.id = existingUser.id;
+        user.role = existingUser.role;
+        return true;
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
