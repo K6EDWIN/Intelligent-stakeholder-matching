@@ -133,19 +133,33 @@ export async function GET() {
     )
   );
 
+  const totalInteractions = acceptedMentorships.length + acceptedConnections.length;
+
   const ranked = scored
     .sort((a, b) => b.hybridScore - a.hybridScore)
-    .slice(0, 10)
+    .slice(0, 12)
     .map((s) => ({
       userId: s.candidate.user.id,
       role: s.candidate.user.role,
       fullName: s.candidate.fullName,
       department: s.candidate.department,
+      bio: s.candidate.bio,
       mentorshipRole: s.candidate.mentorshipRole,
       matchPercent: Math.round(s.hybridScore * 100),
+      contentScore: Math.round(s.contentScore * 100),
+      collaborativeScore: Math.round(s.collaborativeScore * 100),
       sharedSkills: s.sharedSkillNames,
       sharedInterests: s.sharedInterestNames,
     }));
 
-  return NextResponse.json({ recommendations: ranked });
+  return NextResponse.json({
+    recommendations: ranked,
+    meta: {
+      totalInteractions,
+      weights: {
+        alpha: Math.round(hybridWeights.alpha * 100),
+        beta: Math.round(hybridWeights.beta * 100),
+      },
+    },
+  });
 }

@@ -39,7 +39,7 @@ export async function GET() {
         userId: { not: session.user.id },
       },
       include: {
-        user: { select: { id: true, role: true, profile: { select: { fullName: true } } } },
+        user: { select: { id: true, role: true, profile: { select: { fullName: true, department: true, mentorshipRole: true, bio: true } } } },
       },
     });
 
@@ -49,7 +49,10 @@ export async function GET() {
         travelDate: flight.travelDate,
         userId: other.user.id,
         role: other.user.role,
-        fullName: other.user.profile?.fullName || "Unknown",
+        fullName: other.user.profile?.fullName || "Kenya Airways Member",
+        department: other.user.profile?.department || "Flight Operations",
+        mentorshipRole: other.user.profile?.mentorshipRole || "NETWORKING",
+        bio: other.user.profile?.bio || "",
       });
     }
   }

@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import KQAppShell from "@/components/KQAppShell";
+import { Button, Tag } from "@/components/KQBrand";
+import { Icon } from "@/components/KQIcons";
 
 export default function EventsPage() {
   const { status } = useSession();
@@ -31,17 +34,22 @@ export default function EventsPage() {
     if (status !== "authenticated") return;
 
     async function load() {
-      const res = await fetch("/api/events");
-      const data = await res.json();
+      try {
+        const res = await fetch("/api/events");
+        const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || "Could not load events");
+        if (!res.ok) {
+          setError(data.error || "Could not load events");
+          setLoading(false);
+          return;
+        }
+
+        setEvents(data.events || []);
         setLoading(false);
-        return;
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
       }
-
-      setEvents(data.events);
-      setLoading(false);
     }
 
     load();
@@ -57,161 +65,265 @@ export default function EventsPage() {
     setPosting(true);
     setPostError("");
 
-    const res = await fetch("/api/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    const data = await res.json();
+    try {
+      const res = await fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
 
-    setPosting(false);
+      setPosting(false);
 
-    if (!res.ok) {
-      setPostError(data.error || "Could not create event");
-      return;
+      if (!res.ok) {
+        setPostError(data.error || "Could not create event");
+        return;
+      }
+
+      setEvents((prev) =>
+        [
+          {
+            ...data.event,
+            createdByName: "You",
+            participantCount: 0,
+            isJoined: false,
+          },
+          ...prev,
+        ].sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate))
+      );
+      setForm({ title: "", description: "", location: "", eventDate: "" });
+    } catch (err) {
+      setPosting(false);
+      setPostError(err.message);
     }
-
-    setEvents((prev) =>
-      [
-        {
-          ...data.event,
-          createdByName: "You",
-          participantCount: 0,
-          isJoined: false,
-        },
-        ...prev,
-      ].sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate))
-    );
-    setForm({ title: "", description: "", location: "", eventDate: "" });
   };
 
   const toggleRsvp = async (eventId, currentlyJoined) => {
     setRsvpPendingId(eventId);
 
-    const res = await fetch(`/api/events/${eventId}/rsvp`, {
-      method: currentlyJoined ? "DELETE" : "POST",
-    });
+    try {
+      const res = await fetch(`/api/events/${eventId}/rsvp`, {
+        method: currentlyJoined ? "DELETE" : "POST",
+      });
 
-    setRsvpPendingId(null);
+      setRsvpPendingId(null);
 
-    if (!res.ok) return;
+      if (!res.ok) return;
 
-    setEvents((prev) =>
-      prev.map((e) =>
-        e.id === eventId
-          ? {
-              ...e,
-              isJoined: !currentlyJoined,
-              participantCount: e.participantCount + (currentlyJoined ? -1 : 1),
-            }
-          : e
-      )
-    );
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.id === eventId
+            ? {
+                ...e,
+                isJoined: !currentlyJoined,
+                participantCount: e.participantCount + (currentlyJoined ? -1 : 1),
+              }
+            : e
+        )
+      );
+    } catch {
+      setRsvpPendingId(null);
+    }
   };
 
   if (status === "loading" || loading) {
-    return <div className="max-w-2xl mx-auto mt-16 p-6">Loading...</div>;
+    return (
+      <KQAppShell>
+        <div className="app-page">
+          <div className="p-12 text-center text-gray-500 font-medium">
+            <Icon name="events" size={28} className="mx-auto mb-3 text-[#bb162b] animate-spin" />
+            Loading aviation events and masterclasses...
+          </div>
+        </div>
+      </KQAppShell>
+    );
   }
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-6 flex flex-col gap-10">
-      <div>
-        <h1 className="text-2xl font-bold mb-2">Events</h1>
-        <p className="text-gray-500 text-sm">
-          Workshops, reunions, and other community events. RSVP to let
-          organizers know you&apos;re coming.
-        </p>
-      </div>
+    <KQAppShell>
+      <div className="app-page">
+        {/* Title */}
+        <div className="page-title">
+          <div>
+            <div className="eyebrow">COMMUNITY &amp; LEARNING</div>
+            <h1>Aviation Events &amp; Masterclasses</h1>
+            <p>
+              Pride Centre seminars, crew workshops, alumni reunions, and technical masterclasses.
+            </p>
+          </div>
+        </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 border rounded-lg p-4">
-        <h2 className="font-semibold">Create an event</h2>
-        <div>
-          <label className="block text-sm font-medium mb-1">Title</label>
-          <input
-            name="title"
-            value={form.title}
-            onChange={handleChange}
-            className="border rounded px-3 py-2 w-full"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <textarea
-            name="description"
-            value={form.description}
-            onChange={handleChange}
-            className="border rounded px-3 py-2 w-full"
-            rows={3}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Location</label>
-          <input
-            name="location"
-            value={form.location}
-            onChange={handleChange}
-            className="border rounded px-3 py-2 w-full"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Date &amp; time</label>
-          <input
-            type="datetime-local"
-            name="eventDate"
-            value={form.eventDate}
-            onChange={handleChange}
-            className="border rounded px-3 py-2 w-full"
-            required
-          />
-        </div>
-        {postError && <p className="text-red-600 text-sm">{postError}</p>}
-        <button
-          type="submit"
-          disabled={posting}
-          className="bg-black text-white rounded px-4 py-2 disabled:opacity-50 w-fit"
-        >
-          {posting ? "Creating..." : "Create event"}
-        </button>
-      </form>
-
-      {error ? (
-        <p className="text-red-600 text-sm">{error}</p>
-      ) : events.length === 0 ? (
-        <p className="text-gray-500">No events yet.</p>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {events.map((e) => (
-            <div
-              key={e.id}
-              className="border rounded-lg p-4 flex items-start justify-between gap-4"
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
+          {/* Create an Event Card */}
+          <div className="lg:col-span-5">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white border border-[#dce0e3] rounded-xl p-6 shadow-sm sticky top-24"
             >
-              <div className="flex-1">
-                <p className="font-semibold">{e.title}</p>
-                <p className="text-sm text-gray-600">
-                  {new Date(e.eventDate).toLocaleString()}
-                  {e.location ? ` -- ${e.location}` : ""}
-                </p>
-                {e.description && (
-                  <p className="text-sm text-gray-700 mt-1">{e.description}</p>
-                )}
-                <p className="text-xs text-gray-400 mt-2">
-                  {e.participantCount} going -- created by {e.createdByName}
-                </p>
+              <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#dce0e3]">
+                <span className="p-2 bg-[#f9e9eb] text-[#bb162b] rounded-lg">
+                  <Icon name="events" size={16} />
+                </span>
+                <div>
+                  <h2 className="font-bold text-[#0e2740] text-sm">Create an Event</h2>
+                  <p className="text-gray-500 text-xs">Host an aviation seminar or reunion</p>
+                </div>
               </div>
-              <button
-                onClick={() => toggleRsvp(e.id, e.isJoined)}
-                disabled={rsvpPendingId === e.id}
-                className={`text-xs rounded px-3 py-1 shrink-0 disabled:opacity-50 ${
-                  e.isJoined ? "border" : "bg-black text-white"
-                }`}
-              >
-                {e.isJoined ? "Cancel RSVP" : "RSVP"}
-              </button>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Event Title
+                  </label>
+                  <input
+                    name="title"
+                    placeholder="e.g. B787 Dreamliner Systems Masterclass"
+                    value={form.title}
+                    onChange={handleChange}
+                    className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#bb162b] transition"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    name="description"
+                    placeholder="Agenda, keynote speakers, and learning objectives..."
+                    value={form.description}
+                    onChange={handleChange}
+                    className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#bb162b] transition"
+                    rows={3}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Location / Platform
+                  </label>
+                  <input
+                    name="location"
+                    placeholder="e.g. Pride Centre Auditorium, Nairobi (or Teams link)"
+                    value={form.location}
+                    onChange={handleChange}
+                    className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#bb162b] transition"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    Date &amp; Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="eventDate"
+                    value={form.eventDate}
+                    onChange={handleChange}
+                    className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#bb162b] transition"
+                    required
+                  />
+                </div>
+
+                {postError && (
+                  <p className="text-[#bb162b] text-xs bg-red-50 p-2 rounded">
+                    {postError}
+                  </p>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={posting}
+                  className="w-full"
+                  icon="arrow"
+                >
+                  {posting ? "Scheduling..." : "Schedule Event"}
+                </Button>
+              </div>
+            </form>
+          </div>
+
+          {/* List of Events */}
+          <div className="lg:col-span-7 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#dce0e3]">
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                Upcoming Community Events ({events.length})
+              </span>
             </div>
-          ))}
+
+            {error ? (
+              <p className="text-red-600 text-sm">{error}</p>
+            ) : events.length === 0 ? (
+              <div className="p-12 text-center bg-white border border-[#dce0e3] rounded-xl text-gray-500">
+                No events scheduled yet. Create an event to gather peers and mentees!
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {events.map((e) => {
+                  const d = new Date(e.eventDate);
+                  const isPending = rsvpPendingId === e.id;
+
+                  return (
+                    <article
+                      key={e.id}
+                      className="bg-white border border-[#dce0e3] rounded-xl p-5 shadow-sm hover:shadow-md transition"
+                    >
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div>
+                          <h3 className="font-bold text-base text-[#0e2740]">{e.title}</h3>
+                          <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+                            <span className="flex items-center gap-1">
+                              <Icon name="calendar" size={12} />
+                              {d.toLocaleDateString(undefined, {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                            <span>·</span>
+                            <span>{e.location}</span>
+                          </div>
+                        </div>
+                        <Tag gold={e.isJoined}>
+                          {e.participantCount} {e.participantCount === 1 ? "Attending" : "Attending"}
+                        </Tag>
+                      </div>
+
+                      <p className="text-sm text-gray-700 leading-relaxed mt-3 whitespace-pre-wrap">
+                        {e.description}
+                      </p>
+
+                      <div className="mt-4 pt-3 border-t border-[#dce0e3] flex items-center justify-between text-xs">
+                        <span className="text-gray-400">
+                          Organized by {e.createdByName}
+                        </span>
+
+                        <Button
+                          variant={e.isJoined ? "secondary" : "primary"}
+                          onClick={() => toggleRsvp(e.id, e.isJoined)}
+                          disabled={isPending}
+                          className="text-xs py-1.5 px-3 min-h-0"
+                        >
+                          {isPending
+                            ? "Updating..."
+                            : e.isJoined
+                            ? "Cancel RSVP"
+                            : "RSVP to Attend"}
+                        </Button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
-      )}
-    </div>
+      </div>
+    </KQAppShell>
   );
 }

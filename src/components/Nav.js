@@ -2,59 +2,66 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { KQLogo } from "./KQBrand";
 
 export default function Nav() {
   const { data: session, status } = useSession();
+  const pathname = usePathname();
+
+  // Internal app pages use KQAppShell for their sidebar and top header.
+  const appRoutes = [
+    "/",
+    "/login",
+    "/register",
+    "/recommendations",
+    "/directory",
+    "/flight-reconnect",
+    "/requests",
+    "/profile",
+    "/opportunities",
+    "/events",
+    "/admin",
+  ];
+
+  if (appRoutes.some((route) => pathname === route || pathname.startsWith(route + "/"))) {
+    return null;
+  }
 
   return (
-    <nav className="flex items-center justify-between px-6 py-4 border-b">
-      <Link href="/" className="font-semibold">
-        ISM
-      </Link>
-      <div className="flex items-center gap-4 text-sm">
+    <nav className="flex items-center justify-between px-6 py-4 bg-white border-b border-[#dce0e3]">
+      <KQLogo />
+      <div className="flex items-center gap-5 text-sm">
         {status === "authenticated" ? (
           <>
-            <Link href="/recommendations" className="underline">
-              Matches
+            <Link
+              href="/recommendations"
+              className="text-[#182231] hover:text-[#bb162b] font-medium"
+            >
+              Dashboard
             </Link>
-            <Link href="/directory" className="underline">
-              Directory
-            </Link>
-            <Link href="/requests" className="underline">
-              Requests
-            </Link>
-            <Link href="/opportunities" className="underline">
-              Opportunities
-            </Link>
-            <Link href="/events" className="underline">
-              Events
-            </Link>
-            <Link href="/flight-reconnect" className="underline">
-              Flight Reconnect
-            </Link>
-            {session.user.role === "ADMIN" && (
-              <Link href="/admin" className="underline">
-                Admin
-              </Link>
-            )}
-            <Link href="/profile" className="underline">
-              My Profile
-            </Link>
-            <span className="text-gray-500">{session.user.email}</span>
+            <span className="text-gray-400 text-xs">{session.user.email}</span>
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="underline"
+              className="text-[#bb162b] hover:underline font-semibold text-xs"
             >
               Log out
             </button>
           </>
         ) : (
           <>
-            <Link href="/login" className="underline">
+            <Link
+              href="/login"
+              className="text-[#182231] hover:text-[#bb162b] font-medium"
+            >
               Log in
             </Link>
-            <Link href="/register" className="underline">
-              Register
+            <Link
+              href="/register"
+              className="btn btn-primary"
+              style={{ minHeight: "36px", padding: "0 14px" }}
+            >
+              Join Network
             </Link>
           </>
         )}
