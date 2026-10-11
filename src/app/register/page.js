@@ -17,13 +17,13 @@ const PERSONAS = [
   {
     id: "STAFF",
     title: "Active Flight & Ground Staff",
-    subtitle: "Pilots, cabin crew, engineers, ops",
+    subtitle: "Pilots, cabin crew, engineers, operations",
     icon: "flight",
     tag: "Active Crew",
   },
   {
     id: "FORMER_STAFF",
-    title: "Former Employee / Retiree",
+    title: "Former Staff / Retiree",
     subtitle: "Alumni network & institutional advisors",
     icon: "star",
     tag: "Advisory",
@@ -31,7 +31,7 @@ const PERSONAS = [
   {
     id: "FREQUENT_FLYER",
     title: "Frequent Flyer",
-    subtitle: "Asante Rewards & executive travelers",
+    subtitle: "Asante Rewards & executive passengers",
     icon: "shield",
     tag: "Asante Elite",
   },
@@ -99,21 +99,17 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden dynamic-mesh-bg text-[#182231] flex flex-col justify-between relative">
-      {/* Dynamic Ambient Background Orbs */}
-      <div className="ambient-orb-primary" />
-      <div className="ambient-orb-secondary" />
-
+    <div className="min-h-screen w-full bg-[#071626] text-slate-100 flex flex-col justify-between">
       {/* Top Brand Bar */}
-      <header className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between">
-        <KQLogo />
+      <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
+        <KQLogo light />
         <div className="flex items-center gap-3">
-          <span className="hidden sm:inline-block text-xs font-semibold text-gray-300">
+          <span className="hidden sm:inline-block text-xs font-medium text-slate-400">
             Already registered?
           </span>
           <Link
             href="/login"
-            className="btn btn-secondary text-xs px-4 py-2 border-white/20 bg-white/10 text-white hover:bg-white hover:text-[#0e2740] transition backdrop-blur-sm"
+            className="btn btn-secondary text-xs px-4 py-2 border-slate-700 bg-slate-800 text-white hover:bg-slate-700 transition"
           >
             Sign In
           </Link>
@@ -121,31 +117,31 @@ export default function RegisterPage() {
       </header>
 
       {/* Main Content Area */}
-      <main className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 my-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
-          {/* Left Column: Value Proposition & Onboarding Guide */}
-          <section className="lg:col-span-5 text-white space-y-5 lg:pt-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs text-[#e5b842] font-semibold tracking-wide">
-              <span className="w-2 h-2 rounded-full bg-[#1b8755]" />
+      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 my-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+          {/* Left Column */}
+          <section className="lg:col-span-5 text-white space-y-5 lg:pt-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-white/10 text-[#c59b27] text-xs font-bold tracking-wider uppercase">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
               JOIN KENYA AIRWAYS PRIDECONNECT
             </div>
 
-            <h1 className="font-['Fraunces',serif] text-3xl sm:text-4xl lg:text-5xl font-normal leading-[1.12] text-white tracking-tight">
-              Elevate Your Career with the{" "}
-              <span className="text-[#e5b842] block sm:inline">Wings of Africa.</span>
+            <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight">
+              Elevate Your Aviation Career with the{" "}
+              <span className="text-[#c8102e]">Pride of Africa.</span>
             </h1>
 
-            <p className="text-gray-300 text-sm leading-relaxed">
-              Create your verified profile to get matched with experienced mentors, discover aviation opportunities, and build peer networks across Kenya Airways stations.
+            <p className="text-slate-300 text-sm leading-relaxed">
+              Create your verified profile to connect with experienced mentors, explore aviation opportunities, and build relationships across Kenya Airways stations.
             </p>
 
-            {/* Checklist of Member Privileges with SVG Icons */}
-            <div className="space-y-3 pt-3 border-t border-white/15">
+            {/* Checklist */}
+            <div className="space-y-3 pt-3 border-t border-slate-800">
               {[
                 {
                   icon: "sparkles",
-                  title: "AI-Powered Hybrid Matching",
-                  desc: "Algorithms evaluate shared skills, aircraft types, and career goals.",
+                  title: "Hybrid Recommendation Matching",
+                  desc: "Algorithms evaluate shared skills, fleet types, and career goals.",
                 },
                 {
                   icon: "flight",
@@ -154,41 +150,41 @@ export default function RegisterPage() {
                 },
                 {
                   icon: "academic",
-                  title: "Pride Centre Masterclasses & Events",
-                  desc: "Access verified webinars, cadet workshops, and job openings.",
+                  title: "Pride Centre Events & Masterclasses",
+                  desc: "Access verified industry workshops, cadet sessions, and job openings.",
                 },
               ].map((item, idx) => (
-                <div key={idx} className="flex items-start gap-3 text-xs text-gray-300">
-                  <div className="w-6 h-6 rounded-full bg-[#1b8755]/20 text-[#1b8755] border border-[#1b8755]/40 flex items-center justify-center shrink-0 mt-0.5">
+                <div key={idx} className="flex items-start gap-3 text-xs text-slate-300">
+                  <div className="w-6 h-6 rounded bg-slate-900 border border-slate-800 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                     <Icon name={item.icon} size={13} />
                   </div>
                   <div>
-                    <b className="text-white block">{item.title}</b>
-                    <span className="text-gray-400 text-[11px]">{item.desc}</span>
+                    <b className="text-white block font-semibold">{item.title}</b>
+                    <span className="text-slate-400 text-xs">{item.desc}</span>
                   </div>
                 </div>
               ))}
             </div>
           </section>
 
-          {/* Right Column: Comprehensive Registration Card */}
+          {/* Right Column */}
           <section className="lg:col-span-7 w-full max-w-2xl mx-auto">
-            <div className="glass-panel p-5 sm:p-8 rounded-2xl shadow-2xl relative">
+            <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-slate-200 text-slate-900">
               {submitted ? (
-                /* Post-Submission Verification Screen */
+                /* Post-Submission Screen */
                 <div className="text-center py-6 space-y-4">
-                  <div className="w-14 h-14 bg-green-50 text-[#1b8755] border border-green-200 rounded-full flex items-center justify-center mx-auto mb-2 animate-bounce">
+                  <div className="w-14 h-14 bg-emerald-50 text-emerald-700 rounded-full flex items-center justify-center mx-auto mb-2">
                     <Icon name="shield" size={28} />
                   </div>
-                  <h2 className="text-2xl font-bold font-['Fraunces',serif] text-[#0e2740]">
+                  <h2 className="text-2xl font-bold text-slate-900">
                     Verify Your Email Address
                   </h2>
-                  <p className="text-sm text-gray-600 max-w-md mx-auto">
+                  <p className="text-sm text-slate-600 max-w-md mx-auto">
                     We sent a secure activation link to <b>{form.email}</b>. Please check your inbox to confirm your Kenya Airways stakeholder registration.
                   </p>
-                  <div className="p-3 bg-[#fbf9f5] border border-[#dce0e3] rounded-xl text-xs text-gray-500 max-w-md mx-auto text-left">
-                    <b className="text-gray-700 block mb-1">Developer &amp; Testing Note:</b>
-                    If testing locally without live SMTP mail, the activation link is also printed directly in your dev server terminal.
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 max-w-md mx-auto text-left">
+                    <b className="text-slate-800 block mb-1">Developer Testing Note:</b>
+                    If testing locally without live SMTP credentials, the activation link is also printed in your dev server terminal.
                   </div>
                   <div className="pt-2">
                     <Link href="/login" className="btn btn-primary px-8">
@@ -197,36 +193,36 @@ export default function RegisterPage() {
                   </div>
                 </div>
               ) : (
-                /* Registration Form */
+                /* Form */
                 <>
-                  <div className="flex items-center justify-between pb-4 border-b border-[#dce0e3]">
+                  <div className="flex items-center justify-between pb-4 border-b border-slate-200">
                     <div>
-                      <div className="text-[10px] uppercase font-bold tracking-widest text-[#bb162b]">
-                        New Stakeholder Enrollment
+                      <div className="text-xs uppercase font-bold tracking-wider text-[#c8102e]">
+                        Stakeholder Enrollment
                       </div>
-                      <h2 className="text-xl sm:text-2xl font-bold font-['Fraunces',serif] text-[#0e2740] mt-0.5">
+                      <h2 className="text-xl font-bold text-slate-900 mt-0.5">
                         Create Your Account
                       </h2>
                     </div>
-                    <div className="flex bg-[#f2f1ed] p-1 rounded-lg text-xs font-semibold">
+                    <div className="flex bg-slate-100 p-1 rounded-md text-xs font-semibold">
                       <Link
                         href="/login"
-                        className="px-3 py-1 rounded-md text-gray-600 hover:text-[#bb162b] transition"
+                        className="px-3 py-1 rounded text-slate-600 hover:text-[#c8102e] transition"
                       >
                         Sign In
                       </Link>
-                      <button className="px-3 py-1 rounded-md bg-white text-[#0e2740] shadow-sm">
+                      <span className="px-3 py-1 rounded bg-white text-slate-900 shadow-xs">
                         Register
-                      </button>
+                      </span>
                     </div>
                   </div>
 
-                  {/* Google One-Click OAuth Button */}
+                  {/* Google OAuth Button */}
                   <div className="mt-4">
                     <button
                       type="button"
                       onClick={() => signIn("google", { callbackUrl: "/recommendations" })}
-                      className="w-full py-2.5 px-4 bg-white hover:bg-gray-50 border border-[#dce0e3] rounded-xl text-xs font-bold text-gray-700 flex items-center justify-center gap-2.5 transition shadow-sm hover:border-gray-400"
+                      className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-xs font-semibold text-slate-700 flex items-center justify-center gap-2.5 transition cursor-pointer"
                     >
                       <GoogleIcon size={18} />
                       <span>Sign up with Google</span>
@@ -235,17 +231,24 @@ export default function RegisterPage() {
 
                   {/* Divider */}
                   <div className="flex items-center gap-3 my-4">
-                    <div className="flex-1 h-px bg-gray-200" />
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                      or register with credentials
+                    <div className="flex-1 h-px bg-slate-200" />
+                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                      or register with email
                     </span>
-                    <div className="flex-1 h-px bg-gray-200" />
+                    <div className="flex-1 h-px bg-slate-200" />
                   </div>
 
+                  {error && (
+                    <div className="p-2.5 bg-red-50 border border-red-200 text-[#c8102e] text-xs rounded-md mb-3 flex items-center gap-2">
+                      <Icon name="close" size={16} />
+                      <span>{error}</span>
+                    </div>
+                  )}
+
                   <form onSubmit={handleSubmit} className="space-y-3.5">
-                    {/* Persona Selector (4 Cards with wrap, no truncation) */}
+                    {/* Persona Selector */}
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">
+                      <label className="block text-xs font-semibold text-slate-700 mb-2">
                         Step 1: Choose Your Stakeholder Persona
                       </label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -256,35 +259,35 @@ export default function RegisterPage() {
                               key={p.id}
                               type="button"
                               onClick={() => handleRoleSelect(p.id)}
-                              className={`p-3 rounded-xl text-left flex items-start gap-2.5 transition border ${
+                              className={`p-2.5 rounded-lg text-left flex items-start gap-2.5 transition border cursor-pointer ${
                                 isSelected
-                                  ? "border-[#bb162b] bg-[#fff8f8] shadow-sm ring-1 ring-[#bb162b]"
-                                  : "bg-[#fbf9f5] border-[#dce0e3] hover:border-gray-400"
+                                  ? "border-[#c8102e] bg-red-50/50 shadow-xs ring-1 ring-[#c8102e]"
+                                  : "bg-slate-50 border-slate-200 hover:border-slate-300"
                               }`}
                             >
                               <div
-                                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                className={`w-7 h-7 rounded flex items-center justify-center shrink-0 ${
                                   isSelected
-                                    ? "bg-[#bb162b] text-white"
-                                    : "bg-white text-gray-600 border border-[#dce0e3]"
+                                    ? "bg-[#c8102e] text-white"
+                                    : "bg-white text-slate-600 border border-slate-200"
                                 }`}
                               >
-                                <Icon name={p.icon} size={15} />
+                                <Icon name={p.icon} size={14} />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-1">
                                   <b
                                     className={`text-xs ${
-                                      isSelected ? "text-[#bb162b]" : "text-[#0e2740]"
+                                      isSelected ? "text-[#c8102e]" : "text-slate-900"
                                     }`}
                                   >
                                     {p.title}
                                   </b>
-                                  <span className="text-[9px] uppercase font-bold text-gray-400 shrink-0">
+                                  <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">
                                     {p.tag}
                                   </span>
                                 </div>
-                                <p className="text-[10px] text-gray-500 mt-0.5 leading-snug">
+                                <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
                                   {p.subtitle}
                                 </p>
                               </div>
@@ -297,7 +300,7 @@ export default function RegisterPage() {
                     {/* Basic Info Fields */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
                           Full Name
                         </label>
                         <input
@@ -305,13 +308,13 @@ export default function RegisterPage() {
                           placeholder="e.g. Edwin Kamau"
                           value={form.fullName}
                           onChange={handleChange}
-                          className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#bb162b] focus:ring-1 focus:ring-[#bb162b] transition"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#c8102e] transition text-slate-900"
                           required
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
                           Official or Personal Email
                         </label>
                         <input
@@ -320,7 +323,7 @@ export default function RegisterPage() {
                           placeholder="you@kenya-airways.com"
                           value={form.email}
                           onChange={handleChange}
-                          className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#bb162b] focus:ring-1 focus:ring-[#bb162b] transition"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#c8102e] transition text-slate-900"
                           required
                         />
                       </div>
@@ -329,13 +332,13 @@ export default function RegisterPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider">
-                            Account Password
+                          <label className="block text-xs font-semibold text-slate-700">
+                            Password
                           </label>
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="text-xs text-gray-500 hover:text-[#bb162b] flex items-center gap-1 font-medium"
+                            className="text-xs text-slate-500 hover:text-[#c8102e] flex items-center gap-1 font-medium cursor-pointer"
                           >
                             <Icon name="eye" size={12} />
                             {showPassword ? "Hide" : "Show"}
@@ -347,50 +350,48 @@ export default function RegisterPage() {
                           placeholder="Minimum 8 characters"
                           value={form.password}
                           onChange={handleChange}
-                          className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#bb162b] focus:ring-1 focus:ring-[#bb162b] transition"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#c8102e] transition text-slate-900"
                           required
                           minLength={6}
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
                           Staff ID / Student Reg{" "}
-                          <span className="text-gray-400 font-normal lowercase">(optional)</span>
+                          <span className="text-slate-400 font-normal">(optional)</span>
                         </label>
                         <input
                           name="identifier"
                           placeholder="e.g. KQ-10294 or PC-2024"
                           value={form.identifier}
                           onChange={handleChange}
-                          className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#bb162b] focus:ring-1 focus:ring-[#bb162b] transition"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#c8102e] transition text-slate-900"
                         />
                       </div>
                     </div>
 
                     {/* Privacy & Consent */}
                     <div className="pt-1">
-                      <label className="flex items-start gap-2.5 cursor-pointer select-none text-xs text-gray-600">
+                      <label className="flex items-start gap-2.5 cursor-pointer select-none text-xs text-slate-600">
                         <input
                           type="checkbox"
                           checked={consent}
                           onChange={(e) => setConsent(e.target.checked)}
-                          className="accent-[#bb162b] rounded mt-0.5"
+                          className="accent-[#c8102e] rounded mt-0.5"
                         />
                         <span>
-                          <b>I agree to the Kenya Airways PrideConnect Community Charter</b> and consent to explainable recommendation matching and mutual contact verification.
+                          <b>I agree to the Kenya Airways PrideConnect Charter</b> and consent to explainable recommendation matching.
                         </span>
                       </label>
                     </div>
 
-                    {/* Submit CTA */}
                     <Button
                       type="submit"
-                      className="w-full py-3 text-sm font-bold shadow-md mt-2"
+                      className="w-full py-2.5 text-sm font-bold mt-2"
                       disabled={loading}
-                      icon="arrow"
                     >
-                      {loading ? "Creating Stakeholder Account..." : "Complete Registration & Get Matched"}
+                      {loading ? "Creating Stakeholder Account..." : "Complete Registration"}
                     </Button>
                   </form>
                 </>
@@ -401,7 +402,7 @@ export default function RegisterPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 text-center text-xs text-gray-400 border-t border-white/10 mt-auto">
+      <footer className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 text-center text-xs text-slate-500 border-t border-slate-800">
         Kenya Airways PrideConnect · Intelligent Stakeholder Matching Framework · Strathmore University Research
       </footer>
     </div>

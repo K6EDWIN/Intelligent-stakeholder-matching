@@ -17,7 +17,7 @@ const ROLE_LABELS = {
 };
 
 const ROLE_OPTIONS = [
-  { value: "", label: "All Roles" },
+  { value: "", label: "All Stakeholder Roles" },
   { value: "STAFF", label: "Active Staff & Flight Crew" },
   { value: "ALUMNI", label: "Pride Centre Alumni" },
   { value: "FORMER_STAFF", label: "Former Employees" },
@@ -91,11 +91,16 @@ export default function DirectoryPage() {
   if (status === "loading" || loading) {
     return (
       <KQAppShell>
-        <div className="app-page">
-          <div className="p-12 text-center text-gray-500 font-medium">
-            <Icon name="directory" size={28} className="mx-auto mb-3 text-[#bb162b] animate-spin" />
-            Loading Kenya Airways stakeholder directory...
+        <div className="max-w-7xl mx-auto px-6 py-24 text-center">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-slate-100 text-[#0e2740] flex items-center justify-center">
+            <Icon name="directory" size={24} />
           </div>
+          <h2 className="text-xl font-bold text-slate-800">
+            Loading Stakeholder Directory...
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">
+            Accessing verified Kenya Airways community member records.
+          </p>
         </div>
       </KQAppShell>
     );
@@ -103,108 +108,162 @@ export default function DirectoryPage() {
 
   return (
     <KQAppShell>
-      <div className="app-page">
-        {/* Title */}
-        <div className="page-title">
+      <div className="app-page space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
           <div>
-            <div className="eyebrow">GLOBAL COMMUNITY</div>
-            <h1>Stakeholder Directory</h1>
-            <p>Browse verified Kenya Airways mentors, alumni, active crew, and industry leaders.</p>
+            <div className="text-xs font-bold uppercase tracking-wider text-[#c8102e] mb-1">
+              Global Aviation Network
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              Stakeholder Directory
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Browse verified Kenya Airways mentors, alumni, active crew, and technical specialists.
+            </p>
           </div>
           <Button icon="sparkles" onClick={() => router.push("/recommendations")}>
-            View AI Matches
+            View Smart Matches
           </Button>
         </div>
 
-        {/* Search & Filters */}
-        <div className="toolbar flex-wrap">
-          <label>
-            <Icon name="search" />
-            <input
-              placeholder="Search by name, department, or keyword..."
-              value={filters.q}
-              onChange={(e) => handleFilterChange("q", e.target.value)}
-            />
-          </label>
+        {/* Search & Filters Toolbar */}
+        <div className="card p-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
+            {/* Search Input */}
+            <div className="lg:col-span-5 relative">
+              <Icon
+                name="search"
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                placeholder="Search by name, department, or keyword..."
+                value={filters.q}
+                onChange={(e) => handleFilterChange("q", e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] focus:bg-white transition text-slate-800"
+              />
+            </div>
 
-          <select
-            value={filters.role}
-            onChange={(e) => handleFilterChange("role", e.target.value)}
-          >
-            {ROLE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+            {/* Role Filter */}
+            <div className="lg:col-span-3">
+              <select
+                value={filters.role}
+                onChange={(e) => handleFilterChange("role", e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] text-slate-700"
+              >
+                {ROLE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <select
-            value={filters.skill}
-            onChange={(e) => handleFilterChange("skill", e.target.value)}
-          >
-            <option value="">All Skills</option>
-            {(meta.skills || []).map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
+            {/* Skill Filter */}
+            <div className="lg:col-span-2">
+              <select
+                value={filters.skill}
+                onChange={(e) => handleFilterChange("skill", e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] text-slate-700"
+              >
+                <option value="">All Skills</option>
+                {(meta.skills || []).map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <select
-            value={filters.interest}
-            onChange={(e) => handleFilterChange("interest", e.target.value)}
-          >
-            <option value="">All Aviation Interests</option>
-            {(meta.interests || []).map((i) => (
-              <option key={i.id} value={i.id}>
-                {i.name}
-              </option>
-            ))}
-          </select>
+            {/* Interest Filter */}
+            <div className="lg:col-span-2">
+              <select
+                value={filters.interest}
+                onChange={(e) => handleFilterChange("interest", e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] text-slate-700"
+              >
+                <option value="">All Domains</option>
+                {(meta.interests || []).map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
+            <span>
+              Showing <b>{profiles.length}</b> verified stakeholders
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setFilters({ role: "", skill: "", interest: "", q: "" })
+              }
+              className="text-[#c8102e] font-semibold hover:underline cursor-pointer"
+            >
+              Reset Filters
+            </button>
+          </div>
         </div>
 
-        {/* Results Bar */}
-        <div className="results-bar">
-          <span>
-            <b>{profiles.length} verified stakeholders</b> found
-          </span>
-          <span>
-            Sorted by <b>Name (A–Z)</b> <Icon name="chevron" size={14} />
-          </span>
-        </div>
-
-        {/* Profiles Grid */}
+        {/* Directory Grid */}
         {profiles.length === 0 ? (
-          <div className="p-12 text-center bg-white border border-[#dce0e3] rounded-lg text-gray-500">
-            No stakeholders match your filter criteria. Try resetting filters.
+          <div className="card p-12 text-center text-slate-500 space-y-2">
+            <div className="w-12 h-12 mx-auto rounded-full bg-slate-100 text-slate-400 flex items-center justify-center">
+              <Icon name="search" size={22} />
+            </div>
+            <h3 className="font-bold text-slate-800 text-base">No Stakeholders Found</h3>
+            <p className="text-sm text-slate-500 max-w-sm mx-auto">
+              No profiles matched your filter criteria. Try clearing the search query or domain filters.
+            </p>
           </div>
         ) : (
-          <div className="matches-grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {profiles.map((p) => (
-              <article className="match-card" key={p.userId}>
-                <div className="p-5 flex items-start gap-4 border-b border-[#dce0e3] bg-white">
-                  <Avatar name={p.fullName} size="lg" />
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-bold text-[#bb162b] uppercase tracking-wider block">
+              <article key={p.userId} className="card p-5 flex flex-col justify-between space-y-4">
+                <div>
+                  {/* Card Top: Role Tag */}
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
                       {ROLE_LABELS[p.role] || p.role}
                     </span>
-                    <h3 className="text-lg font-bold text-[#0e2740] truncate">
-                      {p.fullName}
-                    </h3>
-                    <p className="text-xs text-gray-500 truncate">
-                      {p.department || "Kenya Airways Member"}
-                    </p>
+                    <span className="text-[11px] font-medium text-slate-400">
+                      Verified Member
+                    </span>
                   </div>
-                </div>
 
-                <div className="match-content">
+                  {/* Identity */}
+                  <div className="flex items-start gap-3 mt-3">
+                    <Avatar name={p.fullName} size="lg" role={p.role} />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-bold text-slate-900 truncate">
+                        {p.fullName}
+                      </h3>
+                      <p className="text-xs text-slate-500 truncate mt-0.5">
+                        {p.department || "Kenya Airways Community Member"}
+                      </p>
+                      <span className="inline-block mt-1 text-xs font-medium text-[#c8102e]">
+                        {p.mentorshipRole === "MENTOR"
+                          ? "Available Mentor"
+                          : p.mentorshipRole === "MENTEE"
+                          ? "Seeking Mentorship"
+                          : "Open to Connect"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bio */}
                   {p.bio && (
-                    <p className="text-xs text-gray-600 line-clamp-2 mb-3">
+                    <p className="text-xs text-slate-600 line-clamp-2 mt-3 leading-relaxed">
                       &quot;{p.bio}&quot;
                     </p>
                   )}
 
-                  <div className="tags mb-3">
+                  {/* Skills & Interests Tags */}
+                  <div className="mt-4 flex flex-wrap gap-1.5">
                     {(p.skills || []).slice(0, 3).map((skill) => (
                       <Tag key={skill}>{skill}</Tag>
                     ))}
@@ -214,13 +273,14 @@ export default function DirectoryPage() {
                       </Tag>
                     ))}
                   </div>
+                </div>
 
-                  <div className="mt-auto pt-3 border-t border-[#dce0e3]">
-                    <RequestActions
-                      receiverId={p.userId}
-                      mentorshipRole={p.mentorshipRole}
-                    />
-                  </div>
+                {/* Actions */}
+                <div className="pt-3 border-t border-slate-100">
+                  <RequestActions
+                    receiverId={p.userId}
+                    mentorshipRole={p.mentorshipRole}
+                  />
                 </div>
               </article>
             ))}

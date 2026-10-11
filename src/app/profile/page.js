@@ -146,30 +146,30 @@ export default function ProfilePage() {
     <KQAppShell>
       <div className="app-page max-w-5xl">
         {/* Profile Header */}
-        <div className="bg-white border border-[#dce0e3] rounded-2xl overflow-hidden shadow-sm mb-8">
-          <div className="h-32 bg-gradient-to-r from-[#0e2740] via-[#31576f] to-[#bb162b] relative">
-            <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div className="card overflow-hidden mb-8">
+          <div className="h-28 bg-gradient-to-r from-[#071626] via-[#0e2740] to-[#1e3a5f] relative">
+            <div className="absolute inset-0 opacity-15 pointer-events-none">
               <svg className="w-full h-full" viewBox="0 0 500 150" fill="none">
                 <path d="M10 120 C150 40 350 140 490 20" stroke="#fff" strokeWidth="1.5" strokeDasharray="6 6" />
               </svg>
             </div>
           </div>
-          <div className="px-8 pb-6 pt-0 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 -mt-12 relative z-10">
+          <div className="px-6 sm:px-8 pb-6 pt-0 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 -mt-10 relative z-10">
             <div className="flex items-end gap-4">
-              <div className="border-4 border-white rounded-full shadow-md bg-white">
+              <div className="border-4 border-white rounded-full shadow-sm bg-white">
                 <Avatar name={form.fullName || session?.user?.email} size="xl" />
               </div>
               <div className="mb-1">
-                <h1 className="text-2xl font-bold font-['Fraunces',serif] text-[#0e2740]">
+                <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
                   {form.fullName || "Your Profile"}
                 </h1>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-slate-500 mt-0.5">
                   {form.department || "Kenya Airways Stakeholder"} · {session?.user?.email}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#eff6f2] border border-[#cde1d6] text-[#1b8755] text-xs font-semibold">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
                 <Icon name="shield" size={13} />
                 Verified Member
               </span>
@@ -178,44 +178,44 @@ export default function ProfilePage() {
         </div>
 
         {/* Form Grid */}
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {message && (
-            <div className="p-3 bg-green-50 border border-green-200 text-[#1b8755] text-xs rounded-xl flex items-center gap-2">
+            <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
               <Icon name="check" size={16} />
-              <span>{message}</span>
+              <span className="font-medium">{message}</span>
             </div>
           )}
 
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-[#bb162b] text-xs rounded-xl flex items-center gap-2">
+            <div className="p-3.5 bg-red-50 border border-red-200 text-red-800 text-xs rounded-xl flex items-center gap-2">
               <Icon name="close" size={16} />
-              <span>{error}</span>
+              <span className="font-medium">{error}</span>
             </div>
           )}
 
           {/* Section 1: Core Details */}
-          <section className="bg-white border border-[#dce0e3] rounded-2xl p-6 sm:p-8 shadow-sm">
-            <h2 className="text-base font-bold text-[#0e2740] pb-3 border-b border-[#dce0e3] mb-5 flex items-center gap-2">
-              <Icon name="profile" size={16} className="text-[#bb162b]" />
+          <section className="card p-6 sm:p-8 space-y-5">
+            <h2 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
+              <Icon name="profile" size={16} className="text-[#c8102e]" />
               Personal &amp; Department Information
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Full Name
                 </label>
                 <input
                   name="fullName"
                   value={form.fullName}
                   onChange={handleChange}
-                  className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:bg-white focus:border-[#bb162b] transition"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e] transition"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Aviation Department / Unit
                 </label>
                 <input
@@ -223,12 +223,12 @@ export default function ProfilePage() {
                   placeholder="e.g. Flight Operations, In-flight, Ground Ops, Cargo"
                   value={form.department}
                   onChange={handleChange}
-                  className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:bg-white focus:border-[#bb162b] transition"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e] transition"
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Bio / Overview
                 </label>
                 <textarea
@@ -236,7 +236,7 @@ export default function ProfilePage() {
                   placeholder="Brief summary of your background, experience at Kenya Airways or Pride Centre..."
                   value={form.bio}
                   onChange={handleChange}
-                  className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:bg-white focus:border-[#bb162b] transition"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e] transition"
                   rows={3}
                 />
               </div>
@@ -244,22 +244,22 @@ export default function ProfilePage() {
           </section>
 
           {/* Section 2: Mentorship Settings */}
-          <section className="bg-white border border-[#dce0e3] rounded-2xl p-6 sm:p-8 shadow-sm">
-            <h2 className="text-base font-bold text-[#0e2740] pb-3 border-b border-[#dce0e3] mb-5 flex items-center gap-2">
+          <section className="card p-6 sm:p-8 space-y-5">
+            <h2 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
               <Icon name="sparkles" size={16} className="text-[#c59b27]" />
               Mentorship Participation &amp; Career Trajectory
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Mentorship Role
                 </label>
                 <select
                   name="mentorshipRole"
                   value={form.mentorshipRole}
                   onChange={handleChange}
-                  className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:bg-white focus:border-[#bb162b] transition"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e] transition"
                 >
                   {ROLE_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -270,7 +270,7 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Mentorship Availability
                 </label>
                 <input
@@ -278,26 +278,26 @@ export default function ProfilePage() {
                   placeholder="e.g. 2 hours/month, Flexible, Weekday mornings"
                   value={form.availability}
                   onChange={handleChange}
-                  className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:bg-white focus:border-[#bb162b] transition"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e] transition"
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Career Goals &amp; Objectives
                 </label>
                 <textarea
                   name="careerGoals"
-                  placeholder="What professional milestones are you working towards? (Powers AI match ranking)"
+                  placeholder="What professional milestones are you working towards? (Informs stakeholder matching)"
                   value={form.careerGoals}
                   onChange={handleChange}
-                  className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:bg-white focus:border-[#bb162b] transition"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e] transition"
                   rows={2}
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Specific Mentorship Needs
                 </label>
                 <textarea
@@ -305,7 +305,7 @@ export default function ProfilePage() {
                   placeholder="What areas or skills do you hope to receive guidance on?"
                   value={form.mentorshipNeeds}
                   onChange={handleChange}
-                  className="w-full bg-[#fbf9f5] border border-[#dce0e3] rounded-lg px-3.5 py-2.5 text-sm outline-none focus:bg-white focus:border-[#bb162b] transition"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e] transition"
                   rows={2}
                 />
               </div>
@@ -313,18 +313,18 @@ export default function ProfilePage() {
           </section>
 
           {/* Section 3: Skills & Taxonomy */}
-          <section className="bg-white border border-[#dce0e3] rounded-2xl p-6 sm:p-8 shadow-sm">
-            <h2 className="text-base font-bold text-[#0e2740] pb-3 border-b border-[#dce0e3] mb-5 flex items-center gap-2">
-              <Icon name="academic" size={16} className="text-[#1b8755]" />
-              Skills &amp; Interests (Vector Recommender Inputs)
+          <section className="card p-6 sm:p-8 space-y-5">
+            <h2 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
+              <Icon name="academic" size={16} className="text-emerald-700" />
+              Skills &amp; Interests (Profile Competencies)
             </h2>
 
             <div className="space-y-6">
               <div>
-                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
                   Technical &amp; Operational Skills ({form.skillIds.length} selected)
                 </label>
-                <div className="flex flex-wrap gap-2 max-h-56 overflow-y-auto p-2 border border-[#dce0e3] rounded-xl bg-[#fbf9f5]">
+                <div className="flex flex-wrap gap-2 max-h-56 overflow-y-auto p-3 border border-slate-200 rounded-xl bg-slate-50">
                   {(meta.skills || []).map((skill) => {
                     const isSelected = form.skillIds.includes(skill.id);
                     return (
@@ -332,10 +332,10 @@ export default function ProfilePage() {
                         key={skill.id}
                         type="button"
                         onClick={() => toggleId("skillIds", skill.id)}
-                        className={`text-xs px-3 py-1.5 rounded-full font-medium transition border flex items-center gap-1.5 ${
+                        className={`text-xs px-3 py-1.5 rounded-lg font-medium transition border flex items-center gap-1.5 ${
                           isSelected
-                            ? "bg-[#bb162b] text-white border-[#bb162b] shadow-xs"
-                            : "bg-white text-gray-700 border-[#dce0e3] hover:border-gray-400"
+                            ? "bg-[#c8102e] text-white border-[#c8102e] shadow-xs"
+                            : "bg-white text-slate-700 border-slate-300 hover:border-slate-400"
                         }`}
                       >
                         {isSelected && <Icon name="check" size={12} />}
@@ -347,10 +347,10 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-2">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">
                   Aviation &amp; Professional Interests ({form.interestIds.length} selected)
                 </label>
-                <div className="flex flex-wrap gap-2 max-h-56 overflow-y-auto p-2 border border-[#dce0e3] rounded-xl bg-[#fbf9f5]">
+                <div className="flex flex-wrap gap-2 max-h-56 overflow-y-auto p-3 border border-slate-200 rounded-xl bg-slate-50">
                   {(meta.interests || []).map((interest) => {
                     const isSelected = form.interestIds.includes(interest.id);
                     return (
@@ -358,10 +358,10 @@ export default function ProfilePage() {
                         key={interest.id}
                         type="button"
                         onClick={() => toggleId("interestIds", interest.id)}
-                        className={`text-xs px-3 py-1.5 rounded-full font-medium transition border flex items-center gap-1.5 ${
+                        className={`text-xs px-3 py-1.5 rounded-lg font-medium transition border flex items-center gap-1.5 ${
                           isSelected
-                            ? "bg-[#c59b27] text-white border-[#c59b27] shadow-xs"
-                            : "bg-white text-gray-700 border-[#dce0e3] hover:border-gray-400"
+                            ? "bg-[#0e2740] text-white border-[#0e2740] shadow-xs"
+                            : "bg-white text-slate-700 border-slate-300 hover:border-slate-400"
                         }`}
                       >
                         {isSelected && <Icon name="check" size={12} />}
@@ -373,16 +373,16 @@ export default function ProfilePage() {
               </div>
 
               <div className="pt-2">
-                <label className="flex items-center gap-2.5 text-xs text-gray-700 cursor-pointer">
+                <label className="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.isPublic}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, isPublic: e.target.checked }))
                     }
-                    className="accent-[#bb162b] rounded"
+                    className="accent-[#c8102e] rounded"
                   />
-                  <span>Make my profile publicly discoverable in the Kenya Airways Member Directory</span>
+                  <span>Make my profile publicly discoverable in the Kenya Airways Stakeholder Directory</span>
                 </label>
               </div>
             </div>
@@ -393,10 +393,10 @@ export default function ProfilePage() {
             <Button
               type="submit"
               disabled={saving}
-              className="px-8 py-3 text-sm font-bold shadow-md"
+              className="px-6 py-2.5 text-sm font-semibold shadow-sm"
               icon="arrow"
             >
-              {saving ? "Saving Profile..." : "Save & Update Matching Vectors"}
+              {saving ? "Saving..." : "Save Profile"}
             </Button>
           </div>
         </form>

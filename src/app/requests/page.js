@@ -129,7 +129,7 @@ export default function RequestsPage() {
           setRatingTarget(null);
           setFeedbackSuccess(false);
           setFeedbackComment("");
-        }, 1800);
+        }, 1600);
       } else {
         const data = await res.json();
         alert(data.error || "Could not save rating");
@@ -176,12 +176,12 @@ export default function RequestsPage() {
   if (status === "loading" || loading) {
     return (
       <KQAppShell>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[#bb162b]/10 text-[#bb162b] flex items-center justify-center animate-pulse">
-            <Icon name="requests" size={32} />
+        <div className="max-w-7xl mx-auto px-6 py-24 text-center">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-slate-100 text-[#0e2740] flex items-center justify-center">
+            <Icon name="requests" size={24} />
           </div>
-          <h2 className="text-xl font-bold font-['Fraunces',serif] text-[#0e2740]">
-            Loading Your Network Requests...
+          <h2 className="text-xl font-bold text-slate-800">
+            Loading Network Requests...
           </h2>
         </div>
       </KQAppShell>
@@ -190,19 +190,18 @@ export default function RequestsPage() {
 
   return (
     <KQAppShell>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="app-page space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#dce0e3]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#bb162b]/10 text-[#bb162b] text-[10px] font-bold uppercase tracking-wider mb-2">
-              <Icon name="requests" size={13} />
+            <div className="text-xs font-bold uppercase tracking-wider text-[#c8102e] mb-1">
               Mentorship &amp; Connections Hub
             </div>
-            <h1 className="font-['Fraunces',serif] text-3xl sm:text-4xl font-normal text-[#0e2740]">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
               Network Requests
             </h1>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1 max-w-xl">
-              Manage bilateral connection requests and track ongoing mentorship engagements across the Kenya Airways community.
+            <p className="text-sm text-slate-500 mt-1">
+              Manage incoming bilateral invitations and track active mentorship engagements.
             </p>
           </div>
 
@@ -211,21 +210,21 @@ export default function RequestsPage() {
           </Button>
         </div>
 
-        {/* Tab Pills */}
-        <div className="flex bg-white p-1.5 rounded-2xl border border-[#dce0e3] shadow-sm max-w-md">
+        {/* Tab Switcher */}
+        <div className="flex bg-slate-100 p-1 rounded-lg max-w-sm border border-slate-200">
           <button
             type="button"
             onClick={() => setActiveTab("pending")}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
+            className={`flex-1 py-1.5 px-3 rounded-md text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "pending"
-                ? "bg-[#bb162b] text-white shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-white text-slate-900 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
             <span>Pending</span>
             <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                activeTab === "pending" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
+              className={`px-1.5 py-0.2 rounded text-[11px] font-bold ${
+                activeTab === "pending" ? "bg-[#c8102e] text-white" : "bg-slate-200 text-slate-700"
               }`}
             >
               {pendingList.length}
@@ -235,16 +234,16 @@ export default function RequestsPage() {
           <button
             type="button"
             onClick={() => setActiveTab("sent")}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
+            className={`flex-1 py-1.5 px-3 rounded-md text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "sent"
-                ? "bg-[#bb162b] text-white shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-white text-slate-900 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
             <span>Sent</span>
             <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                activeTab === "sent" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
+              className={`px-1.5 py-0.2 rounded text-[11px] font-bold ${
+                activeTab === "sent" ? "bg-slate-800 text-white" : "bg-slate-200 text-slate-700"
               }`}
             >
               {sentList.length}
@@ -254,16 +253,16 @@ export default function RequestsPage() {
           <button
             type="button"
             onClick={() => setActiveTab("active")}
-            className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${
+            className={`flex-1 py-1.5 px-3 rounded-md text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === "active"
-                ? "bg-[#bb162b] text-white shadow-sm"
-                : "text-gray-600 hover:text-gray-900"
+                ? "bg-white text-slate-900 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
             }`}
           >
             <span>Active</span>
             <span
-              className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                activeTab === "active" ? "bg-white/20 text-white" : "bg-gray-100 text-gray-700"
+              className={`px-1.5 py-0.2 rounded text-[11px] font-bold ${
+                activeTab === "active" ? "bg-emerald-700 text-white" : "bg-slate-200 text-slate-700"
               }`}
             >
               {activeConnectionsList.length}
@@ -275,10 +274,10 @@ export default function RequestsPage() {
         {activeTab === "pending" && (
           <div className="space-y-4">
             {pendingList.length === 0 ? (
-              <div className="p-16 text-center bg-white border border-[#dce0e3] rounded-3xl shadow-sm text-gray-500 space-y-2">
-                <Icon name="check" size={32} className="mx-auto text-[#1b8755]" />
-                <h3 className="font-bold text-gray-800 text-base">You are all caught up!</h3>
-                <p className="text-xs text-gray-500 max-w-sm mx-auto">
+              <div className="card p-12 text-center text-slate-500 space-y-2">
+                <Icon name="check" size={28} className="mx-auto text-emerald-600" />
+                <h3 className="font-bold text-slate-800 text-base">You are all caught up!</h3>
+                <p className="text-sm text-slate-500 max-w-sm mx-auto">
                   No incoming mentorship requests pending your review at this time.
                 </p>
               </div>
@@ -292,42 +291,42 @@ export default function RequestsPage() {
                   return (
                     <div
                       key={req.id}
-                      className="bg-white border border-[#dce0e3] rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4 hover:border-gray-400 transition"
+                      className="card p-5 flex flex-col justify-between space-y-4"
                     >
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#fbf9f5] border border-gray-200 text-gray-600 uppercase tracking-wider">
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
                             {role}
                           </span>
-                          <span className="text-[11px] font-semibold text-gray-400">
+                          <span className="text-xs text-slate-400">
                             {new Date(req.createdAt).toLocaleDateString()}
                           </span>
                         </div>
 
                         <div className="flex items-start gap-3">
-                          <Avatar name={name} size="md" />
+                          <Avatar name={name} size="md" role={counterpart?.role} />
                           <div>
-                            <h3 className="font-['Fraunces',serif] text-base font-bold text-[#0e2740]">
+                            <h3 className="text-base font-bold text-slate-900">
                               {name}
                             </h3>
-                            <span className="text-xs text-[#bb162b] font-medium">
+                            <span className="text-xs text-[#c8102e] font-semibold">
                               {req.kind === "mentorship" ? "Mentorship Proposal" : "Networking Request"}
                             </span>
                           </div>
                         </div>
 
                         {req.message && (
-                          <div className="p-3 bg-[#fbf9f5] rounded-xl border border-gray-200 text-xs text-gray-700 italic leading-relaxed">
+                          <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-700 leading-relaxed italic">
                             &ldquo;{req.message}&rdquo;
                           </div>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
                         <button
                           type="button"
                           onClick={() => handleRespond(req.kind, req.id, "ACCEPTED")}
-                          className="flex-1 btn btn-primary text-xs py-2 rounded-xl flex items-center justify-center gap-1.5 shadow-sm"
+                          className="flex-1 btn btn-primary text-xs py-2 rounded-md"
                         >
                           <Icon name="check" size={14} />
                           <span>Accept Request</span>
@@ -335,7 +334,7 @@ export default function RequestsPage() {
                         <button
                           type="button"
                           onClick={() => handleRespond(req.kind, req.id, "DECLINED")}
-                          className="btn btn-secondary text-xs py-2 px-4 rounded-xl border-gray-300 text-gray-600 hover:bg-gray-50"
+                          className="btn btn-secondary text-xs py-2 px-4 rounded-md"
                         >
                           Decline
                         </button>
@@ -352,11 +351,11 @@ export default function RequestsPage() {
         {activeTab === "sent" && (
           <div className="space-y-4">
             {sentList.length === 0 ? (
-              <div className="p-16 text-center bg-white border border-[#dce0e3] rounded-3xl shadow-sm text-gray-500 space-y-2">
-                <Icon name="requests" size={32} className="mx-auto text-gray-400" />
-                <h3 className="font-bold text-gray-800 text-base">No Sent Requests</h3>
-                <p className="text-xs text-gray-500 max-w-sm mx-auto">
-                  Browse AI recommendations or the Member Directory to send your first connection invitation.
+              <div className="card p-12 text-center text-slate-500 space-y-2">
+                <Icon name="requests" size={28} className="mx-auto text-slate-400" />
+                <h3 className="font-bold text-slate-800 text-base">No Sent Requests</h3>
+                <p className="text-sm text-slate-500 max-w-sm mx-auto">
+                  Browse Smart Matches or the Member Directory to send your first connection invitation.
                 </p>
               </div>
             ) : (
@@ -369,17 +368,17 @@ export default function RequestsPage() {
                   return (
                     <div
                       key={req.id}
-                      className="bg-white border border-[#dce0e3] rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4"
+                      className="card p-5 flex flex-col justify-between space-y-4"
                     >
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#fbf9f5] border border-gray-200 text-gray-600 uppercase tracking-wider">
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                          <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
                             {role}
                           </span>
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            className={`text-xs font-semibold px-2 py-0.5 rounded ${
                               req.status === "ACCEPTED"
-                                ? "bg-emerald-50 text-[#1b8755] border border-emerald-200"
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                 : req.status === "DECLINED"
                                 ? "bg-red-50 text-red-600 border border-red-200"
                                 : "bg-amber-50 text-amber-700 border border-amber-200"
@@ -390,19 +389,19 @@ export default function RequestsPage() {
                         </div>
 
                         <div className="flex items-start gap-3">
-                          <Avatar name={name} size="md" />
+                          <Avatar name={name} size="md" role={counterpart?.role} />
                           <div>
-                            <h3 className="font-['Fraunces',serif] text-base font-bold text-[#0e2740]">
+                            <h3 className="text-base font-bold text-slate-900">
                               {name}
                             </h3>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-slate-400">
                               Sent on {new Date(req.createdAt).toLocaleDateString()}
                             </span>
                           </div>
                         </div>
 
                         {req.message && (
-                          <div className="p-3 bg-[#fbf9f5] rounded-xl border border-gray-200 text-xs text-gray-700 italic leading-relaxed">
+                          <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-700 leading-relaxed italic">
                             &ldquo;{req.message}&rdquo;
                           </div>
                         )}
@@ -415,15 +414,15 @@ export default function RequestsPage() {
           </div>
         )}
 
-        {/* Tab 3: Active Connections & Rating Feedback */}
+        {/* Tab 3: Active Connections */}
         {activeTab === "active" && (
           <div className="space-y-4">
             {activeConnectionsList.length === 0 ? (
-              <div className="p-16 text-center bg-white border border-[#dce0e3] rounded-3xl shadow-sm text-gray-500 space-y-2">
-                <Icon name="users" size={32} className="mx-auto text-gray-400" />
-                <h3 className="font-bold text-gray-800 text-base">No Active Mentorship Pairs Yet</h3>
-                <p className="text-xs text-gray-500 max-w-sm mx-auto">
-                  When a request is accepted, your bilateral connection will appear here with collaborative milestones.
+              <div className="card p-12 text-center text-slate-500 space-y-2">
+                <Icon name="users" size={28} className="mx-auto text-slate-400" />
+                <h3 className="font-bold text-slate-800 text-base">No Active Connections Yet</h3>
+                <p className="text-sm text-slate-500 max-w-sm mx-auto">
+                  When a request is accepted, your bilateral connection will appear here.
                 </p>
               </div>
             ) : (
@@ -436,54 +435,38 @@ export default function RequestsPage() {
                   return (
                     <div
                       key={req.id}
-                      className="bg-white border border-[#dce0e3] rounded-2xl p-6 shadow-sm space-y-4 hover:border-gray-400 transition"
+                      className="card p-5 space-y-4"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[#fbf9f5] border border-gray-200 text-gray-600 uppercase tracking-wider">
+                      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
                           {role}
                         </span>
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#1b8755]">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#1b8755]" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                           Active Connection
                         </span>
                       </div>
 
                       <div className="flex items-start gap-3">
-                        <Avatar name={name} size="md" />
+                        <Avatar name={name} size="md" role={counterpart?.role} />
                         <div>
-                          <h3 className="font-['Fraunces',serif] text-base font-bold text-[#0e2740]">
+                          <h3 className="text-base font-bold text-slate-900">
                             {name}
                           </h3>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-slate-400">
                             Connected since {new Date(req.updatedAt || req.createdAt).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
 
-                      {/* Mentorship Milestones */}
-                      <div className="p-3 bg-[#fbf9f5] rounded-xl border border-gray-200 space-y-2 text-xs">
-                        <div className="flex items-center justify-between font-semibold text-gray-700 text-[11px]">
-                          <span>Engagement Roadmap:</span>
-                          <span className="text-[#1b8755]">Milestone 2 of 4</span>
-                        </div>
-                        <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                          <div className="bg-[#1b8755] h-full rounded-full w-1/2" />
-                        </div>
-                        <div className="flex items-center justify-between text-[10px] text-gray-500 pt-1">
-                          <span>1. Intro Handshake ✓</span>
-                          <span>2. Skill Goals Alignment ✓</span>
-                          <span>3. Mid Review</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                      <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
                         <button
                           type="button"
                           onClick={() => setRatingTarget({ id: req.id, kind: req.kind, name })}
-                          className="flex-1 btn btn-secondary text-xs py-2 rounded-xl flex items-center justify-center gap-1.5"
+                          className="btn btn-secondary text-xs py-2 w-full rounded-md"
                         >
                           <Icon name="star" size={14} className="text-[#c59b27]" />
-                          <span>Rate Mentorship Quality</span>
+                          <span>Rate Connection Quality</span>
                         </button>
                       </div>
                     </div>
@@ -494,59 +477,59 @@ export default function RequestsPage() {
           </div>
         )}
 
-        {/* Rating & Collaborative Feedback Modal */}
+        {/* Rating Modal */}
         {ratingTarget && (
           <div
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+            className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
             onClick={() => setRatingTarget(null)}
           >
             <div
-              className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-5 shadow-2xl relative border border-gray-200 text-center"
+              className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl border border-slate-200 text-center relative"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 type="button"
                 onClick={() => setRatingTarget(null)}
-                className="absolute top-5 right-5 p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+                className="absolute top-4 right-4 p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
               >
-                <Icon name="close" size={18} />
+                <Icon name="close" size={16} />
               </button>
 
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-[#c59b27]/10 text-[#c59b27] flex items-center justify-center">
-                <Icon name="star" size={30} />
+              <div className="w-12 h-12 mx-auto rounded-full bg-amber-50 text-[#c59b27] flex items-center justify-center">
+                <Icon name="star" size={24} />
               </div>
 
               <div>
-                <h3 className="font-['Fraunces',serif] text-xl font-bold text-[#0e2740]">
-                  Rate This Mentorship Match
+                <h3 className="text-lg font-bold text-slate-900">
+                  Rate Connection Quality
                 </h3>
-                <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto leading-relaxed">
-                  Your feedback trains the Collaborative Filtering engine and optimizes recommendation accuracy for all Kenya Airways stakeholders.
+                <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
+                  Your feedback helps optimize collaborative interaction scoring for all Kenya Airways stakeholders.
                 </p>
               </div>
 
               {feedbackSuccess ? (
-                <div className="p-4 bg-emerald-50 border border-emerald-200 text-[#1b8755] text-xs font-semibold rounded-2xl flex items-center justify-center gap-2">
-                  <Icon name="check" size={18} />
-                  <span>Rating Recorded! Collaborative weights updated.</span>
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-lg flex items-center justify-center gap-2">
+                  <Icon name="check" size={16} />
+                  <span>Feedback Saved! Collaborative weights updated.</span>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {/* Star Rating Selector */}
+                  {/* Star Rating */}
                   <div className="flex items-center justify-center gap-2 py-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
                         type="button"
                         onClick={() => setSelectedStars(star)}
-                        className="p-1 transition hover:scale-110"
+                        className="p-1 transition cursor-pointer"
                         aria-label={`Rate ${star} stars`}
                       >
                         <Icon
                           name="star"
-                          size={28}
+                          size={24}
                           className={
-                            star <= selectedStars ? "text-[#c59b27] fill-[#c59b27]" : "text-gray-300"
+                            star <= selectedStars ? "text-[#c59b27]" : "text-slate-300"
                           }
                         />
                       </button>
@@ -557,20 +540,20 @@ export default function RequestsPage() {
                     rows={3}
                     value={feedbackComment}
                     onChange={(e) => setFeedbackComment(e.target.value)}
-                    placeholder="Optional feedback: Did this mentorship meet your professional expectations?"
-                    className="w-full p-3 bg-[#fbf9f5] border border-[#dce0e3] rounded-xl text-xs outline-none focus:bg-white focus:border-[#bb162b] resize-none"
+                    placeholder="Optional feedback: Did this connection meet your professional expectations?"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-md text-xs sm:text-sm outline-none focus:bg-white focus:border-[#c8102e] resize-none"
                   />
 
                   <div className="flex items-center justify-end gap-3 pt-2">
                     <button
                       type="button"
                       onClick={() => setRatingTarget(null)}
-                      className="px-4 py-2 text-xs font-semibold text-gray-600 hover:text-gray-900"
+                      className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer"
                     >
                       Skip
                     </button>
                     <Button onClick={handleRateSubmit} disabled={submittingFeedback}>
-                      {submittingFeedback ? "Saving..." : "Submit Quality Rating"}
+                      {submittingFeedback ? "Saving..." : "Submit Rating"}
                     </Button>
                   </div>
                 </div>
