@@ -214,20 +214,20 @@ export default function RecommendationsPage() {
         </div>
 
         {/* Filter Toolbar */}
-        <div className="card p-4 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
+        <div className="card p-5 sm:p-6 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-center">
             {/* Search Input */}
             <div className="lg:col-span-5 relative">
               <Icon
                 name="search"
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
               />
               <input
                 placeholder="Search by stakeholder name, skill, or fleet..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] focus:bg-white transition text-slate-800"
+                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-[#c8102e] focus:bg-white transition text-slate-800"
               />
             </div>
 
@@ -236,7 +236,7 @@ export default function RecommendationsPage() {
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] text-slate-700"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-[#c8102e] text-slate-700"
               >
                 <option value="ALL">All Stakeholder Roles</option>
                 <option value="STAFF">Active KQ Staff</option>
@@ -251,7 +251,7 @@ export default function RecommendationsPage() {
               <select
                 value={mentorshipFilter}
                 onChange={(e) => setMentorshipFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] text-slate-700"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-[#c8102e] text-slate-700"
               >
                 <option value="ALL">All Availability</option>
                 <option value="MENTOR">Available Mentors</option>
@@ -277,7 +277,7 @@ export default function RecommendationsPage() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
+          <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs text-slate-500">
             <span>
               Showing <b>{filteredMatches.length}</b> matches meeting criteria
             </span>
@@ -308,7 +308,7 @@ export default function RecommendationsPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredMatches.map((item) => {
               const roleDisplay = ROLE_LABELS[item.role] || item.role;
               const isHighMatch = item.matchPercent >= 85;
@@ -316,16 +316,16 @@ export default function RecommendationsPage() {
               return (
                 <article
                   key={item.userId}
-                  className="card p-5 flex flex-col justify-between space-y-4"
+                  className="card p-6 sm:p-7 flex flex-col justify-between space-y-5"
                 >
                   <div>
                     {/* Header: Role Tag + Match Score */}
-                    <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                    <div className="flex items-center justify-between gap-2 pb-3.5 border-b border-slate-100">
+                      <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700">
                         {roleDisplay}
                       </span>
                       <div
-                        className={`px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1.5 ${
+                        className={`px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1.5 ${
                           isHighMatch
                             ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                             : "bg-slate-100 text-slate-800 border border-slate-200"
@@ -336,7 +336,7 @@ export default function RecommendationsPage() {
                     </div>
 
                     {/* Member Profile Info */}
-                    <div className="flex items-start gap-3 mt-3">
+                    <div className="flex items-start gap-4 mt-4">
                       <Avatar name={item.fullName} size="lg" role={item.role} />
                       <div className="flex-1 min-w-0">
                         <h3 className="text-base font-bold text-slate-900 truncate">
@@ -356,7 +356,7 @@ export default function RecommendationsPage() {
                     </div>
 
                     {/* Breakdown Scores */}
-                    <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-2 text-xs">
+                    <div className="mt-4 p-3.5 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-2 text-xs">
                       <div className="flex items-center justify-between text-slate-600">
                         <span>Profile &amp; Skills Similarity:</span>
                         <b className="font-mono text-slate-900">{item.contentScore || item.matchPercent}%</b>
@@ -381,12 +381,12 @@ export default function RecommendationsPage() {
                     </div>
 
                     {/* Shared Skills Chips */}
-                    <div className="mt-3">
-                      <div className="text-[11px] uppercase font-semibold text-slate-400 mb-1.5 tracking-wider">
+                    <div className="mt-4">
+                      <div className="text-[11px] uppercase font-semibold text-slate-400 mb-2 tracking-wider">
                         Shared Competencies
                       </div>
                       <div className="flex flex-wrap gap-1.5">
-                        {(item.sharedSkills || []).slice(0, 3).map((skill) => (
+                        {(item.sharedSkills || []).slice(0, 4).map((skill) => (
                           <Tag key={skill}>{skill}</Tag>
                         ))}
                         {(!item.sharedSkills || item.sharedSkills.length === 0) && (
@@ -397,14 +397,14 @@ export default function RecommendationsPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
+                  <div className="pt-4 border-t border-slate-100 flex items-center gap-2.5">
                     <button
                       type="button"
                       onClick={() => {
                         setSelectedMatch(item);
                         setRequestMessage(TEMPLATE_MESSAGES[0].text);
                       }}
-                      className="btn btn-primary text-xs py-2 flex-1 rounded-md"
+                      className="btn btn-primary text-xs py-2.5 flex-1 rounded-lg"
                     >
                       <Icon name="requests" size={14} />
                       <span>Request Mentorship</span>
@@ -412,7 +412,7 @@ export default function RecommendationsPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedMatch(item)}
-                      className="btn btn-secondary text-xs py-2 px-3 rounded-md"
+                      className="btn btn-secondary text-xs py-2.5 px-3.5 rounded-lg"
                       title="View Details"
                     >
                       <Icon name="eye" size={14} />
