@@ -109,6 +109,12 @@ export default function RecommendationsPage() {
   }, [recommendations, searchQuery, roleFilter, minScore, mentorshipFilter]);
 
   const handleSendRequest = async (receiverId) => {
+    const targetId = receiverId || selectedMatch?.userId || selectedMatch?.id;
+    if (!targetId) {
+      alert("Recipient ID is missing. Please select a valid profile.");
+      return;
+    }
+
     setSendingRequest(true);
     setFeedbackSuccess("");
     try {
@@ -116,7 +122,8 @@ export default function RecommendationsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          receiverId,
+          receiverId: targetId,
+          userId: targetId,
           message:
             requestMessage ||
             "Hello, I would value connecting with you on Kenya Airways PrideConnect for structured mentorship and professional networking.",

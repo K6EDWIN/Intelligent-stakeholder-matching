@@ -279,6 +279,7 @@ export default function DirectoryPage() {
                 <div className="pt-4 border-t border-slate-100">
                   <RequestActions
                     receiverId={p.userId}
+                    userId={p.userId}
                     mentorshipRole={p.mentorshipRole}
                   />
                 </div>

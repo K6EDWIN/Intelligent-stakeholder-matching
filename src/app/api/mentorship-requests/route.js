@@ -45,7 +45,9 @@ export async function POST(request) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { receiverId, message } = await request.json();
+  const body = await request.json().catch(() => ({}));
+  const receiverId = body.receiverId || body.userId || body.targetUserId;
+  const message = body.message;
 
   if (!receiverId) {
     return NextResponse.json(
