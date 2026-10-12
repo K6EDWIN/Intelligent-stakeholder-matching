@@ -1,0 +1,573 @@
+{
+  "info": {
+    "_postman_id": "kq-prideconnect-api-collection",
+    "name": "Kenya Airways PrideConnect - API Collection",
+    "description": "Comprehensive API collection for Kenya Airways PrideConnect (Intelligent Stakeholder Matching Framework). Covers Authentication, Profile, Recommendations, Directory, Mentorship, Connections, Events, Opportunities, and Admin Analytics.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "csrfToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "requestId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication & Enrollment",
+      "item": [
+        {
+          "name": "Get CSRF Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();",
+                  "if (jsonData.csrfToken) {",
+                  "    pm.collectionVariables.set('csrfToken', jsonData.csrfToken);",
+                  "    console.log('Saved CSRF token: ' + jsonData.csrfToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/csrf",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "csrf"]
+            },
+            "description": "Fetches the NextAuth CSRF token required for credentials login. Postman auto-extracts this token into collection variable 'csrfToken'."
+          }
+        },
+        {
+          "name": "Sign In with Credentials (Login)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "csrfToken",
+                  "value": "{{csrfToken}}",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "admin@kenya-airways.com",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "AdminPass123!",
+                  "type": "text"
+                },
+                {
+                  "key": "json",
+                  "value": "true",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/callback/credentials",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "callback", "credentials"]
+            },
+            "description": "Authenticates the user and sets the NextAuth session cookie in Postman's cookie jar. Subsequent requests will be authenticated."
+          }
+        },
+        {
+          "name": "Check Session Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/session",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "session"]
+            },
+            "description": "Returns current authenticated session user and role."
+          }
+        },
+        {
+          "name": "Register Stakeholder (Self-Registration)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Capt. Brian Odhiambo\",\n  \"email\": \"brian.odhiambo@kenya-airways.com\",\n  \"password\": \"KQSecurePilot2026!\",\n  \"role\": \"STAFF\",\n  \"department\": \"Flight Operations\",\n  \"bio\": \"Active Flight & Ground Staff · Pilots, cabin crew, engineers, operations\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "register"]
+            },
+            "description": "Registers a new stakeholder with whitelisted roles (ALUMNI, STAFF, FORMER_STAFF, FREQUENT_FLYER). Generates verification token."
+          }
+        },
+        {
+          "name": "Verify Email Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verify?token=YOUR_VERIFICATION_TOKEN",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "verify"],
+              "query": [
+                {
+                  "key": "token",
+                  "value": "YOUR_VERIFICATION_TOKEN"
+                }
+              ]
+            },
+            "description": "Activates stakeholder account via token received in verification email or server log."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Profile & Metadata",
+      "item": [
+        {
+          "name": "Get Current Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "profile"]
+            },
+            "description": "Returns full profile of authenticated stakeholder including skills and interests."
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Capt. Brian Odhiambo\",\n  \"department\": \"B787 Fleet Operations\",\n  \"bio\": \"Long-haul captain with 12+ years experience in B787 Dreamliner operations.\",\n  \"mentorshipRole\": \"MENTOR\",\n  \"isPublic\": true,\n  \"skillIds\": [],\n  \"interestIds\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "profile"]
+            },
+            "description": "Updates profile attributes, department, bio, and mentorship role."
+          }
+        },
+        {
+          "name": "Get Taxonomy & Metadata (Skills & Interests)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/meta",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "meta"]
+            },
+            "description": "Returns available skills, interests, and departments taxonomy for filtering."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Stakeholder Directory & Search",
+      "item": [
+        {
+          "name": "List Directory Stakeholders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/directory?role=&q=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "directory"],
+              "query": [
+                {
+                  "key": "role",
+                  "value": "",
+                  "description": "Filter by role: ALUMNI, STAFF, FORMER_STAFF, FREQUENT_FLYER"
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Search query for name, department, or bio"
+                },
+                {
+                  "key": "skill",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "interest",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Lists verified, public stakeholder profiles with optional keyword and role filtering."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Intelligent Recommendations",
+      "item": [
+        {
+          "name": "Get Hybrid Recommendations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/recommendations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recommendations"]
+            },
+            "description": "Computes content-based and collaborative similarity scores, dynamically weights them, persists rankings, and returns top matched candidates."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Mentorship & Connection Requests",
+      "item": [
+        {
+          "name": "List Mentorship Requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/mentorship-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mentorship-requests"]
+            },
+            "description": "Lists sent and received mentorship requests for the logged-in user."
+          }
+        },
+        {
+          "name": "Send Mentorship Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverId\": \"TARGET_USER_ID\",\n  \"message\": \"Hello, I would value connecting with you on Kenya Airways PrideConnect for structured mentorship.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mentorship-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mentorship-requests"]
+            },
+            "description": "Sends a mentorship request to a target stakeholder."
+          }
+        },
+        {
+          "name": "Respond to Mentorship Request (Accept/Reject)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/mentorship-requests/REQUEST_ID",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "mentorship-requests", "REQUEST_ID"]
+            },
+            "description": "Updates request status to ACCEPTED or REJECTED."
+          }
+        },
+        {
+          "name": "List Connection Requests",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/connection-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "connection-requests"]
+            },
+            "description": "Lists sent and received peer connection requests."
+          }
+        },
+        {
+          "name": "Send Connection Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiverId\": \"TARGET_USER_ID\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/connection-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "connection-requests"]
+            },
+            "description": "Sends a direct peer connection invitation."
+          }
+        },
+        {
+          "name": "Respond to Connection Request",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/connection-requests/REQUEST_ID",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "connection-requests", "REQUEST_ID"]
+            },
+            "description": "Accepts or rejects peer connection request."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Flight Reconnect & Events",
+      "item": [
+        {
+          "name": "Get Flight Reconnect Matches",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/flight-reconnect",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "flight-reconnect"]
+            },
+            "description": "Finds stakeholders travelling on same route/date with sharing consent enabled."
+          }
+        },
+        {
+          "name": "Log Flight Travel Schedule",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"flightRoute\": \"NBO-LHR\",\n  \"travelDate\": \"2026-11-15T08:00:00.000Z\",\n  \"consentToShare\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/flight-reconnect",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "flight-reconnect"]
+            },
+            "description": "Registers flight route for in-transit networking."
+          }
+        },
+        {
+          "name": "List Pride Centre Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events"]
+            },
+            "description": "Lists upcoming and past Pride Centre workshops and masterclasses."
+          }
+        },
+        {
+          "name": "RSVP to Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/events/EVENT_ID/rsvp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "events", "EVENT_ID", "rsvp"]
+            },
+            "description": "Toggles or confirms RSVP to an event."
+          }
+        },
+        {
+          "name": "List Aviation Opportunities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/opportunities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "opportunities"]
+            },
+            "description": "Lists cadet openings, internships, and internal postings."
+          }
+        },
+        {
+          "name": "Submit Platform Feedback",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"comment\": \"Exceptional stakeholder matching accuracy and privacy design!\",\n  \"page\": \"/recommendations\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "feedback"]
+            },
+            "description": "Submits feedback on system recommendations or feature usability."
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Admin Dashboard & Telemetry",
+      "item": [
+        {
+          "name": "Get Admin Overview Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "stats"]
+            },
+            "description": "Requires ADMIN role. Returns platform metrics, user counts by role, connection volume, and conversion rates."
+          }
+        },
+        {
+          "name": "Get Model Evaluation Telemetry",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/evaluation",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "evaluation"]
+            },
+            "description": "Requires ADMIN role. Computes Precision@K, Recall@K, MAP, NDCG, and weight adaptation curves."
+          }
+        },
+        {
+          "name": "List All Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users?role=&status=&q=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users"],
+              "query": [
+                {
+                  "key": "role",
+                  "value": ""
+                },
+                {
+                  "key": "status",
+                  "value": ""
+                },
+                {
+                  "key": "q",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Requires ADMIN role. Lists all platform users with account and profile status."
+          }
+        },
+        {
+          "name": "Update User Status / Suspend (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isSuspended\": false,\n  \"role\": \"STAFF\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/users/USER_ID",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "users", "USER_ID"]
+            },
+            "description": "Requires ADMIN role. Suspends/unsuspends account or reassigns role."
+          }
+        }
+      ]
+    }
+  ]
+}
