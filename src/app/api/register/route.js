@@ -79,6 +79,46 @@ export async function POST(request) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
+    const personaDefaults = {
+      ALUMNI: {
+        department: "Pride Centre Academy",
+        bio: "Pride Centre Alumni · Graduates & current aviation trainees",
+        mentorshipRole: "MENTEE",
+      },
+      STAFF: {
+        department: "Flight Operations",
+        bio: "Active Flight & Ground Staff · Pilots, cabin crew, engineers, operations",
+        mentorshipRole: "MENTOR",
+      },
+      FORMER_STAFF: {
+        department: "Executive & Flight Operations Advisory",
+        bio: "Former Staff / Retiree · Alumni network & institutional advisors",
+        mentorshipRole: "MENTOR",
+      },
+      FREQUENT_FLYER: {
+        department: "Commercial Aviation & Asante Rewards",
+        bio: "Frequent Flyer · Asante Rewards & executive passengers",
+        mentorshipRole: "BOTH",
+      },
+    }[role] || {
+      department: "Flight Operations",
+      bio: "Kenya Airways Stakeholder Member",
+      mentorshipRole: "BOTH",
+    };
+
+    const assignedDepartment =
+      typeof body.department === "string" && body.department.trim()
+        ? body.department.trim()
+        : personaDefaults.department;
+
+    const assignedBio =
+      typeof body.bio === "string" && body.bio.trim()
+        ? body.bio.trim()
+        : personaDefaults.bio;
+
+    const assignedMentorshipRole =
+      body.mentorshipRole || personaDefaults.mentorshipRole;
+
     const user = await prisma.user.create({
       data: {
         email: normalizedEmail,
@@ -87,6 +127,10 @@ export async function POST(request) {
         profile: {
           create: {
             fullName: normalizedName,
+            department: assignedDepartment,
+            bio: assignedBio,
+            mentorshipRole: assignedMentorshipRole,
+            isPublic: true,
           },
         },
       },

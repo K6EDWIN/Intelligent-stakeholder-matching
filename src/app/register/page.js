@@ -10,30 +10,42 @@ const PERSONAS = [
   {
     id: "ALUMNI",
     title: "Pride Centre Alumni",
+    tag: "Graduates",
     subtitle: "Graduates & current aviation trainees",
     icon: "academic",
-    tag: "Graduates",
+    department: "Pride Centre Academy",
+    bio: "Pride Centre Alumni · Graduates & current aviation trainees",
+    mentorshipTrack: "Mentee (Cadet workshops, career transitions, and skills growth)",
   },
   {
     id: "STAFF",
     title: "Active Flight & Ground Staff",
+    tag: "Active Crew",
     subtitle: "Pilots, cabin crew, engineers, operations",
     icon: "flight",
-    tag: "Active Crew",
+    department: "Flight Operations",
+    bio: "Active Flight & Ground Staff · Pilots, cabin crew, engineers, operations",
+    mentorshipTrack: "Mentor (Fleet operations, technical peer matching, and cross-station sharing)",
   },
   {
     id: "FORMER_STAFF",
     title: "Former Staff / Retiree",
+    tag: "Advisory",
     subtitle: "Alumni network & institutional advisors",
     icon: "star",
-    tag: "Advisory",
+    department: "Executive & Flight Operations Advisory",
+    bio: "Former Staff / Retiree · Alumni network & institutional advisors",
+    mentorshipTrack: "Mentor (Institutional wisdom, executive advisory, and alumni leadership)",
   },
   {
     id: "FREQUENT_FLYER",
     title: "Frequent Flyer",
+    tag: "Asante Elite",
     subtitle: "Asante Rewards & executive passengers",
     icon: "shield",
-    tag: "Asante Elite",
+    department: "Commercial Aviation & Asante Rewards",
+    bio: "Frequent Flyer · Asante Rewards & executive passengers",
+    mentorshipTrack: "Both (Executive networking, route connections, and loyalty synergy)",
   },
 ];
 
@@ -43,7 +55,8 @@ export default function RegisterPage() {
     password: "",
     fullName: "",
     role: "ALUMNI",
-    department: "Flight Operations",
+    department: PERSONAS[0].department,
+    bio: PERSONAS[0].bio,
     identifier: "",
   });
   const [consent, setConsent] = useState(true);
@@ -52,13 +65,21 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  const selectedPersona = PERSONAS.find((p) => p.id === form.role) || PERSONAS[0];
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleRoleSelect = (roleId) => {
-    setForm((prev) => ({ ...prev, role: roleId }));
+    const target = PERSONAS.find((p) => p.id === roleId);
+    setForm((prev) => ({
+      ...prev,
+      role: roleId,
+      department: target?.department || prev.department,
+      bio: target?.bio || prev.bio,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -80,6 +101,8 @@ export default function RegisterPage() {
           password: form.password,
           fullName: form.fullName,
           role: form.role,
+          department: form.department,
+          bio: form.bio,
         }),
       });
 
@@ -249,10 +272,16 @@ export default function RegisterPage() {
                   <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Persona Selector */}
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-2">
-                        Step 1: Choose Your Stakeholder Persona
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-xs font-semibold text-slate-700">
+                          Step 1: Choose Your Stakeholder Persona
+                        </label>
+                        <span className="text-[11px] text-slate-500 font-medium">
+                          Sets matching baseline & profile tags
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {PERSONAS.map((p) => {
                           const isSelected = form.role === p.id;
                           return (
@@ -260,41 +289,111 @@ export default function RegisterPage() {
                               key={p.id}
                               type="button"
                               onClick={() => handleRoleSelect(p.id)}
-                              className={`p-3.5 rounded-xl text-left flex items-start gap-3 transition border cursor-pointer ${
+                              className={`p-3.5 rounded-xl text-left flex items-start gap-3 transition border cursor-pointer relative overflow-hidden ${
                                 isSelected
-                                  ? "border-[#c8102e] bg-red-50/50 shadow-xs ring-2 ring-[#c8102e]/20"
-                                  : "bg-white border-slate-200 hover:border-slate-300"
+                                  ? "border-[#c8102e] bg-red-50/70 shadow-sm ring-2 ring-[#c8102e]/25"
+                                  : "bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
                               }`}
                             >
                               <div
-                                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition ${
                                   isSelected
-                                    ? "bg-[#c8102e] text-white"
-                                    : "bg-slate-50 text-slate-600 border border-slate-200"
+                                    ? "bg-[#c8102e] text-white shadow-xs"
+                                    : "bg-slate-100 text-slate-600 border border-slate-200"
                                 }`}
                               >
-                                <Icon name={p.icon} size={15} />
+                                <Icon name={p.icon} size={16} />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between gap-1">
+                                <div className="flex items-center justify-between gap-1.5 mb-0.5">
                                   <b
-                                    className={`text-xs ${
+                                    className={`text-xs font-bold ${
                                       isSelected ? "text-[#c8102e]" : "text-slate-900"
                                     }`}
                                   >
                                     {p.title}
                                   </b>
-                                  <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">
+                                  <span
+                                    className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded tracking-wide shrink-0 ${
+                                      isSelected
+                                        ? "bg-[#c8102e] text-white"
+                                        : "bg-slate-100 text-slate-600 border border-slate-200"
+                                    }`}
+                                  >
                                     {p.tag}
                                   </span>
                                 </div>
-                                <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                                <p className="text-[11px] font-medium text-slate-600 leading-snug">
                                   {p.subtitle}
                                 </p>
                               </div>
                             </button>
                           );
                         })}
+                      </div>
+
+                      {/* Prominent Persona Pre-filled Metadata Info Box */}
+                      <div className="mt-3.5 p-3.5 bg-slate-50 border border-slate-200/90 rounded-xl space-y-3">
+                        <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span className="text-xs font-bold text-slate-800">
+                              Pre-filled Stakeholder Details for:{" "}
+                              <span className="text-[#c8102e]">{selectedPersona.title}</span>
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            Tag: {selectedPersona.tag}
+                          </span>
+                        </div>
+
+                        <p className="text-[11px] text-slate-600 italic">
+                          &ldquo;{selectedPersona.subtitle}&rdquo;
+                        </p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                              Assigned Department / Unit
+                            </label>
+                            <input
+                              name="department"
+                              value={form.department}
+                              onChange={handleChange}
+                              className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e]/20 transition"
+                              placeholder="e.g. Flight Operations"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                              Mentorship Alignment Track
+                            </label>
+                            <div className="w-full bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-medium truncate">
+                              {selectedPersona.mentorshipTrack}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                            Default Profile Bio / Stakeholder Focus
+                          </label>
+                          <input
+                            name="bio"
+                            value={form.bio}
+                            onChange={handleChange}
+                            className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e]/20 transition"
+                            placeholder="Enter brief stakeholder summary"
+                          />
+                        </div>
+
+                        <div className="text-[10px] text-slate-500 flex items-center gap-1.5 pt-0.5">
+                          <Icon name="sparkles" size={12} className="text-[#c59b27] shrink-0" />
+                          <span>
+                            These descriptions will be saved to your verified profile upon email sign-up and used for intelligent matching.
+                          </span>
+                        </div>
                       </div>
                     </div>
 
@@ -353,7 +452,7 @@ export default function RegisterPage() {
                           onChange={handleChange}
                           className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#c8102e] focus:ring-2 focus:ring-[#c8102e]/10 transition text-slate-900 shadow-2xs"
                           required
-                          minLength={6}
+                          minLength={8}
                         />
                       </div>
 
