@@ -21,7 +21,11 @@ export default function Home() {
 
   const handleGetStarted = () => {
     if (session?.user) {
-      router.push("/recommendations");
+      if (session.user.role === "ADMIN") {
+        router.push("/admin");
+      } else {
+        router.push("/recommendations");
+      }
     } else {
       router.push("/login");
     }
@@ -83,8 +87,11 @@ export default function Home() {
           {/* Header Action Buttons */}
           <div className="hidden sm:flex items-center gap-3">
             {session?.user ? (
-              <Link href="/recommendations" className="btn btn-primary text-xs px-5">
-                Open Portal
+              <Link
+                href={session.user.role === "ADMIN" ? "/admin" : "/recommendations"}
+                className="btn btn-primary text-xs px-5"
+              >
+                {session.user.role === "ADMIN" ? "Admin Console" : "Open Portal"}
               </Link>
             ) : (
               <>

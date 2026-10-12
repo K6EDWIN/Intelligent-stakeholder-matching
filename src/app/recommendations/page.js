@@ -31,7 +31,7 @@ const TEMPLATE_MESSAGES = [
 ];
 
 export default function RecommendationsPage() {
-  const { status } = useSession();
+  const { status, data: session } = useSession();
   const router = useRouter();
 
   const [recommendations, setRecommendations] = useState([]);
@@ -54,8 +54,10 @@ export default function RecommendationsPage() {
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login");
+    } else if (status === "authenticated" && session?.user?.role === "ADMIN") {
+      router.push("/admin");
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   useEffect(() => {
     if (status !== "authenticated") return;

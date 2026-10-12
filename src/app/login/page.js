@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { signIn } from "next-auth/react";
+import { Suspense, useState, useEffect } from "react";
+import { signIn, getSession, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { KQLogo, Button } from "@/components/KQBrand";
@@ -12,6 +12,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const verified = searchParams.get("verified") === "true";
   const urlError = searchParams.get("error");
+  const { data: session, status: authStatus } = useSession();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,6 +21,17 @@ function LoginForm() {
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // If already authenticated, redirect to appropriate destination immediately
+  useEffect(() => {
+    if (authStatus === "authenticated") {
+      if (session?.user?.role === "ADMIN") {
+        router.push("/admin");
+      } else {
+        router.push("/recommendations");
+      }
+    }
+  }, [authStatus, session, router]);
 
   const urlErrorMessage =
     urlError === "expired_token"
@@ -41,14 +53,21 @@ function LoginForm() {
       redirect: false,
     });
 
-    setLoading(false);
-
     if (res?.error) {
+      setLoading(false);
       setError(res.error);
       return;
     }
 
-    router.push("/recommendations");
+    // Retrieve active session to inspect role and route accordingly
+    const currentSession = await getSession();
+    setLoading(false);
+
+    if (currentSession?.user?.role === "ADMIN") {
+      router.push("/admin");
+    } else {
+      router.push("/recommendations");
+    }
   };
 
   const handleGoogleSignIn = () => {

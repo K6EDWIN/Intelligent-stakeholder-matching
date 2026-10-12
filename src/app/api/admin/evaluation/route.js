@@ -15,7 +15,8 @@ function computeDCG(relevanceList) {
 
 // GET /api/admin/evaluation
 // Computes Precision@K, Recall@K, NDCG@K, and MRR for CBF, CF, and Hybrid
-export async function GET() {
+// Also supports ?simulateUserId=<id> for live recommendation engine inspection
+export async function GET(req) {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
@@ -27,10 +28,15 @@ export async function GET() {
     return NextResponse.json({ error: "Admins only" }, { status: 403 });
   }
 
+  const startTime = Date.now();
+
   try {
+    const url = new URL(req.url);
+    const simulateUserId = url.searchParams.get("simulateUserId");
+
     const [profiles, acceptedMentorships, acceptedConnections] = await Promise.all([
       prisma.profile.findMany({
-        where: { user: { isVerified: true } },
+        where: { user: { isVerified: true, isSuspended: false } },
         include: {
           user: { select: { id: true, role: true } },
           skills: true,
@@ -53,6 +59,70 @@ export async function GET() {
       ...acceptedConnections,
     ]);
     const hybridWeights = computeHybridWeights(totalInteractions);
+
+    // Live recommendation simulation for a selected stakeholder
+    if (simulateUserId) {
+      const targetProfile = profiles.find((p) => p.user.id === simulateUserId);
+      if (!targetProfile) {
+        return NextResponse.json({ error: "Target stakeholder not found" }, { status: 404 });
+      }
+
+      const targetAttrs = {
+        skillIds: targetProfile.skills.map((s) => s.skillId),
+        interestIds: targetProfile.interests.map((i) => i.interestId),
+      };
+
+      const skillLookup = await prisma.skill.findMany({ select: { id: true, name: true } });
+      const skillMap = Object.fromEntries(skillLookup.map((s) => [s.id, s.name]));
+      const targetSkillIds = new Set(targetAttrs.skillIds);
+
+      const simResults = profiles
+        .filter((p) => p.user.id !== simulateUserId)
+        .map((cand) => {
+          const candAttrs = {
+            skillIds: cand.skills.map((s) => s.skillId),
+            interestIds: cand.interests.map((i) => i.interestId),
+          };
+
+          const cbf = computeContentScore(targetAttrs, candAttrs);
+          const cf = computeCollaborativeScore(connectionsByUser, simulateUserId, cand.user.id);
+          const hybrid = computeHybridScore(cbf, cf, hybridWeights);
+
+          const sharedSkillNames = cand.skills
+            .filter((s) => targetSkillIds.has(s.skillId))
+            .map((s) => skillMap[s.skillId] || "Technical Skill");
+
+          return {
+            id: cand.user.id,
+            name: cand.fullName || "Stakeholder",
+            department: cand.department || "Operations",
+            role: cand.user.role,
+            contentScore: +(cbf * 100).toFixed(1),
+            collaborativeScore: +(cf * 100).toFixed(1),
+            hybridScore: +(hybrid * 100).toFixed(1),
+            sharedSkills: sharedSkillNames,
+          };
+        })
+        .sort((a, b) => b.hybridScore - a.hybridScore)
+        .slice(0, 5);
+
+      return NextResponse.json({
+        simulation: {
+          targetUser: {
+            id: targetProfile.user.id,
+            name: targetProfile.fullName || "Stakeholder",
+            department: targetProfile.department || "Operations",
+            role: targetProfile.user.role,
+          },
+          candidates: simResults,
+          weights: {
+            alpha: Math.round(hybridWeights.alpha * 100),
+            beta: Math.round(hybridWeights.beta * 100),
+          },
+          latencyMs: Date.now() - startTime,
+        },
+      });
+    }
 
     // Run benchmark across users with at least 2 candidates
     if (profiles.length < 3) {
@@ -163,6 +233,12 @@ export async function GET() {
         alpha: Math.round(hybridWeights.alpha * 100),
         beta: Math.round(hybridWeights.beta * 100),
       },
+      latencyMs: Date.now() - startTime,
+      upliftPercent: +(
+        ((hybridNdcg10 - Math.max(cbfNdcg10, cfNdcg10, 0.001)) /
+          Math.max(cbfNdcg10, cfNdcg10, 0.001)) *
+        100
+      ).toFixed(1),
       models: [
         {
           name: "Content-Based (CBF)",
