@@ -74,16 +74,16 @@ function LoginForm() {
       </header>
 
       {/* Main Grid Layout */}
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 my-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+      <main className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-10 lg:py-16 my-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           {/* Left Column: Mission & Metrics */}
-          <section className="lg:col-span-5 text-white space-y-5">
+          <section className="lg:col-span-5 text-white space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-white/10 text-[#c59b27] text-xs font-bold tracking-wider uppercase">
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
               KENYA AIRWAYS ENTERPRISE PORTAL
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight text-white">
               Aviation Mentorship &amp; Networking,{" "}
               <span className="text-[#c8102e]">Intelligently Connected.</span>
             </h1>
@@ -93,21 +93,21 @@ function LoginForm() {
             </p>
 
             {/* Metrics */}
-            <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-800">
-              <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
-                <b className="block text-xl font-bold text-white">150+</b>
+            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-800">
+              <div className="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+                <b className="block text-2xl font-bold text-white tracking-tight">150+</b>
                 <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
                   Stakeholders
                 </span>
               </div>
-              <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
-                <b className="block text-xl font-bold text-[#c59b27]">440+</b>
+              <div className="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+                <b className="block text-2xl font-bold text-[#c59b27] tracking-tight">440+</b>
                 <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
                   Handshakes
                 </span>
               </div>
-              <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
-                <b className="block text-xl font-bold text-emerald-400">Hybrid</b>
+              <div className="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+                <b className="block text-2xl font-bold text-emerald-400 tracking-tight">Hybrid</b>
                 <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
                   CBF + CF
                 </span>
@@ -115,10 +115,10 @@ function LoginForm() {
             </div>
 
             {/* Privacy callout */}
-            <div className="p-3.5 rounded-lg bg-slate-900/80 border border-slate-800 text-xs text-slate-300 flex items-start gap-3">
+            <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 flex items-start gap-3">
               <Icon name="shield" size={18} className="text-[#c59b27] shrink-0 mt-0.5" />
-              <div>
-                <b className="text-white block font-semibold mb-0.5">Privacy &amp; Mutual Consent Guaranteed</b>
+              <div className="space-y-0.5">
+                <b className="text-white block font-semibold">Privacy &amp; Mutual Consent Guaranteed</b>
                 Personal itineraries and contact info unlock only upon bilateral acceptance between verified Kenya Airways stakeholders.
               </div>
             </div>
@@ -126,23 +126,23 @@ function LoginForm() {
 
           {/* Right Column: Sign In Card */}
           <section className="lg:col-span-7">
-            <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-slate-200 text-slate-900">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+            <div className="bg-white rounded-2xl p-8 sm:p-10 lg:p-11 shadow-2xl border border-slate-200/90 text-slate-900">
+              <div className="flex items-center justify-between pb-5 border-b border-slate-100">
                 <div>
                   <div className="text-xs uppercase font-bold tracking-wider text-[#c8102e]">
                     Sign In Portal
                   </div>
-                  <h2 className="text-xl font-bold text-slate-900 mt-0.5">
+                  <h2 className="text-xl font-bold text-slate-900 mt-1">
                     Access Kenya Airways PrideConnect
                   </h2>
                 </div>
-                <div className="flex bg-slate-100 p-1 rounded-md text-xs font-semibold">
-                  <span className="px-3 py-1 rounded bg-white text-slate-900 shadow-xs">
+                <div className="flex bg-slate-100 p-1 rounded-lg text-xs font-semibold">
+                  <span className="px-3.5 py-1.5 rounded-md bg-white text-slate-900 shadow-xs">
                     Sign In
                   </span>
                   <Link
                     href="/register"
-                    className="px-3 py-1 rounded text-slate-600 hover:text-[#c8102e] transition"
+                    className="px-3.5 py-1.5 rounded-md text-slate-600 hover:text-[#c8102e] transition"
                   >
                     Register
                   </Link>
@@ -151,32 +151,32 @@ function LoginForm() {
 
               {/* Status Alert Banners */}
               {verified && (
-                <div className="mt-3 p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-md flex items-center gap-2">
+                <div className="mt-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-lg flex items-center gap-2">
                   <Icon name="check" size={16} />
                   <span>Email verified successfully! You can now sign in.</span>
                 </div>
               )}
 
               {urlErrorMessage && (
-                <div className="mt-3 p-2.5 bg-red-50 border border-red-200 text-[#c8102e] text-xs rounded-md flex items-center gap-2">
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 text-[#c8102e] text-xs rounded-lg flex items-center gap-2">
                   <Icon name="close" size={16} />
                   <span>{urlErrorMessage}</span>
                 </div>
               )}
 
               {error && (
-                <div className="mt-3 p-2.5 bg-red-50 border border-red-200 text-[#c8102e] text-xs rounded-md flex items-center gap-2">
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 text-[#c8102e] text-xs rounded-lg flex items-center gap-2">
                   <Icon name="close" size={16} />
                   <span>{error}</span>
                 </div>
               )}
 
               {/* Google OAuth Button */}
-              <div className="mt-4">
+              <div className="mt-5">
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
-                  className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-xs font-semibold text-slate-700 flex items-center justify-center gap-2.5 transition cursor-pointer"
+                  className="w-full py-3 px-4 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 flex items-center justify-center gap-3 transition cursor-pointer shadow-xs"
                 >
                   <GoogleIcon size={18} />
                   <span>Sign in with Google</span>
@@ -184,7 +184,7 @@ function LoginForm() {
               </div>
 
               {/* Divider */}
-              <div className="flex items-center gap-3 my-4">
+              <div className="flex items-center gap-3 my-5">
                 <div className="flex-1 h-px bg-slate-200" />
                 <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                   or sign in with email
@@ -193,9 +193,9 @@ function LoginForm() {
               </div>
 
               {/* Sign In Form */}
-              <form onSubmit={handleSubmit} className="space-y-3.5">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Official Email / Membership ID
                   </label>
                   <input
@@ -203,13 +203,13 @@ function LoginForm() {
                     placeholder="e.g. pilot@kenya-airways.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#c8102e] transition text-slate-900"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#c8102e] focus:ring-2 focus:ring-[#c8102e]/10 transition text-slate-900 shadow-2xs"
                     required
                   />
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-xs font-semibold text-slate-700">
                       Password
                     </label>
@@ -227,12 +227,12 @@ function LoginForm() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#c8102e] transition text-slate-900"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#c8102e] focus:ring-2 focus:ring-[#c8102e]/10 transition text-slate-900 shadow-2xs"
                     required
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-slate-600 pt-0.5">
+                <div className="flex items-center justify-between text-xs text-slate-600 pt-1">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
@@ -249,7 +249,7 @@ function LoginForm() {
 
                 <Button
                   type="submit"
-                  className="w-full py-2.5 text-sm font-bold mt-2"
+                  className="w-full py-3 text-sm font-semibold rounded-lg mt-3"
                   disabled={loading}
                 >
                   {loading ? "Authenticating..." : "Sign In to PrideConnect"}

@@ -114,13 +114,40 @@ export const authOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.isSuspended = Boolean(user.isSuspended);
       }
+
+      // Check database for active suspension status on existing session tokens
+      if (token?.id) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id },
+            select: { isSuspended: true, role: true },
+          });
+
+          if (dbUser) {
+            token.isSuspended = dbUser.isSuspended;
+            token.role = dbUser.role;
+          } else {
+            token.isSuspended = true;
+          }
+        } catch {
+          // Fallback gracefully on transient DB connection issues
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
+      // Immediately invalidate session if the account has been suspended by an admin
+      if (token?.isSuspended) {
+        return null;
+      }
+
       if (session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
+        session.user.isSuspended = token.isSuspended || false;
       }
       return session;
     },

@@ -221,13 +221,13 @@ export default function DirectoryPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {profiles.map((p) => (
-              <article key={p.userId} className="card p-5 flex flex-col justify-between space-y-4">
+              <article key={p.userId} className="card p-6 flex flex-col justify-between space-y-5">
                 <div>
                   {/* Card Top: Role Tag */}
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                  <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700">
                       {ROLE_LABELS[p.role] || p.role}
                     </span>
                     <span className="text-[11px] font-medium text-slate-400">
@@ -236,7 +236,7 @@ export default function DirectoryPage() {
                   </div>
 
                   {/* Identity */}
-                  <div className="flex items-start gap-3 mt-3">
+                  <div className="flex items-start gap-3.5 mt-3.5">
                     <Avatar name={p.fullName} size="lg" role={p.role} />
                     <div className="flex-1 min-w-0">
                       <h3 className="text-base font-bold text-slate-900 truncate">
@@ -257,7 +257,7 @@ export default function DirectoryPage() {
 
                   {/* Bio */}
                   {p.bio && (
-                    <p className="text-xs text-slate-600 line-clamp-2 mt-3 leading-relaxed">
+                    <p className="text-xs text-slate-600 line-clamp-2 mt-3.5 leading-relaxed">
                       &quot;{p.bio}&quot;
                     </p>
                   )}
@@ -276,7 +276,7 @@ export default function DirectoryPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="pt-3 border-t border-slate-100">
+                <div className="pt-4 border-t border-slate-100">
                   <RequestActions
                     receiverId={p.userId}
                     mentorshipRole={p.mentorshipRole}

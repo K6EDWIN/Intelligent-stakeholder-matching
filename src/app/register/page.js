@@ -117,16 +117,17 @@ export default function RegisterPage() {
       </header>
 
       {/* Main Content Area */}
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 my-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+      {/* Main Content Area */}
+      <main className="w-full max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-10 lg:py-16 my-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
           {/* Left Column */}
-          <section className="lg:col-span-5 text-white space-y-5 lg:pt-2">
+          <section className="lg:col-span-5 text-white space-y-6 lg:pt-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-white/10 text-[#c59b27] text-xs font-bold tracking-wider uppercase">
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
               JOIN KENYA AIRWAYS PRIDECONNECT
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight text-white">
               Elevate Your Aviation Career with the{" "}
               <span className="text-[#c8102e]">Pride of Africa.</span>
             </h1>
@@ -136,7 +137,7 @@ export default function RegisterPage() {
             </p>
 
             {/* Checklist */}
-            <div className="space-y-3 pt-3 border-t border-slate-800">
+            <div className="space-y-4 pt-4 border-t border-slate-800">
               {[
                 {
                   icon: "sparkles",
@@ -154,13 +155,13 @@ export default function RegisterPage() {
                   desc: "Access verified industry workshops, cadet sessions, and job openings.",
                 },
               ].map((item, idx) => (
-                <div key={idx} className="flex items-start gap-3 text-xs text-slate-300">
-                  <div className="w-6 h-6 rounded bg-slate-900 border border-slate-800 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
-                    <Icon name={item.icon} size={13} />
+                <div key={idx} className="flex items-start gap-3.5 text-xs text-slate-300">
+                  <div className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <Icon name={item.icon} size={14} />
                   </div>
                   <div>
-                    <b className="text-white block font-semibold">{item.title}</b>
-                    <span className="text-slate-400 text-xs">{item.desc}</span>
+                    <b className="text-white block font-semibold text-sm mb-0.5">{item.title}</b>
+                    <span className="text-slate-400 text-xs leading-relaxed">{item.desc}</span>
                   </div>
                 </div>
               ))}
@@ -168,8 +169,8 @@ export default function RegisterPage() {
           </section>
 
           {/* Right Column */}
-          <section className="lg:col-span-7 w-full max-w-2xl mx-auto">
-            <div className="bg-white rounded-xl p-6 sm:p-8 shadow-xl border border-slate-200 text-slate-900">
+          <section className="lg:col-span-7 w-full">
+            <div className="bg-white rounded-2xl p-8 sm:p-10 shadow-2xl border border-slate-200/90 text-slate-900">
               {submitted ? (
                 /* Post-Submission Screen */
                 <div className="text-center py-6 space-y-4">
@@ -195,34 +196,34 @@ export default function RegisterPage() {
               ) : (
                 /* Form */
                 <>
-                  <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+                  <div className="flex items-center justify-between pb-5 border-b border-slate-100">
                     <div>
                       <div className="text-xs uppercase font-bold tracking-wider text-[#c8102e]">
                         Stakeholder Enrollment
                       </div>
-                      <h2 className="text-xl font-bold text-slate-900 mt-0.5">
+                      <h2 className="text-xl font-bold text-slate-900 mt-1">
                         Create Your Account
                       </h2>
                     </div>
-                    <div className="flex bg-slate-100 p-1 rounded-md text-xs font-semibold">
+                    <div className="flex bg-slate-100 p-1 rounded-lg text-xs font-semibold">
                       <Link
                         href="/login"
-                        className="px-3 py-1 rounded text-slate-600 hover:text-[#c8102e] transition"
+                        className="px-3.5 py-1.5 rounded-md text-slate-600 hover:text-[#c8102e] transition"
                       >
                         Sign In
                       </Link>
-                      <span className="px-3 py-1 rounded bg-white text-slate-900 shadow-xs">
+                      <span className="px-3.5 py-1.5 rounded-md bg-white text-slate-900 shadow-xs">
                         Register
                       </span>
                     </div>
                   </div>
 
                   {/* Google OAuth Button */}
-                  <div className="mt-4">
+                  <div className="mt-5">
                     <button
                       type="button"
                       onClick={() => signIn("google", { callbackUrl: "/recommendations" })}
-                      className="w-full py-2.5 px-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-md text-xs font-semibold text-slate-700 flex items-center justify-center gap-2.5 transition cursor-pointer"
+                      className="w-full py-3 px-4 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 flex items-center justify-center gap-3 transition cursor-pointer shadow-xs"
                     >
                       <GoogleIcon size={18} />
                       <span>Sign up with Google</span>
@@ -230,7 +231,7 @@ export default function RegisterPage() {
                   </div>
 
                   {/* Divider */}
-                  <div className="flex items-center gap-3 my-4">
+                  <div className="flex items-center gap-3 my-5">
                     <div className="flex-1 h-px bg-slate-200" />
                     <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                       or register with email
@@ -239,19 +240,19 @@ export default function RegisterPage() {
                   </div>
 
                   {error && (
-                    <div className="p-2.5 bg-red-50 border border-red-200 text-[#c8102e] text-xs rounded-md mb-3 flex items-center gap-2">
+                    <div className="p-3 bg-red-50 border border-red-200 text-[#c8102e] text-xs rounded-lg mb-4 flex items-center gap-2">
                       <Icon name="close" size={16} />
                       <span>{error}</span>
                     </div>
                   )}
 
-                  <form onSubmit={handleSubmit} className="space-y-3.5">
+                  <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Persona Selector */}
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 mb-2">
                         Step 1: Choose Your Stakeholder Persona
                       </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         {PERSONAS.map((p) => {
                           const isSelected = form.role === p.id;
                           return (
@@ -259,20 +260,20 @@ export default function RegisterPage() {
                               key={p.id}
                               type="button"
                               onClick={() => handleRoleSelect(p.id)}
-                              className={`p-2.5 rounded-lg text-left flex items-start gap-2.5 transition border cursor-pointer ${
+                              className={`p-3.5 rounded-xl text-left flex items-start gap-3 transition border cursor-pointer ${
                                 isSelected
-                                  ? "border-[#c8102e] bg-red-50/50 shadow-xs ring-1 ring-[#c8102e]"
-                                  : "bg-slate-50 border-slate-200 hover:border-slate-300"
+                                  ? "border-[#c8102e] bg-red-50/50 shadow-xs ring-2 ring-[#c8102e]/20"
+                                  : "bg-white border-slate-200 hover:border-slate-300"
                               }`}
                             >
                               <div
-                                className={`w-7 h-7 rounded flex items-center justify-center shrink-0 ${
+                                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                                   isSelected
                                     ? "bg-[#c8102e] text-white"
-                                    : "bg-white text-slate-600 border border-slate-200"
+                                    : "bg-slate-50 text-slate-600 border border-slate-200"
                                 }`}
                               >
-                                <Icon name={p.icon} size={14} />
+                                <Icon name={p.icon} size={15} />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-1">
@@ -298,9 +299,9 @@ export default function RegisterPage() {
                     </div>
 
                     {/* Basic Info Fields */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                           Full Name
                         </label>
                         <input
@@ -308,13 +309,13 @@ export default function RegisterPage() {
                           placeholder="e.g. Edwin Kamau"
                           value={form.fullName}
                           onChange={handleChange}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#c8102e] transition text-slate-900"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#c8102e] focus:ring-2 focus:ring-[#c8102e]/10 transition text-slate-900 shadow-2xs"
                           required
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                           Official or Personal Email
                         </label>
                         <input
@@ -323,15 +324,15 @@ export default function RegisterPage() {
                           placeholder="you@kenya-airways.com"
                           value={form.email}
                           onChange={handleChange}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#c8102e] transition text-slate-900"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#c8102e] focus:ring-2 focus:ring-[#c8102e]/10 transition text-slate-900 shadow-2xs"
                           required
                         />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center justify-between mb-1.5">
                           <label className="block text-xs font-semibold text-slate-700">
                             Password
                           </label>
@@ -350,14 +351,14 @@ export default function RegisterPage() {
                           placeholder="Minimum 8 characters"
                           value={form.password}
                           onChange={handleChange}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#c8102e] transition text-slate-900"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#c8102e] focus:ring-2 focus:ring-[#c8102e]/10 transition text-slate-900 shadow-2xs"
                           required
                           minLength={6}
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                           Staff ID / Student Reg{" "}
                           <span className="text-slate-400 font-normal">(optional)</span>
                         </label>
@@ -366,7 +367,7 @@ export default function RegisterPage() {
                           placeholder="e.g. KQ-10294 or PC-2024"
                           value={form.identifier}
                           onChange={handleChange}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:bg-white focus:border-[#c8102e] transition text-slate-900"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 text-sm outline-none focus:border-[#c8102e] focus:ring-2 focus:ring-[#c8102e]/10 transition text-slate-900 shadow-2xs"
                         />
                       </div>
                     </div>
@@ -388,7 +389,7 @@ export default function RegisterPage() {
 
                     <Button
                       type="submit"
-                      className="w-full py-2.5 text-sm font-bold mt-2"
+                      className="w-full py-3 text-sm font-semibold rounded-lg mt-3"
                       disabled={loading}
                     >
                       {loading ? "Creating Stakeholder Account..." : "Complete Registration"}

@@ -37,6 +37,7 @@ export async function GET() {
         travelDate: flight.travelDate,
         consentToShare: true,
         userId: { not: session.user.id },
+        user: { isSuspended: false },
       },
       include: {
         user: { select: { id: true, role: true, profile: { select: { fullName: true, department: true, mentorshipRole: true, bio: true } } } },
