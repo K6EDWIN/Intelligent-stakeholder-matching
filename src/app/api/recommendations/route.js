@@ -40,7 +40,7 @@ export async function GET() {
     where: {
       isPublic: true,
       userId: { not: session.user.id },
-      user: { isVerified: true },
+      user: { isVerified: true, isSuspended: false },
     },
     include: {
       user: { select: { id: true, role: true } },
