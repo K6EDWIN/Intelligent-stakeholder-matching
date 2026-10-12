@@ -8,20 +8,28 @@ export const authOptions = {
     strategy: "jwt",
   },
   providers: [
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-      ? [
-          GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          }),
-        ]
-      : [
-          // Fallback provider placeholder if Google keys are not yet configured in env
-          GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID || "placeholder_client_id",
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "placeholder_secret",
-          }),
-        ]),
+    ...(() => {
+      const googleClientId = (process.env.GOOGLE_CLIENT_ID || "")
+        .replace(/^["']|["']$/g, "")
+        .trim();
+      const googleClientSecret = (process.env.GOOGLE_CLIENT_SECRET || "")
+        .replace(/^["']|["']$/g, "")
+        .trim();
+
+      return googleClientId && googleClientSecret
+        ? [
+            GoogleProvider({
+              clientId: googleClientId,
+              clientSecret: googleClientSecret,
+            }),
+          ]
+        : [
+            GoogleProvider({
+              clientId: googleClientId || "placeholder_client_id",
+              clientSecret: googleClientSecret || "placeholder_secret",
+            }),
+          ];
+    })(),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
