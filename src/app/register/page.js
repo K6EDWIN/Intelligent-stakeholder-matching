@@ -5,6 +5,7 @@ import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { KQLogo, Button } from "@/components/KQBrand";
 import { Icon, GoogleIcon } from "@/components/KQIcons";
+import { ViewModeToggle } from "@/components/ViewMode";
 
 const PERSONAS = [
   {
@@ -127,6 +128,7 @@ export default function RegisterPage() {
       <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
         <KQLogo light />
         <div className="flex items-center gap-3">
+          <ViewModeToggle compact />
           <span className="hidden sm:inline-block text-xs font-medium text-slate-400">
             Already registered?
           </span>

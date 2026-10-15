@@ -481,3 +481,81 @@ h1, h2, h3, h4, h5, h6 {
     padding: 20px 16px;
   }
 }
+
+/* Shared view switch */
+.view-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid #dbe2ea;
+  border-radius: 999px;
+  background: #f5f7fa;
+  color: #64748b;
+  font: 600 11px/1 var(--font-sans);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.view-mode-option { padding: 7px 10px; border-radius: 999px; }
+.view-mode-option.selected { background: #fff; color: var(--kq-navy); box-shadow: 0 1px 4px #0f172a18; }
+.view-mode-toggle.compact { margin-right: 3px; }
+
+/* Classic view: calm, consistent spacing and clear hierarchy. */
+html[data-view-mode="classic"] .app-page { max-width: 1320px; padding-top: 32px; }
+html[data-view-mode="classic"] .card { border-radius: 14px; }
+html[data-view-mode="classic"] .sidebar { width: 258px; padding-inline: 18px; }
+html[data-view-mode="classic"] .shell-main { margin-left: 258px; }
+html[data-view-mode="classic"] .sidebar-nav-item { border-radius: 9px; }
+
+/* Modern view: expressive airline editorial palette with warm runway glow. */
+html[data-view-mode="modern"] { --bg-page: #f5f3f0; --kq-navy: #101b2b; --kq-crimson: #ed4b62; --kq-crimson-hover: #d93750; }
+html[data-view-mode="modern"] body { background: #f5f3f0; }
+html[data-view-mode="modern"] .shell { background: #f5f3f0; }
+html[data-view-mode="modern"] .sidebar { width: 276px; padding: 28px 19px 18px; background: linear-gradient(165deg,#111d2c 0%,#17283a 62%,#26384b 100%); border: 0; }
+html[data-view-mode="modern"] .sidebar .logo { position: relative; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,.08); }
+html[data-view-mode="modern"] .sidebar .logo::after { content: ""; position: absolute; width: 74px; height: 2px; bottom: -1px; left: 8px; background: linear-gradient(90deg,#ed4b62,#f5b64a,transparent); border-radius: 9px; }
+html[data-view-mode="modern"] .shell-main { margin-left: 276px; }
+html[data-view-mode="modern"] .app-header { height: 72px; padding-inline: 36px; background: rgba(255,255,255,.88); backdrop-filter: blur(18px); border-color: #e9e3dd; }
+html[data-view-mode="modern"] .app-page { max-width: 1460px; padding: 40px 42px 76px; }
+html[data-view-mode="modern"] .sidebar-nav-heading { padding-top: 18px; color: #91a0b1; letter-spacing: .14em; }
+html[data-view-mode="modern"] .sidebar-nav-item { height: 45px; margin: 2px 0; border: 0; border-radius: 11px; color: #c3ced8; }
+html[data-view-mode="modern"] .sidebar-nav-item.active { background: linear-gradient(100deg,rgba(237,75,98,.24),rgba(237,75,98,.07)); box-shadow: inset 3px 0 #ed4b62; }
+html[data-view-mode="modern"] .sidebar-nav-item:hover { transform: translateX(3px); }
+html[data-view-mode="modern"] .card { border: 1px solid #e9e3dd; border-radius: 18px; box-shadow: 0 8px 28px rgba(40,35,31,.045); }
+html[data-view-mode="modern"] .card:hover { border-color: #e6c9c8; box-shadow: 0 16px 40px rgba(40,35,31,.09); transform: translateY(-2px); }
+html[data-view-mode="modern"] .btn { min-height: 42px; border-radius: 11px; }
+html[data-view-mode="modern"] .btn-primary { background: linear-gradient(135deg,#ed4b62,#cf304b); box-shadow: 0 7px 18px rgba(220,58,82,.22); }
+html[data-view-mode="modern"] .icon-btn { width: 40px; height: 40px; border-radius: 12px; }
+html[data-view-mode="modern"] .view-mode-toggle { background: #f1efec; border-color: #e8e3dd; }
+html[data-view-mode="modern"] .view-mode-option.selected { color: #fff; background: #142438; box-shadow: 0 3px 9px #1424382b; }
+html[data-view-mode="modern"] .logo-mark { border-radius: 12px; background: linear-gradient(145deg,#f05a6d,#c8102e); box-shadow: 0 6px 18px #c8102e40; }
+html[data-view-mode="modern"] .logo-copy b { letter-spacing: -.04em; }
+html[data-view-mode="modern"] h1 { letter-spacing: -.045em; }
+html[data-view-mode="modern"] input, html[data-view-mode="modern"] select, html[data-view-mode="modern"] textarea { border-radius: 11px; }
+
+/* Public landing page treatment follows the selected view. */
+html[data-view-mode="modern"] .home-page { background: #f5f3f0; }
+html[data-view-mode="modern"] .home-page > header { background: rgba(255,255,255,.9); backdrop-filter: blur(18px); border-color: #e8e3dd; }
+html[data-view-mode="modern"] .home-page h1 { font-size: clamp(2.7rem,5vw,4.45rem); line-height: 1.02; letter-spacing: -.055em; }
+html[data-view-mode="modern"] .home-page h1 span { color: #ed4b62 !important; }
+html[data-view-mode="modern"] .home-page .btn { border-radius: 12px; }
+html[data-view-mode="modern"] .home-page article { border-radius: 20px; }
+html[data-view-mode="modern"] .home-page > main > section:first-child { isolation: isolate; }
+html[data-view-mode="modern"] .home-page > main > section:first-child::before { content: ""; position: absolute; z-index: -1; width: 460px; height: 460px; top: 2%; right: -6%; border-radius: 50%; background: radial-gradient(circle,rgba(239,92,107,.12),rgba(247,186,105,.08) 48%,transparent 70%); animation: runway-drift 11s ease-in-out infinite alternate; pointer-events: none; }
+html[data-view-mode="modern"] .home-page > main > section:first-child h1 { animation: hero-enter .7s cubic-bezier(.2,.7,.2,1) both; }
+html[data-view-mode="modern"] .home-page > main > section:first-child > div > div:last-child > div { box-shadow: 0 24px 70px rgba(26,39,52,.15); border-radius: 22px; }
+@keyframes runway-drift { from { transform: translate3d(-16px,0,0) scale(.94); } to { transform: translate3d(18px,14px,0) scale(1.06); } }
+@keyframes hero-enter { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 1024px) {
+  html[data-view-mode="modern"] .shell-main, html[data-view-mode="classic"] .shell-main { margin-left: 0; }
+  html[data-view-mode="modern"] .app-page { padding: 26px 20px 52px; }
+  html[data-view-mode="modern"] .app-header { padding-inline: 16px; }
+}
+@media (max-width: 640px) {
+  .view-mode-toggle.compact .view-mode-option { padding: 7px 8px; }
+  html[data-view-mode="modern"] .app-page { padding-inline: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

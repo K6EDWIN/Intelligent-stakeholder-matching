@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { KQLogo, Avatar } from "./KQBrand";
 import { Icon } from "./KQIcons";
+import { ViewModeToggle } from "./ViewMode";
 
 export default function KQAppShell({ children }) {
   const { data: session } = useSession();
@@ -147,6 +148,7 @@ export default function KQAppShell({ children }) {
 
           {/* Header Action Tools */}
           <div className="header-right">
+            <ViewModeToggle compact />
             <Link
               href="/directory"
               className="icon-btn"
