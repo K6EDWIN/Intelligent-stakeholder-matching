@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { KQLogo, Button } from "@/components/KQBrand";
 import { Icon, GoogleIcon } from "@/components/KQIcons";
+import { ViewModeToggle } from "@/components/ViewMode";
 
 function LoginForm() {
   const router = useRouter();
@@ -80,6 +81,7 @@ function LoginForm() {
       <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
         <KQLogo light />
         <div className="flex items-center gap-3">
+          <ViewModeToggle compact />
           <span className="hidden sm:inline-block text-xs font-medium text-slate-400">
             Need an account?
           </span>

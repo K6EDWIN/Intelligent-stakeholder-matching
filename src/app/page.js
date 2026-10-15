@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { KQLogo, Button, Tag } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
+import { ViewModeToggle } from "@/components/ViewMode";
 
 const photos = {
   grace:
@@ -59,7 +60,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+    <div className="home-page min-h-screen bg-slate-50 text-slate-900 font-sans">
       {/* Top Navigation Bar */}
       <header className="sticky top-0 z-30 w-full bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
@@ -86,6 +87,7 @@ export default function Home() {
 
           {/* Header Action Buttons */}
           <div className="hidden sm:flex items-center gap-3">
+            <ViewModeToggle compact />
             {session?.user ? (
               <Link
                 href={session.user.role === "ADMIN" ? "/admin" : "/recommendations"}
@@ -109,14 +111,17 @@ export default function Home() {
           </div>
 
           {/* Mobile Hamburger Toggle */}
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-md text-slate-700 hover:bg-slate-100 transition"
-            aria-label="Toggle navigation menu"
-          >
-            <Icon name={mobileMenuOpen ? "close" : "menu"} size={20} />
-          </button>
+          <div className="md:hidden flex items-center gap-2">
+            <ViewModeToggle compact />
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-md text-slate-700 hover:bg-slate-100 transition"
+              aria-label="Toggle navigation menu"
+            >
+              <Icon name={mobileMenuOpen ? "close" : "menu"} size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Mobile Dropdown Menu */}
