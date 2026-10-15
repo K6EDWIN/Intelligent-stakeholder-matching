@@ -717,6 +717,30 @@ html[data-view-mode="modern"] .home-page > main > section article { overflow: hi
 html[data-view-mode="modern"] .home-page > main > section:first-child > div > div:last-child > div { border: 1px solid var(--modern-line); background: rgba(20,21,29,.88); box-shadow: 0 28px 90px rgba(0,0,0,.38); }
 html[data-view-mode="modern"] .home-page footer { border-top: 1px solid var(--modern-line); background: rgba(8,9,14,.65); color: #8e8b97; }
 html[data-view-mode="modern"] .home-page .tag { color: hsl(var(--modern-hue) 90% 70%); }
+html[data-view-mode="modern"] .admin-console { min-height: 100vh; background: transparent !important; color: var(--modern-copy); }
+html[data-view-mode="modern"] .admin-console > header { background: rgba(12,13,19,.86) !important; border-color: var(--modern-line) !important; box-shadow: 0 12px 42px rgba(0,0,0,.22); backdrop-filter: blur(24px); }
+html[data-view-mode="modern"] .admin-console > header .border-slate-800 { border-color: var(--modern-line) !important; }
+html[data-view-mode="modern"] .admin-console > header [class*="text-[#c8102e]"] { color: hsl(var(--modern-hue) 90% 69%) !important; }
+html[data-view-mode="modern"] .admin-console > header [class*="bg-[#c8102e]"] { background-color: hsl(var(--modern-hue) 78% 52% / .18) !important; }
+html[data-view-mode="modern"] .admin-console main { width: min(100%, 1540px); }
+html[data-view-mode="modern"] .admin-console .shadow-xs { box-shadow: 0 18px 54px rgba(0,0,0,.16); }
+html[data-view-mode="modern"] .admin-console .bg-red-50,
+html[data-view-mode="modern"] .admin-console .bg-blue-50,
+html[data-view-mode="modern"] .admin-console .bg-purple-50,
+html[data-view-mode="modern"] .admin-console .bg-amber-50 { background: rgba(255,255,255,.06) !important; border-color: var(--modern-line) !important; }
+html[data-view-mode="modern"] .admin-console [class*="text-[#0e2740]"] { color: #a9c6ff !important; }
+html[data-view-mode="modern"] .admin-console [class*="text-[#c8102e]"] { color: hsl(var(--modern-hue) 90% 72%) !important; }
+html[data-view-mode="modern"] .admin-console [class*="text-[#b48a28]"],
+html[data-view-mode="modern"] .admin-console .text-indigo-700,
+html[data-view-mode="modern"] .admin-console .text-indigo-900 { color: #c2b2ff !important; }
+html[data-view-mode="modern"] .admin-console .text-purple-900 { color: #d2afff !important; }
+html[data-view-mode="modern"] .admin-console .text-amber-900,
+html[data-view-mode="modern"] .admin-console .text-amber-800 { color: #f4ce83 !important; }
+html[data-view-mode="modern"] .admin-console table { color: #dedbe3; }
+html[data-view-mode="modern"] .admin-console tbody tr:hover { background: rgba(255,255,255,.045); }
+@media (max-width: 640px) {
+  html[data-view-mode="modern"] .admin-console .view-mode-option:not(.selected) { display: none; }
+}
 @media (max-width: 1024px) {
   html[data-view-mode="modern"] .shell-main { margin-left: 0; }
   html[data-view-mode="modern"] .app-page { padding: 30px 24px 58px; }

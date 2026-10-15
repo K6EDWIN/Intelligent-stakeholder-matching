@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { KQLogo, Button, Tag, Avatar } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
+import { ViewModeToggle } from "@/components/ViewMode";
 
 const ROLE_LABELS = {
   ALUMNI: "Pride Centre Alumni",
@@ -284,7 +285,7 @@ export default function AdminPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans flex flex-col">
+    <div className="admin-console min-h-screen bg-[#f8fafc] text-slate-900 font-sans flex flex-col">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-[#071626] text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 text-xs flex items-center gap-2 animate-bounce">
@@ -316,6 +317,7 @@ export default function AdminPage() {
 
             {/* Right: Operational Status & User Badge */}
             <div className="flex items-center gap-3">
+              <ViewModeToggle compact />
               <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-950/60 border border-emerald-700/40 text-emerald-400 text-xs">
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 <span className="font-semibold text-[11px] tracking-wide uppercase">
