@@ -18,6 +18,7 @@ export default function Nav() {
     "/directory",
     "/flight-reconnect",
     "/requests",
+    "/notifications",
     "/profile",
     "/opportunities",
     "/events",

@@ -4,7 +4,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { resend } from "@/lib/resend";
 
-export const ALLOWED_REGISTRATION_ROLES = [
+const ALLOWED_REGISTRATION_ROLES = [
   "ALUMNI",
   "STAFF",
   "FORMER_STAFF",

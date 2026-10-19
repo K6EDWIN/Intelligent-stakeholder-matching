@@ -83,6 +83,20 @@ export async function POST(request) {
   if (Number.isNaN(parsedDate.getTime())) {
     return NextResponse.json({ error: "travelDate is invalid" }, { status: 400 });
   }
+  const travelDay = String(travelDate).slice(0, 10);
+  const todayParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Nairobi",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const today = todayParts;
+  if (travelDay >= today) {
+    return NextResponse.json(
+      { error: "Flight Reconnect is for completed trips. Choose a date before today." },
+      { status: 400 }
+    );
+  }
 
   const flight = await prisma.flightReconnect.create({
     data: {

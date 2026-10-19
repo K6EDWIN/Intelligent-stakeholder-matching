@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { extractPairFeatures } from "@/lib/adaptive-recommender";
 import { buildConnectionsByUser, computeCollaborativeScore } from "@/lib/collaborative";
+import { createNotification } from "@/lib/notifications";
 
 const COUNTERPART_SELECT = {
   id: true,
@@ -116,6 +117,14 @@ export async function POST(request) {
           )
         : undefined,
     },
+  });
+
+  await createNotification({
+      userId: receiverId,
+      type: "CONNECTION_REQUEST",
+      title: "New connection request",
+      message: `${senderProfile?.fullName || "A stakeholder"} would like to connect with you.`,
+      href: "/requests",
   });
 
   return NextResponse.json({ connectionRequest }, { status: 201 });

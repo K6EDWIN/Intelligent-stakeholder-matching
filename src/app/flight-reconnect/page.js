@@ -24,6 +24,16 @@ const POPULAR_ROUTES = [
   { code: "KQ 310", from: "NBO", to: "DXB", label: "Nairobi ➔ Dubai Int'l" },
 ];
 
+function getYesterdayInNairobi() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Nairobi", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(new Date());
+  const today = Object.fromEntries(parts.filter((part) => part.type !== "literal").map(({ type, value }) => [type, value]));
+  const yesterday = new Date(`${today.year}-${today.month}-${today.day}T00:00:00Z`);
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  return yesterday.toISOString().slice(0, 10);
+}
+
 export default function FlightReconnectPage() {
   const { status } = useSession();
   const router = useRouter();
@@ -37,6 +47,7 @@ export default function FlightReconnectPage() {
   const [origin, setOrigin] = useState("NBO");
   const [destination, setDestination] = useState("LHR");
   const [travelDate, setTravelDate] = useState("");
+  const [maxTravelDate] = useState(getYesterdayInNairobi);
   const [seatClass, setSeatClass] = useState("BUSINESS");
   const [consentToShare, setConsentToShare] = useState(true);
   const [posting, setPosting] = useState(false);
@@ -318,9 +329,11 @@ export default function FlightReconnectPage() {
                     type="date"
                     value={travelDate}
                     onChange={(e) => setTravelDate(e.target.value)}
+                    max={maxTravelDate}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs sm:text-sm outline-none focus:bg-white focus:border-[#c8102e]"
                     required
                   />
+                  <p className="mt-1.5 text-[11px] text-slate-500">Choose a completed flight. Future trips aren’t eligible for reconnection.</p>
                 </div>
 
                 <div>
