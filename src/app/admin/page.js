@@ -888,7 +888,7 @@ export default function AdminPage() {
                                 Hybrid Match
                               </span>
                               <b className="text-sm font-mono text-emerald-700 font-extrabold">
-                                {cand.hybridScore}%
+                                {cand.matchScore}%
                               </b>
                             </div>
                           </div>
