@@ -3,7 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { KQLogo, Avatar } from "./KQBrand";
 import { Icon } from "./KQIcons";
 import { ViewModeToggle } from "./ViewMode";
@@ -13,6 +13,20 @@ export default function KQAppShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileSelect, setMobileSelect] = useState(pathname);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!session?.user?.id) return undefined;
+    let active = true;
+    const refresh = () => fetch("/api/notifications", { cache: "no-store" })
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => { if (active && data) setUnreadCount(data.unreadCount || 0); })
+      .catch(() => {});
+    refresh();
+    const interval = setInterval(refresh, 60000);
+    window.addEventListener("notifications-updated", refresh);
+    return () => { active = false; clearInterval(interval); window.removeEventListener("notifications-updated", refresh); };
+  }, [session?.user?.id, pathname]);
 
   const navSections = [
     {
@@ -21,6 +35,7 @@ export default function KQAppShell({ children }) {
         { href: "/recommendations", icon: "sparkles", label: "Smart Matches", badge: "Engine" },
         { href: "/directory", icon: "directory", label: "Stakeholder Directory" },
         { href: "/requests", icon: "requests", label: "Mentorship & Requests" },
+        { href: "/notifications", icon: "bell", label: "Notifications", badge: unreadCount ? String(unreadCount) : null },
       ],
     },
     {
@@ -157,11 +172,12 @@ export default function KQAppShell({ children }) {
               <Icon name="search" size={16} />
             </Link>
             <Link
-              href="/requests"
+              href="/notifications"
               className="icon-btn relative"
-              title="Mentorship & Connection Requests"
+              title="Notifications"
             >
               <Icon name="bell" size={16} />
+              {unreadCount > 0 && <span className="absolute -right-1 -top-1 min-w-4 h-4 px-1 rounded-full bg-[#c8102e] text-white text-[9px] leading-4 text-center font-bold">{unreadCount > 9 ? "9+" : unreadCount}</span>}
             </Link>
 
             {session?.user ? (

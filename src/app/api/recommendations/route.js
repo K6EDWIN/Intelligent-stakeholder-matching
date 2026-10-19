@@ -160,6 +160,15 @@ export async function GET() {
       mlAcceptanceProbability: item.mlAcceptanceProbability === null
         ? null
         : Math.round(item.mlAcceptanceProbability * 100),
+      mlInfluence: Math.round(item.mlConfidence * 100),
+      signals: {
+        skillOverlap: Math.round((Number(item.modelFeatures.skillOverlap) || 0) * 100),
+        interestOverlap: Math.round((Number(item.modelFeatures.interestOverlap) || 0) * 100),
+        sameDepartment: Boolean(item.modelFeatures.sameDepartment),
+        mentorshipRoleFit: Boolean(item.modelFeatures.mentorshipRoleFit),
+        sharedNetwork: Math.round((Number(item.modelFeatures.sharedNetwork) || 0) * 100),
+        requestType: item.modelFeatures.isMentorshipRequest ? "Mentorship" : "Connection",
+      },
       sharedSkills: item.sharedSkillNames,
       sharedInterests: item.sharedInterestNames,
     }));

@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const profile = await prisma.profile.findUnique({
+  let profile = await prisma.profile.findUnique({
     where: { userId: session.user.id },
     include: {
       skills: { include: { skill: true } },
@@ -21,7 +21,15 @@ export async function GET() {
   });
 
   if (!profile) {
-    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    profile = await prisma.profile.create({
+      data: {
+        userId: session.user.id,
+        fullName: session.user.name || session.user.email?.split("@")[0] || "PrideConnect Member",
+        department: session.user.role === "ADMIN" ? "Administration" : "Flight Operations",
+        isPublic: session.user.role !== "ADMIN",
+      },
+      include: { skills: true, interests: true },
+    });
   }
 
   return NextResponse.json({

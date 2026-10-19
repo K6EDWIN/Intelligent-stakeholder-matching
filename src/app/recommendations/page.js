@@ -398,6 +398,19 @@ export default function RecommendationsPage() {
                           style={{ width: `${item.collaborativeScore}%` }}
                         />
                       </div>
+                      <div className="pt-2 border-t border-slate-200/70">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Model signals · {item.mlInfluence ?? 0}% ranking influence</div>
+                        <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
+                          {[
+                            `Skills ${item.signals?.skillOverlap ?? 0}%`,
+                            `Interests ${item.signals?.interestOverlap ?? 0}%`,
+                            `Department ${item.signals?.sameDepartment ? "match" : "no match"}`,
+                            `Role fit ${item.signals?.mentorshipRoleFit ? "yes" : "no"}`,
+                            `Network ${item.signals?.sharedNetwork ?? 0}%`,
+                            item.signals?.requestType || "Mentorship",
+                          ].map((signal) => <span key={signal} className="px-2 py-1 rounded-full bg-white border border-slate-200 text-slate-600">{signal}</span>)}
+                        </div>
+                      </div>
                       {!meta.model?.active && (
                         <p className="pt-1 text-[11px] text-slate-500">
                           The model is collecting resolved request outcomes. Predictions will become personalized as members accept or decline requests.

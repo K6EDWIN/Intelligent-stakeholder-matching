@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createNotification } from "@/lib/notifications";
 
 const VALID_STATUSES = ["ACCEPTED", "DECLINED"];
 
@@ -48,6 +49,15 @@ export async function PATCH(request, { params }) {
   const connectionRequest = await prisma.connectionRequest.update({
     where: { id },
     data: { status },
+  });
+
+  const responder = await prisma.profile.findUnique({ where: { userId: session.user.id }, select: { fullName: true } });
+  await createNotification({
+      userId: existing.senderId,
+      type: `CONNECTION_${status}`,
+      title: status === "ACCEPTED" ? "Connection request accepted" : "Connection request declined",
+      message: `${responder?.fullName || "A stakeholder"} ${status === "ACCEPTED" ? "accepted" : "declined"} your connection request.`,
+      href: "/requests",
   });
 
   return NextResponse.json({ connectionRequest });

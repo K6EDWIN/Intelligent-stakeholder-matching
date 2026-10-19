@@ -47,6 +47,9 @@ export default function AdminPage() {
 
   // Recommender Live Simulation State
   const [simTargetUserId, setSimTargetUserId] = useState("");
+  const [simSearch, setSimSearch] = useState("");
+  const [simUserOptions, setSimUserOptions] = useState([]);
+  const [simUsersLoading, setSimUsersLoading] = useState(false);
   const [simulationData, setSimulationData] = useState(null);
   const [simulating, setSimulating] = useState(false);
   const [simError, setSimError] = useState("");
@@ -94,10 +97,6 @@ export default function AdminPage() {
         const userList = usersData.users || [];
         setUsers(userList);
 
-        if (userList.length > 0 && !simTargetUserId) {
-          setSimTargetUserId(userList[0].id);
-        }
-
         if (evalData.benchmark) {
           setBenchmark(evalData.benchmark);
         }
@@ -110,6 +109,28 @@ export default function AdminPage() {
 
     load();
   }, [status, session]);
+
+  useEffect(() => {
+    if (status !== "authenticated" || session?.user?.role !== "ADMIN") return undefined;
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setSimUsersLoading(true);
+      try {
+        const query = new URLSearchParams({ q: simSearch });
+        const res = await fetch(`/api/admin/simulation-users?${query}`, { signal: controller.signal });
+        const data = await res.json();
+        if (res.ok) {
+          setSimUserOptions(data.users || []);
+          setSimTargetUserId((current) => (data.users || []).some((u) => u.id === current) ? current : (data.users?.[0]?.id || ""));
+        }
+      } catch (err) {
+        if (err.name !== "AbortError") setSimError(err.message);
+      } finally {
+        if (!controller.signal.aborted) setSimUsersLoading(false);
+      }
+    }, 220);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [status, session?.user?.role, simSearch]);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -298,6 +319,15 @@ export default function AdminPage() {
               >
                 <Icon name="sparkles" size={13} />
                 <span className="hidden sm:inline">Stakeholder Portal</span>
+              </Link>
+
+              <Link
+                href="/profile"
+                className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/70 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
+                title="View and edit your administrator profile"
+              >
+                <Avatar name={session?.user?.name || session?.user?.email} size="sm" role="ADMIN" />
+                <span className="hidden sm:inline">My Profile</span>
               </Link>
 
               <button
@@ -754,19 +784,26 @@ export default function AdminPage() {
                     Simulate Live Recommendation Scoring for Any Stakeholder
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Select a member from the database to run live vector calculation and inspect their top candidate breakdown in real time.
+                    Search the directory by name, email, or department, then inspect live scores for that member. Results are searched on the server and capped to a short list.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+                  <label className="relative">
+                    <span className="sr-only">Search stakeholders for simulation</span>
+                    <Icon name="search" size={15} className="absolute left-3 text-slate-400" />
+                    <input value={simSearch} onChange={(e) => setSimSearch(e.target.value)} placeholder="Search name, email, department" className="w-full sm:w-56 pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs outline-none text-slate-800 focus:border-[#c8102e]" />
+                  </label>
                   <select
                     value={simTargetUserId}
                     onChange={(e) => setSimTargetUserId(e.target.value)}
-                    className="px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs outline-none text-slate-800 font-medium max-w-xs focus:border-[#c8102e]"
+                    aria-label="Choose stakeholder for simulation"
+                    className="px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs outline-none text-slate-800 font-medium max-w-xs focus:border-[#c8102e]"
                   >
-                    {users.map((u) => (
+                    {simUserOptions.length === 0 && <option value="">{simUsersLoading ? "Searching…" : "No matching stakeholders"}</option>}
+                    {simUserOptions.map((u) => (
                       <option key={u.id} value={u.id}>
-                        {u.profile?.fullName || u.email} ({u.role})
+                        {u.profile?.fullName || u.email} · {u.role}
                       </option>
                     ))}
                   </select>

@@ -164,7 +164,7 @@ export default function ProfilePage() {
                   {form.fullName || "Your Profile"}
                 </h1>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  {form.department || "Kenya Airways Stakeholder"} · {session?.user?.email}
+                  {form.department || "Kenya Airways Stakeholder"} · {session?.user?.email} · {session?.user?.role === "ADMIN" ? "Administrator" : "Verified Member"}
                 </p>
               </div>
             </div>
