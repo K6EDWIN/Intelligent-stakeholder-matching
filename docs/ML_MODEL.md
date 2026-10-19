@@ -1,9 +1,19 @@
 # Machine-learning experiment: predicting request acceptance
 
-This report explains the project's trained model in everyday language first, then gives enough detail to reproduce and discuss the experiment. The central distinction is:
+This report explains both the live adaptive model and the separate neural-network experiment.
 
-- The **live recommendations** shown by the web application come from explicit JavaScript similarity formulas in `src/lib/recommendation.js`, `src/lib/collaborative.js`, and `src/lib/hybrid.js`.
-- The **trained neural model** described here is a separate research experiment in `ml/train_recommender.ipynb`. It is not loaded by the website and does not affect live match rankings.
+- The **live recommendations** learn a regularized logistic-regression model from resolved request outcomes. Feature snapshots are captured when new requests are sent, before the recipient decides. See `src/lib/adaptive-recommender.js`.
+- The **NCF neural model** described in the later sections is a separate experiment in `ml/train_recommender.ipynb`. It is not loaded by the website because it performed around chance on fabricated data.
+
+## Live model used by the website
+
+When a member sends a request, the API snapshots six numeric signals from the sender and recipient profiles: skill overlap, interest overlap, same department, mentorship-role fit, shared accepted-network score, and request type. When the request is accepted or declined, that status becomes the training label. Pending requests and older seeded interactions without a feature snapshot are excluded. Members should be informed that these outcomes help improve recommendations.
+
+The recommendation API fits a small L2-regularized logistic-regression model to the available labeled request snapshots. It uses balanced class weights so an uneven number of acceptances or declines does not automatically dominate. The model estimates acceptance likelihood for each possible mentorship match. Rankings blend that estimate with a profile/network cold-start score until enough examples have accumulated.
+
+The model is considered ready to influence ranking once there are at least 12 labeled examples and at least four outcomes of each class. Its influence increases linearly to full influence at 50 examples. These are conservative prototype thresholds, not validated performance guarantees. The model is fit when recommendations are requested. It can run in the Next.js server or in the optional Python API prepared in `ml/huggingface/`, hosted on Render or Hugging Face Docker Spaces. When configured, the app sends numeric features only; profile text, request messages, names, email addresses, and user IDs are not model inputs. The numeric feature snapshot remains in the application's PostgreSQL database, which is the source of truth when the hosted service starts or restarts.
+
+This does not establish that the model is accurate or fair. The administrator console exposes its training-example counts and influence. A proper performance claim still requires a time-based held-out evaluation and consented real usage data. The admin's profile-overlap benchmark is a separate proxy diagnostic and does not validate the learned acceptance model.
 
 ## 1. The question the experiment asks
 
@@ -94,11 +104,11 @@ The observed chance-level ROC-AUC is evidence that this particular model and dat
 
 The plots in `ml/artifacts/loss_curve.png` and `ml/artifacts/embedding_space.png` are exploratory diagnostics. A two-dimensional PCA visualization is a compressed view of the learned vectors; visual clusters (or lack of clusters) alone do not establish model quality.
 
-## 6. Why the model is not integrated into the website
+## 6. Why the NCF experiment is not integrated into the website
 
-The results do not support using its acceptance predictions to rank stakeholders. The live API at `/api/recommendations` therefore calculates content, collaborative, and hybrid scores from profile sets and accepted relationships. The notebook's `best_model.pt` checkpoint and exported user embeddings are research outputs only.
+The results do not support using the NCF experiment's predictions to rank stakeholders. The live API instead learns from new request snapshots using the small logistic-regression model described above. The notebook's `best_model.pt` checkpoint and exported user embeddings remain research outputs only.
 
-Keeping the model separate makes the production behavior inspectable and avoids presenting a near-random experimental prediction as a useful live recommendation. No NCF model checkpoint is required to run the web application.
+The live model is intentionally small and can be retrained from request examples stored in PostgreSQL. No NCF checkpoint, Python runtime, or model-hosting service is required to run the web application.
 
 ## 7. How to reproduce the experiment
 

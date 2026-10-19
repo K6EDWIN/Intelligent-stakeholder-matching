@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { computeContentScore } from "@/lib/recommendation";
 import { buildConnectionsByUser, computeCollaborativeScore } from "@/lib/collaborative";
 import { computeHybridWeights, computeHybridScore } from "@/lib/hybrid";
+import { buildTrainingExamples, scoreCandidate, trainAcceptanceModel } from "@/lib/adaptive-recommender";
+import { getAdaptivePredictions } from "@/lib/hosted-ml";
 
 // Helper: Discounted Cumulative Gain
 function computeDCG(relevanceList) {
@@ -34,7 +36,7 @@ export async function GET(req) {
     const url = new URL(req.url);
     const simulateUserId = url.searchParams.get("simulateUserId");
 
-    const [profiles, acceptedMentorships, acceptedConnections] = await Promise.all([
+    const [profiles, acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections] = await Promise.all([
       prisma.profile.findMany({
         where: { user: { isVerified: true, isSuspended: false } },
         include: {
@@ -51,6 +53,14 @@ export async function GET(req) {
         where: { status: "ACCEPTED" },
         select: { senderId: true, receiverId: true },
       }),
+      prisma.mentorshipRequest.findMany({
+        where: { status: { in: ["ACCEPTED", "DECLINED"] } },
+        select: { status: true, modelFeatures: true },
+      }),
+      prisma.connectionRequest.findMany({
+        where: { status: { in: ["ACCEPTED", "DECLINED"] } },
+        select: { status: true, modelFeatures: true },
+      }),
     ]);
 
     const totalInteractions = acceptedMentorships.length + acceptedConnections.length;
@@ -58,7 +68,17 @@ export async function GET(req) {
       ...acceptedMentorships,
       ...acceptedConnections,
     ]);
+    const trainingExamples = buildTrainingExamples([
+      ...resolvedMentorships,
+      ...resolvedConnections,
+    ]);
+    const model = trainAcceptanceModel(trainingExamples);
     const hybridWeights = computeHybridWeights(totalInteractions);
+    const modelState = await getAdaptivePredictions({
+      examples: trainingExamples,
+      candidates: [],
+      localModel: model,
+    });
 
     // Live recommendation simulation for a selected stakeholder
     if (simulateUserId) {
@@ -86,7 +106,15 @@ export async function GET(req) {
 
           const cbf = computeContentScore(targetAttrs, candAttrs);
           const cf = computeCollaborativeScore(connectionsByUser, simulateUserId, cand.user.id);
-          const hybrid = computeHybridScore(cbf, cf, hybridWeights);
+          const adaptive = scoreCandidate({
+            owner: targetProfile,
+            candidate: cand,
+            ownerAttrs: targetAttrs,
+            candidateAttrs: candAttrs,
+            connectionsByUser,
+            model,
+            totalAcceptedInteractions: totalInteractions,
+          });
 
           const sharedSkillNames = cand.skills
             .filter((s) => targetSkillIds.has(s.skillId))
@@ -99,11 +127,28 @@ export async function GET(req) {
             role: cand.user.role,
             contentScore: +(cbf * 100).toFixed(1),
             collaborativeScore: +(cf * 100).toFixed(1),
-            hybridScore: +(hybrid * 100).toFixed(1),
+            mlAcceptanceProbability: adaptive.mlAcceptanceProbability,
+            baselineScore: adaptive.baselineScore,
+            modelFeatures: adaptive.modelFeatures,
+            matchScore: adaptive.matchScore,
             sharedSkills: sharedSkillNames,
           };
-        })
-        .sort((a, b) => b.hybridScore - a.hybridScore)
+        });
+
+      const hostedPredictions = await getAdaptivePredictions({
+        examples: trainingExamples,
+        candidates: simResults.map((item) => ({ features: item.modelFeatures })),
+        localModel: model,
+      });
+      simResults.forEach((item, index) => {
+        item.mlAcceptanceProbability = hostedPredictions.predictions[index];
+        item.matchScore = item.mlAcceptanceProbability === null
+          ? item.baselineScore
+          : item.baselineScore * (1 - hostedPredictions.model.confidence) +
+            item.mlAcceptanceProbability * hostedPredictions.model.confidence;
+      });
+      const rankedSimResults = simResults
+        .sort((a, b) => b.matchScore - a.matchScore)
         .slice(0, 5);
 
       return NextResponse.json({
@@ -114,10 +159,21 @@ export async function GET(req) {
             department: targetProfile.department || "Operations",
             role: targetProfile.user.role,
           },
-          candidates: simResults,
-          weights: {
-            alpha: Math.round(hybridWeights.alpha * 100),
-            beta: Math.round(hybridWeights.beta * 100),
+          candidates: rankedSimResults.map(({ baselineScore, modelFeatures, ...item }) => ({
+            ...item,
+            mlAcceptanceProbability: item.mlAcceptanceProbability === null
+              ? null
+              : +(item.mlAcceptanceProbability * 100).toFixed(1),
+            matchScore: +(item.matchScore * 100).toFixed(1),
+          })),
+          model: {
+            active: hostedPredictions.model.active,
+            trainingExamples: hostedPredictions.model.sampleCount,
+            acceptedExamples: hostedPredictions.model.acceptedCount,
+            declinedExamples: hostedPredictions.model.declinedCount,
+            confidence: Math.round(hostedPredictions.model.confidence * 100),
+            featureWeights: hostedPredictions.model.weights,
+            provider: hostedPredictions.provider,
           },
           latencyMs: Date.now() - startTime,
         },
@@ -230,6 +286,15 @@ export async function GET(req) {
       evaluatedUsers: evaluatedUsersCount,
       totalStakeholders: profiles.length,
       totalInteractions,
+      adaptiveModel: {
+        active: modelState.model.active,
+        provider: modelState.provider,
+        trainingExamples: modelState.model.sampleCount,
+        acceptedExamples: modelState.model.acceptedCount,
+        declinedExamples: modelState.model.declinedCount,
+        confidence: Math.round(modelState.model.confidence * 100),
+        featureWeights: modelState.model.weights,
+      },
       weights: {
         alpha: Math.round(hybridWeights.alpha * 100),
         beta: Math.round(hybridWeights.beta * 100),

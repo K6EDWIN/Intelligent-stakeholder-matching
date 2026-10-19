@@ -2,19 +2,18 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { computeContentScore, sharedAttributes } from "@/lib/recommendation";
+import { sharedAttributes } from "@/lib/recommendation";
+import { buildConnectionsByUser } from "@/lib/collaborative";
 import {
-  buildConnectionsByUser,
-  computeCollaborativeScore,
-} from "@/lib/collaborative";
-import { computeHybridWeights, computeHybridScore } from "@/lib/hybrid";
+  buildTrainingExamples,
+  scoreCandidate,
+  trainAcceptanceModel,
+} from "@/lib/adaptive-recommender";
+import { getAdaptivePredictions } from "@/lib/hosted-ml";
 
 // GET /api/recommendations
-// Computes content-based similarity and user-based collaborative filtering
-// between the logged-in user and every other eligible stakeholder, combines
-// them into a hybrid score (cold-start-aware weighting -- see
-// src/lib/hybrid.js), persists all three scores to the Recommendation
-// table, and ranks the "Suggested for you" list by hybridScore.
+// Fits a small acceptance model from resolved, feature-snapshotted live
+// requests. The model gradually takes over ranking as labeled outcomes grow.
 export async function GET() {
   const session = await getServerSession(authOptions);
 
@@ -32,8 +31,8 @@ export async function GET() {
   }
 
   const ownerAttrs = {
-    skillIds: ownerProfile.skills.map((s) => s.skillId),
-    interestIds: ownerProfile.interests.map((i) => i.interestId),
+    skillIds: ownerProfile.skills.map((item) => item.skillId),
+    interestIds: ownerProfile.interests.map((item) => item.interestId),
   };
 
   const candidates = await prisma.profile.findMany({
@@ -49,7 +48,7 @@ export async function GET() {
     },
   });
 
-  const [acceptedMentorships, acceptedConnections] = await Promise.all([
+  const [acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections] = await Promise.all([
     prisma.mentorshipRequest.findMany({
       where: { status: "ACCEPTED" },
       select: { senderId: true, receiverId: true },
@@ -58,58 +57,74 @@ export async function GET() {
       where: { status: "ACCEPTED" },
       select: { senderId: true, receiverId: true },
     }),
+    prisma.mentorshipRequest.findMany({
+      where: { status: { in: ["ACCEPTED", "DECLINED"] } },
+      select: { status: true, modelFeatures: true },
+    }),
+    prisma.connectionRequest.findMany({
+      where: { status: { in: ["ACCEPTED", "DECLINED"] } },
+      select: { status: true, modelFeatures: true },
+    }),
   ]);
+
   const connectionsByUser = buildConnectionsByUser([
     ...acceptedMentorships,
     ...acceptedConnections,
   ]);
-  const hybridWeights = computeHybridWeights(
-    acceptedMentorships.length + acceptedConnections.length
-  );
+  const examples = buildTrainingExamples([
+    ...resolvedMentorships,
+    ...resolvedConnections,
+  ]);
+  const model = trainAcceptanceModel(examples);
+  const totalInteractions = acceptedMentorships.length + acceptedConnections.length;
 
   const scored = candidates.map((candidate) => {
     const candidateAttrs = {
-      skillIds: candidate.skills.map((s) => s.skillId),
-      interestIds: candidate.interests.map((i) => i.interestId),
+      skillIds: candidate.skills.map((item) => item.skillId),
+      interestIds: candidate.interests.map((item) => item.interestId),
     };
-
-    const contentScore = computeContentScore(ownerAttrs, candidateAttrs);
-    const collaborativeScore = computeCollaborativeScore(
+    const score = scoreCandidate({
+      owner: ownerProfile,
+      candidate,
+      ownerAttrs,
+      candidateAttrs,
       connectionsByUser,
-      session.user.id,
-      candidate.user.id
-    );
-    const hybridScore = computeHybridScore(
-      contentScore,
-      collaborativeScore,
-      hybridWeights
-    );
+      model,
+      totalAcceptedInteractions: totalInteractions,
+    });
     const { sharedSkillIds, sharedInterestIds } = sharedAttributes(
       ownerAttrs,
       candidateAttrs
     );
 
-    const sharedSkillNames = candidate.skills
-      .filter((s) => sharedSkillIds.includes(s.skillId))
-      .map((s) => s.skill.name);
-    const sharedInterestNames = candidate.interests
-      .filter((i) => sharedInterestIds.includes(i.interestId))
-      .map((i) => i.interest.name);
-
     return {
       candidate,
-      contentScore,
-      collaborativeScore,
-      hybridScore,
-      sharedSkillNames,
-      sharedInterestNames,
+      ...score,
+      sharedSkillNames: candidate.skills
+        .filter((item) => sharedSkillIds.includes(item.skillId))
+        .map((item) => item.skill.name),
+      sharedInterestNames: candidate.interests
+        .filter((item) => sharedInterestIds.includes(item.interestId))
+        .map((item) => item.interest.name),
     };
   });
 
-  // Persist all three scores. hybridScore -- not contentScore -- is now the
-  // ranking signal, per the weighted formula in src/lib/hybrid.js.
+  const hostedPredictions = await getAdaptivePredictions({
+    examples,
+    candidates: scored.map((item) => ({ features: item.modelFeatures })),
+    localModel: model,
+  });
+  scored.forEach((item, index) => {
+    item.mlAcceptanceProbability = hostedPredictions.predictions[index];
+    item.mlConfidence = hostedPredictions.model.confidence;
+    item.matchScore = item.mlAcceptanceProbability === null
+      ? item.baselineScore
+      : item.baselineScore * (1 - item.mlConfidence) +
+        item.mlAcceptanceProbability * item.mlConfidence;
+  });
+
   await prisma.$transaction(
-    scored.map(({ candidate, contentScore, collaborativeScore, hybridScore }) =>
+    scored.map(({ candidate, contentScore, collaborativeScore, matchScore }) =>
       prisma.recommendation.upsert({
         where: {
           ownerId_matchedUserId: {
@@ -117,48 +132,50 @@ export async function GET() {
             matchedUserId: candidate.user.id,
           },
         },
-        update: {
-          contentScore,
-          collaborativeScore,
-          hybridScore,
-        },
+        update: { contentScore, collaborativeScore, hybridScore: matchScore },
         create: {
           ownerId: session.user.id,
           matchedUserId: candidate.user.id,
           contentScore,
           collaborativeScore,
-          hybridScore,
+          hybridScore: matchScore,
         },
       })
     )
   );
 
-  const totalInteractions = acceptedMentorships.length + acceptedConnections.length;
-
   const ranked = scored
-    .sort((a, b) => b.hybridScore - a.hybridScore)
+    .sort((a, b) => b.matchScore - a.matchScore)
     .slice(0, 12)
-    .map((s) => ({
-      userId: s.candidate.user.id,
-      role: s.candidate.user.role,
-      fullName: s.candidate.fullName,
-      department: s.candidate.department,
-      bio: s.candidate.bio,
-      mentorshipRole: s.candidate.mentorshipRole,
-      matchPercent: Math.round(s.hybridScore * 100),
-      contentScore: Math.round(s.contentScore * 100),
-      collaborativeScore: Math.round(s.collaborativeScore * 100),
-      sharedSkills: s.sharedSkillNames,
-      sharedInterests: s.sharedInterestNames,
+    .map((item) => ({
+      userId: item.candidate.user.id,
+      role: item.candidate.user.role,
+      fullName: item.candidate.fullName,
+      department: item.candidate.department,
+      bio: item.candidate.bio,
+      mentorshipRole: item.candidate.mentorshipRole,
+      matchPercent: Math.round(item.matchScore * 100),
+      contentScore: Math.round(item.contentScore * 100),
+      collaborativeScore: Math.round(item.collaborativeScore * 100),
+      mlAcceptanceProbability: item.mlAcceptanceProbability === null
+        ? null
+        : Math.round(item.mlAcceptanceProbability * 100),
+      sharedSkills: item.sharedSkillNames,
+      sharedInterests: item.sharedInterestNames,
     }));
 
   return NextResponse.json({
     recommendations: ranked,
     meta: {
       totalInteractions,
-      weights: {
-        alpha: Math.round(hybridWeights.alpha * 100),
-        beta: Math.round(hybridWeights.beta * 100),
+      model: {
+        active: hostedPredictions.model.active,
+        provider: hostedPredictions.provider,
+        trainingExamples: hostedPredictions.model.sampleCount,
+        acceptedExamples: hostedPredictions.model.acceptedCount,
+        declinedExamples: hostedPredictions.model.declinedCount,
+        confidence: Math.round(hostedPredictions.model.confidence * 100),
+        status: hostedPredictions.model.active ? "LEARNING_FROM_OUTCOMES" : "GATHERING_OUTCOMES",
       },
     },
   });

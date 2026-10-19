@@ -233,7 +233,7 @@ export default function AdminPage() {
             Restricted Admin Console
           </h2>
           <p className="text-xs text-slate-400 leading-relaxed">
-            This console contains academic evaluation telemetry, dynamic hybrid recommender weights, and user governance controls reserved strictly for Kenya Airways administrators.
+            This console contains recommender learning status, evaluation diagnostics, and user governance controls reserved for administrators.
           </p>
           <div className="pt-2">
             <Button onClick={() => router.push("/recommendations")} className="w-full">
@@ -514,10 +514,10 @@ export default function AdminPage() {
                     Prototype Ranking Diagnostic
                   </div>
                   <h3 className="text-lg font-bold text-slate-900">
-                    Compare the three live ranking formulas
+                    Compare the three cold-start ranking signals
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Public verified profiles only. Relevance is a proxy rule: at least two shared skills or an accepted connection; it is not a human judgment or held-out test.
+                    This proxy benchmark does not evaluate the learned acceptance model. Relevance means two shared skills or an accepted connection; it is not human judgment or a held-out test.
                   </p>
                 </div>
 
@@ -584,10 +584,10 @@ export default function AdminPage() {
                     Cold-Start Mitigation Mechanism
                   </div>
                   <h3 className="text-lg font-bold text-slate-900">
-                    Dynamic Weight Adaptation: Content vs. Collaborative Signals
+                    Cold-Start Fallback: Profile and Network Signals
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    The live formula uses N = {benchmark?.totalInteractions ?? 0} accepted mentorship and connection requests. These are hand-set weights, not trained model parameters.
+                    This transparent fallback helps while the adaptive acceptance model gathers enough resolved, feature-snapshotted requests to learn.
                   </p>
                 </div>
 
@@ -598,6 +598,62 @@ export default function AdminPage() {
                   <span className="px-3 py-1.5 rounded-lg bg-emerald-800 text-white font-bold">
                     β(Collab): {currentBeta}%
                   </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="block text-[10px] uppercase tracking-wider font-bold text-slate-400">Live ML model</span>
+                  <b className="text-sm text-slate-900">{benchmark?.adaptiveModel?.provider === "HOSTED_API" ? "Hosted ML API" : benchmark?.adaptiveModel?.provider === "LOCAL_FALLBACK" ? "Local fallback (host unavailable)" : benchmark?.adaptiveModel?.active ? "Local model learning from outcomes" : "Gathering labeled outcomes"}</b>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="block text-[10px] uppercase tracking-wider font-bold text-slate-400">Training examples</span>
+                  <b className="text-sm text-slate-900">{benchmark?.adaptiveModel?.trainingExamples ?? 0} resolved requests</b>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="block text-[10px] uppercase tracking-wider font-bold text-slate-400">ML ranking influence</span>
+                  <b className="text-sm text-slate-900">{benchmark?.adaptiveModel?.confidence ?? 0}%</b>
+                </div>
+              </div>
+
+              <div className="p-4 sm:p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                <div>
+                  <span className="block text-[10px] uppercase tracking-wider font-bold text-slate-400">What the model has learned</span>
+                  <p className="text-xs text-slate-600 mt-1">Positive weights raise the estimated acceptance score when that signal is present. Negative weights lower it. Values update as new requests are resolved.</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                  {Object.entries(benchmark?.adaptiveModel?.featureWeights || {}).map(([name, weight]) => {
+                    const magnitude = Math.abs(weight);
+                    const maxMagnitude = Math.max(
+                      ...Object.values(benchmark?.adaptiveModel?.featureWeights || {}).map((value) => Math.abs(value)),
+                      0.01
+                    );
+                    const labels = {
+                      skillOverlap: "Shared skills",
+                      interestOverlap: "Shared interests",
+                      sameDepartment: "Same department",
+                      mentorshipRoleFit: "Mentor and mentee fit",
+                      sharedNetwork: "Shared network patterns",
+                      isMentorshipRequest: "Mentorship request type",
+                    };
+                    return (
+                      <div key={name} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 text-xs">
+                        <span className="text-slate-600">{labels[name] || name}</span>
+                        <b className={weight >= 0 ? "font-mono text-emerald-700" : "font-mono text-rose-700"}>
+                          {weight >= 0 ? "+" : ""}{weight.toFixed(3)}
+                        </b>
+                        <div className="col-span-2 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${weight >= 0 ? "bg-emerald-600" : "bg-rose-600"}`}
+                            style={{ width: `${(magnitude / maxMagnitude) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {!benchmark?.adaptiveModel?.featureWeights && (
+                    <p className="text-xs text-slate-500 sm:col-span-2">Learned weights will appear after at least 12 resolved requests, including four acceptances and four declines.</p>
+                  )}
                 </div>
               </div>
 
@@ -755,7 +811,8 @@ export default function AdminPage() {
 
                     <div className="text-left sm:text-right font-mono text-[11px] text-slate-600 space-y-0.5">
                       <div>Inference Latency: <b className="text-slate-900">{simulationData.latencyMs}ms</b></div>
-                      <div>Engine Blend: <b className="text-slate-900">{simulationData.weights.alpha}% Content / {simulationData.weights.beta}% Collab</b></div>
+                      <div>ML provider: <b className="text-slate-900">{simulationData.model.provider === "HOSTED_API" ? "Hosted ML API" : simulationData.model.provider}</b></div>
+                      <div>Adaptive ML influence: <b className="text-slate-900">{simulationData.model.confidence}%</b></div>
                     </div>
                   </div>
 
@@ -787,6 +844,10 @@ export default function AdminPage() {
                               </div>
                               <span className="text-[11px] text-slate-500 block mt-0.5">
                                 {cand.department}
+                              </span>
+
+                              <span className="text-[11px] text-slate-500 block mt-1">
+                                Predicted acceptance: <b className="text-slate-800">{cand.mlAcceptanceProbability == null ? "Gathering examples" : `${cand.mlAcceptanceProbability}%`}</b> · Final match score: <b className="text-slate-800">{cand.matchScore}%</b>
                               </span>
 
                               {cand.sharedSkills.length > 0 && (

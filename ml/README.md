@@ -2,7 +2,7 @@
 
 This folder contains a small Neural Collaborative Filtering (NCF) experiment. In everyday terms, it tests whether a neural network can predict if an already-sent mentorship or connection request will be accepted or declined.
 
-**This is not the live recommendation engine.** The website ranks potential matches with transparent profile-overlap and accepted-connection formulas in `src/lib/`. The trained model and its embeddings are research artifacts, not used by the website. The full method and limitations are in [`docs/ML_MODEL.md`](../docs/ML_MODEL.md).
+**This NCF notebook is not the live recommendation engine.** The website now learns from newly resolved mentorship and connection requests with a separate lightweight logistic-regression model in `src/lib/adaptive-recommender.js`. The NCF model and its embeddings remain notebook research artifacts because its synthetic-data results were near chance. The live model and both sets of limitations are detailed in [`docs/ML_MODEL.md`](../docs/ML_MODEL.md).
 
 ## Files
 
@@ -30,6 +30,10 @@ The available labeled data contains 372 accepted/declined requests, but every se
 
 The checked-in `precision_at_5` field is a historical value from an earlier notebook version and used a nonstandard denominator. The notebook has since been corrected to calculate standard Precision@5 (excluding the sender as a candidate), but the artifacts have not been regenerated. Do not compare the old artifact value with standard Precision@5 results; rerun the notebook to get an updated value. See [`docs/ML_MODEL.md`](../docs/ML_MODEL.md).
 
-## Why the model stays separate
+## Host the live recommender separately
 
-The model did not show reliable predictive value on this dataset, and deploying its scores as match rankings would change the product's behavior without evidence that it helps members. The live `/api/recommendations` route does not load checkpoints or embeddings. Running the website does not require Python, Colab, or files from this folder.
+The live adaptive recommendation service is prepared in [`huggingface/`](huggingface/). It is a Docker Space API that fits from new resolved outcomes in the application's database. This is separate from the NCF notebook above. Follow the deployment steps in the main [README](../README.md#host-the-live-recommender-on-hugging-face) and the Space-specific [`README`](huggingface/README.md).
+
+## Why this NCF model stays separate
+
+The NCF model did not show reliable predictive value on this dataset. The live website uses a different model that learns from request outcomes captured by the running application. The live `/api/recommendations` route does not load this notebook's checkpoint or embeddings. Running the website does not require Python, Colab, or files from this folder.

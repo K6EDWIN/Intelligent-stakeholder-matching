@@ -130,6 +130,7 @@ model MentorshipRequest {
   receiverId String
   message    String?
   status     RequestStatus @default(PENDING)
+  modelFeatures Json?         // Numeric feature snapshot used after outcome is known.
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 
@@ -144,6 +145,7 @@ model ConnectionRequest {
   senderId   String
   receiverId String
   status     RequestStatus @default(PENDING)
+  modelFeatures Json?         // Numeric feature snapshot used after outcome is known.
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 

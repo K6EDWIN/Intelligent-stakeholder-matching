@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { extractPairFeatures } from "@/lib/adaptive-recommender";
+import { buildConnectionsByUser, computeCollaborativeScore } from "@/lib/collaborative";
 
 const COUNTERPART_SELECT = {
   id: true,
@@ -62,9 +64,28 @@ export async function POST(request) {
     );
   }
 
-  const receiver = await prisma.user.findUnique({
-    where: { id: receiverId },
-  });
+  const [receiver, senderProfile, acceptedMentorships, acceptedConnections] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: receiverId },
+      include: {
+        profile: {
+          include: { skills: true, interests: true },
+        },
+      },
+    }),
+    prisma.profile.findUnique({
+      where: { userId: session.user.id },
+      include: { skills: true, interests: true },
+    }),
+    prisma.mentorshipRequest.findMany({
+      where: { status: "ACCEPTED" },
+      select: { senderId: true, receiverId: true },
+    }),
+    prisma.connectionRequest.findMany({
+      where: { status: "ACCEPTED" },
+      select: { senderId: true, receiverId: true },
+    }),
+  ]);
   if (!receiver) {
     return NextResponse.json({ error: "Recipient not found" }, { status: 404 });
   }
@@ -84,6 +105,18 @@ export async function POST(request) {
       senderId: session.user.id,
       receiverId,
       message: message || null,
+      modelFeatures: senderProfile && receiver.profile
+        ? extractPairFeatures(
+            senderProfile,
+            receiver.profile,
+            "MENTORSHIP",
+            computeCollaborativeScore(
+              buildConnectionsByUser([...acceptedMentorships, ...acceptedConnections]),
+              session.user.id,
+              receiverId
+            )
+          )
+        : undefined,
     },
   });
 

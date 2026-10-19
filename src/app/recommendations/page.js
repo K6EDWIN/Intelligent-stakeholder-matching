@@ -35,7 +35,10 @@ export default function RecommendationsPage() {
   const router = useRouter();
 
   const [recommendations, setRecommendations] = useState([]);
-  const [meta, setMeta] = useState({ weights: { alpha: 85, beta: 15 }, totalInteractions: 0 });
+  const [meta, setMeta] = useState({
+    totalInteractions: 0,
+    model: { active: false, trainingExamples: 0, confidence: 0 },
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -203,21 +206,19 @@ export default function RecommendationsPage() {
             </p>
           </div>
 
-          {/* Engine Parameters Badge */}
+          {/* Adaptive model status */}
           <div className="flex items-center gap-4 bg-white p-3 rounded-lg border border-slate-200 shadow-sm text-xs">
             <div className="border-r border-slate-200 pr-3">
-              <span className="text-slate-400 block text-[11px] font-semibold uppercase">Algorithm Model</span>
-              <span className="font-semibold text-slate-800">Hybrid CBF + CF</span>
+              <span className="text-slate-400 block text-[11px] font-semibold uppercase">Recommendation engine</span>
+              <span className="font-semibold text-slate-800">{meta.model?.provider === "HOSTED_API" ? "Hosted adaptive ML" : meta.model?.active ? "Adaptive ML" : "Learning from outcomes"}</span>
             </div>
             <div className="border-r border-slate-200 pr-3 font-mono">
-              <span className="text-slate-400 block text-[11px] font-semibold uppercase">Current Weights</span>
-              <span className="text-slate-700">
-                α: <b>{meta.weights?.alpha || 85}%</b> · β: <b>{meta.weights?.beta || 15}%</b>
-              </span>
+              <span className="text-slate-400 block text-[11px] font-semibold uppercase">ML ranking influence</span>
+              <span className="text-slate-700"><b>{meta.model?.confidence || 0}%</b></span>
             </div>
             <div>
-              <span className="text-slate-400 block text-[11px] font-semibold uppercase">Dataset Interactions</span>
-              <span className="font-semibold text-slate-700">{meta.totalInteractions || 0} logged</span>
+              <span className="text-slate-400 block text-[11px] font-semibold uppercase">Resolved examples</span>
+              <span className="font-semibold text-slate-700">{meta.model?.trainingExamples || 0} logged</span>
             </div>
           </div>
         </div>
@@ -367,26 +368,41 @@ export default function RecommendationsPage() {
                     {/* Breakdown Scores */}
                     <div className="mt-4 p-3.5 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-2 text-xs">
                       <div className="flex items-center justify-between text-slate-600">
-                        <span>Profile &amp; Skills Similarity:</span>
-                        <b className="font-mono text-slate-900">{item.contentScore || item.matchPercent}%</b>
+                        <span>Predicted request acceptance:</span>
+                        <b className="font-mono text-slate-900">{item.mlAcceptanceProbability == null ? "Gathering examples" : `${item.mlAcceptanceProbability}%`}</b>
                       </div>
                       <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
                         <div
                           className="bg-[#c8102e] h-full rounded-full"
-                          style={{ width: `${item.contentScore || item.matchPercent}%` }}
+                          style={{ width: `${item.mlAcceptanceProbability ?? 0}%` }}
                         />
                       </div>
 
                       <div className="flex items-center justify-between text-slate-600 pt-1">
-                        <span>Community Interaction Network:</span>
-                        <b className="font-mono text-slate-900">{item.collaborativeScore || 60}%</b>
+                        <span>Profile &amp; skills similarity:</span>
+                        <b className="font-mono text-slate-900">{item.contentScore}%</b>
+                      </div>
+                      <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                        <div
+                          className="bg-[#0e2740] h-full rounded-full"
+                          style={{ width: `${item.contentScore}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-slate-600 pt-1">
+                        <span>Community network signal:</span>
+                        <b className="font-mono text-slate-900">{item.collaborativeScore}%</b>
                       </div>
                       <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
                         <div
                           className="bg-emerald-600 h-full rounded-full"
-                          style={{ width: `${item.collaborativeScore || 60}%` }}
+                          style={{ width: `${item.collaborativeScore}%` }}
                         />
                       </div>
+                      {!meta.model?.active && (
+                        <p className="pt-1 text-[11px] text-slate-500">
+                          The model is collecting resolved request outcomes. Predictions will become personalized as members accept or decline requests.
+                        </p>
+                      )}
                     </div>
 
                     {/* Shared Skills Chips */}
