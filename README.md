@@ -2,7 +2,7 @@
 
 PrideConnect is a student-built web application that helps members of the Kenya Airways community discover mentors and professional peers. A member creates a profile with their skills and interests. The application compares that profile with other eligible profiles, uses accepted connections as an additional signal, and presents a ranked list of possible matches.
 
-> **Project status:** Academic prototype for the Strathmore University capstone. It is not an official Kenya Airways service. The included people and interaction history are fabricated demonstration data, not real Kenya Airways records.
+> **Project status:** Academic prototype for the Strathmore University capstone.
 
 ## Start here
 
@@ -11,7 +11,7 @@ This repository contains the web application, a live adaptive machine-learning r
 | Part | What it does | Is it used by the live website? |
 |---|---|---|
 | Live adaptive recommender | Learns from real request accept/decline outcomes and adjusts match rankings over time. It uses profile/network signals while evidence is limited. | Yes. |
-| Neural Collaborative Filtering (NCF) experiment | Trains a small neural network on fabricated request examples. It did not beat a simple baseline. | No. It remains a separate research notebook. |
+| Neural Collaborative Filtering (NCF) experiment | Trains a small neural network on fabricated request examples. It did not beat a simple baseline. |
 | Admin evaluation | Compares live ranking formulas against a rule-based definition of a “relevant” profile. | Admin-only diagnostic; it is not an independent user study or held-out validation. |
 
 In simple terms, the live recommender learns how request outcomes relate to profile compatibility, mentorship fit, and past network patterns. A small cold-start formula supports it until enough real outcomes exist. The NCF notebook is a separate experiment; its result was not strong enough to use in the live product. Read [How matching works](#how-matching-works), [Machine-learning experiment](#machine-learning-experiment), and [Evaluation and limitations](#evaluation-and-limitations) for the details.
