@@ -17,12 +17,20 @@ vi.mock("@/lib/prisma", () => ({
     user: {
       findUnique: vi.fn(),
     },
+    profile: {
+      findUnique: vi.fn(),
+    },
+    mentorshipRequest: {
+      findMany: vi.fn(),
+    },
   },
 }));
 
 describe("/api/connection-requests API Endpoints", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    prisma.mentorshipRequest.findMany.mockResolvedValue([]);
+    prisma.connectionRequest.findMany.mockResolvedValue([]);
   });
 
   describe("GET", () => {

@@ -92,6 +92,8 @@ describe("GET /api/recommendations API Endpoint", () => {
 
     // Mock interaction history
     prisma.mentorshipRequest.findMany.mockResolvedValueOnce([]);
+    prisma.mentorshipRequest.findMany.mockResolvedValueOnce([]);
+    prisma.connectionRequest.findMany.mockResolvedValueOnce([]);
     prisma.connectionRequest.findMany.mockResolvedValueOnce([]);
     prisma.$transaction.mockResolvedValueOnce([]);
 
@@ -109,8 +111,14 @@ describe("GET /api/recommendations API Endpoint", () => {
     expect(data.recommendations[0].sharedInterests).toContain("Mentorship");
 
     // Check meta telemetry
-    expect(data.meta.weights.alpha).toBe(90);
-    expect(data.meta.weights.beta).toBe(10);
     expect(data.meta.totalInteractions).toBe(0);
+    expect(data.meta.model).toMatchObject({
+      active: false,
+      trainingExamples: 0,
+      acceptedExamples: 0,
+      declinedExamples: 0,
+      confidence: 0,
+      status: "GATHERING_OUTCOMES",
+    });
   });
 });
