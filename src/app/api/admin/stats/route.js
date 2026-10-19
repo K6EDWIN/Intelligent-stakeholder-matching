@@ -82,13 +82,13 @@ export async function GET() {
     totalRecommendations,
     totalFlightReconnects,
     avgRecommendationScore: {
-      hybrid: recScoreAgg?._avg?.hybridScore ? +(recScoreAgg._avg.hybridScore * 100).toFixed(1) : 78.5,
-      content: recScoreAgg?._avg?.contentScore ? +(recScoreAgg._avg.contentScore * 100).toFixed(1) : 82.0,
-      collaborative: recScoreAgg?._avg?.collaborativeScore ? +(recScoreAgg._avg.collaborativeScore * 100).toFixed(1) : 62.4,
+      hybrid: recScoreAgg?._avg?.hybridScore != null ? +(recScoreAgg._avg.hybridScore * 100).toFixed(1) : 0,
+      content: recScoreAgg?._avg?.contentScore != null ? +(recScoreAgg._avg.contentScore * 100).toFixed(1) : 0,
+      collaborative: recScoreAgg?._avg?.collaborativeScore != null ? +(recScoreAgg._avg.collaborativeScore * 100).toFixed(1) : 0,
     },
     feedbackStats: {
       total: feedbackAgg?._count || 0,
-      avgRating: feedbackAgg?._avg?.rating ? +feedbackAgg._avg.rating.toFixed(2) : 4.8,
+      avgRating: feedbackAgg?._avg?.rating != null ? +feedbackAgg._avg.rating.toFixed(2) : 0,
     },
   });
 }

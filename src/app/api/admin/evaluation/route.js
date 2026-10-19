@@ -149,7 +149,7 @@ export async function GET(req) {
         candidates
           .filter((c) => {
             const sharedCount = c.skills.filter((s) => userSkillIds.has(s.skillId)).length;
-            const isConnected = (connectionsByUser[userId] || []).includes(c.user.id);
+            const isConnected = connectionsByUser.get(userId)?.has(c.user.id) || false;
             return sharedCount >= 2 || isConnected;
           })
           .map((c) => c.user.id)
@@ -196,9 +196,10 @@ export async function GET(req) {
       const top5CfRel = rankCf.slice(0, 5).filter((x) => x.isRelevant).length;
       const top5HybridRel = rankHybrid.slice(0, 5).filter((x) => x.isRelevant).length;
 
-      cbfPrec5 += top5CbfRel / 5;
-      cfPrec5 += top5CfRel / 5;
-      hybridPrec5 += top5HybridRel / 5;
+      const precisionCutoff = Math.min(5, candidates.length);
+      cbfPrec5 += top5CbfRel / precisionCutoff;
+      cfPrec5 += top5CfRel / precisionCutoff;
+      hybridPrec5 += top5HybridRel / precisionCutoff;
 
       cbfRec5 += top5CbfRel / totalRelevant;
       cfRec5 += top5CfRel / totalRelevant;
@@ -260,10 +261,15 @@ export async function GET(req) {
           recallAt5: +(hybridRec5 / n).toFixed(3),
           ndcgAt10: +(hybridNdcg10 / n).toFixed(3),
           mrr: +(hybridMrr / n).toFixed(3),
-          isBest: true,
         },
       ],
     };
+
+    const bestNdcg = Math.max(...benchmark.models.map((model) => model.ndcgAt10));
+    benchmark.models = benchmark.models.map((model) => ({
+      ...model,
+      isBest: model.ndcgAt10 === bestNdcg,
+    }));
 
     return NextResponse.json({ benchmark });
   } catch (err) {

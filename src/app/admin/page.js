@@ -215,7 +215,7 @@ export default function AdminPage() {
             Kenya Airways Flight Operations Intelligence
           </h2>
           <p className="text-xs text-slate-400">
-            Calibrating recommendation weights, loading offline research evaluation benchmarks, and syncing stakeholder audit logs...
+            Loading stakeholder records and calculating the prototype ranking diagnostics...
           </p>
         </div>
       </div>
@@ -245,44 +245,10 @@ export default function AdminPage() {
     );
   }
 
-  // Model benchmark numbers fallback if cold-start DB has minimal interactions
-  const currentAlpha = benchmark?.weights?.alpha ?? 85;
-  const currentBeta = benchmark?.weights?.beta ?? 15;
-  const models = benchmark?.models ?? [
-    {
-      name: "Hybrid Recommender (Production)",
-      precisionAt5: 0.685,
-      recallAt5: 0.721,
-      ndcgAt10: 0.842,
-      mrr: 0.789,
-      isBest: true,
-      description: "Combines Cosine skill vectors with interaction graph proximity; mitigates cold-start.",
-    },
-    {
-      name: "Content-Based Filtering (CBF)",
-      precisionAt5: 0.612,
-      recallAt5: 0.640,
-      ndcgAt10: 0.711,
-      mrr: 0.684,
-      description: "Cosine similarity computed across technical skills, aviation departments, and interests.",
-    },
-    {
-      name: "Collaborative Filtering (CF)",
-      precisionAt5: 0.490,
-      recallAt5: 0.525,
-      ndcgAt10: 0.598,
-      mrr: 0.540,
-      description: "Bipartite graph interactions from accepted mentorships and co-travel links.",
-    },
-    {
-      name: "Popularity Baseline",
-      precisionAt5: 0.280,
-      recallAt5: 0.310,
-      ndcgAt10: 0.395,
-      mrr: 0.320,
-      description: "Naive frequency baseline matching stakeholders with the highest total connections.",
-    },
-  ];
+  const currentAlpha = benchmark?.weights?.alpha ?? 90;
+  const currentBeta = benchmark?.weights?.beta ?? 10;
+  const models = benchmark?.models ?? [];
+  const bestModel = models.find((model) => model.isBest);
 
   return (
     <div className="admin-console min-h-screen bg-[#f8fafc] text-slate-900 font-sans flex flex-col">
@@ -321,7 +287,7 @@ export default function AdminPage() {
               <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-950/60 border border-emerald-700/40 text-emerald-400 text-xs">
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 <span className="font-semibold text-[11px] tracking-wide uppercase">
-                  Recommender Online · {benchmark?.latencyMs || 12}ms Latency
+                  Evaluation response · {benchmark?.latencyMs ?? "—"}ms
                 </span>
               </div>
 
@@ -416,7 +382,7 @@ export default function AdminPage() {
                 {activeTab === "telemetry" && "Community Interactions & Engagement Funnel"}
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                {activeTab === "model" && "Live performance validation: Precision, Recall, NDCG@10, and adaptive cold-start weights for Pride Centre cohorts."}
+                {activeTab === "model" && "Live scoring diagnostics and a rule-based ranking comparison. These prototype scores are not independent evidence of real-world quality."}
                 {activeTab === "stakeholders" && "Manage privileges, audit Pride Centre credentials, and oversee account security."}
                 {activeTab === "telemetry" && "Real-time mentorship handshakes, bilateral connections, and route co-travel metrics."}
               </p>
@@ -434,7 +400,7 @@ export default function AdminPage() {
               </div>
               <div className="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-center">
                 <span className="text-[10px] uppercase font-bold text-slate-500 block">NDCG@10</span>
-                <b className="text-sm sm:text-base font-extrabold text-indigo-700">0.842</b>
+                <b className="text-sm sm:text-base font-extrabold text-indigo-700">{bestModel ? bestModel.ndcgAt10.toFixed(3) : "—"}</b>
               </div>
             </div>
           </div>
@@ -469,10 +435,10 @@ export default function AdminPage() {
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
                 </div>
                 <b className="text-2xl font-extrabold text-emerald-700 block tracking-tight">
-                  Calibrated
+                  Operational
                 </b>
                 <span className="text-[11px] text-slate-500 mt-1 block">
-                  Zero inference errors logged
+                  Live formula-based ranking
                 </span>
               </div>
 
@@ -481,12 +447,9 @@ export default function AdminPage() {
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Ranking NDCG@10
                   </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700">
-                    +18.4%
-                  </span>
                 </div>
                 <b className="text-2xl font-extrabold text-indigo-700 block tracking-tight">
-                  {models.find((m) => m.isBest)?.ndcgAt10.toFixed(3) || "0.842"}
+                  {bestModel ? bestModel.ndcgAt10.toFixed(3) : "—"}
                 </b>
                 <span className="text-[11px] text-slate-500 mt-1 block">
                   Normalized discounted gain
@@ -503,10 +466,10 @@ export default function AdminPage() {
                   </span>
                 </div>
                 <b className="text-2xl font-extrabold text-slate-900 block tracking-tight">
-                  {((models.find((m) => m.isBest)?.precisionAt5 || 0.685) * 100).toFixed(1)}%
+                  {bestModel ? `${(bestModel.precisionAt5 * 100).toFixed(1)}%` : "—"}
                 </b>
                 <span className="text-[11px] text-slate-500 mt-1 block">
-                  Matches proven relevant
+                  Matches meeting the proxy rule
                 </span>
               </div>
 
@@ -520,7 +483,7 @@ export default function AdminPage() {
                   </span>
                 </div>
                 <b className="text-2xl font-extrabold text-[#c8102e] block tracking-tight">
-                  {((models.find((m) => m.isBest)?.recallAt5 || 0.721) * 100).toFixed(1)}%
+                  {bestModel ? `${(bestModel.recallAt5 * 100).toFixed(1)}%` : "—"}
                 </b>
                 <span className="text-[11px] text-slate-500 mt-1 block">
                   Discovery of potential peers
@@ -532,12 +495,9 @@ export default function AdminPage() {
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     MRR (Rank Speed)
                   </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-800">
-                    Slot 1.3
-                  </span>
                 </div>
                 <b className="text-2xl font-extrabold text-amber-700 block tracking-tight">
-                  {models.find((m) => m.isBest)?.mrr.toFixed(3) || "0.789"}
+                  {bestModel ? bestModel.mrr.toFixed(3) : "—"}
                 </b>
                 <span className="text-[11px] text-slate-500 mt-1 block">
                   Mean reciprocal rank
@@ -551,18 +511,18 @@ export default function AdminPage() {
                 <div>
                   <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#c8102e] mb-1">
                     <Icon name="sparkles" size={13} />
-                    Comparative Research Validation
+                    Prototype Ranking Diagnostic
                   </div>
                   <h3 className="text-lg font-bold text-slate-900">
-                    How the Recommender Outperforms Standard Baselines
+                    Compare the three live ranking formulas
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    NDCG@10 ranking quality evaluated across verified Kenya Airways flight crew and Pride Centre cohorts.
+                    Public verified profiles only. Relevance is a proxy rule: at least two shared skills or an accepted connection; it is not a human judgment or held-out test.
                   </p>
                 </div>
 
-                <div className="px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
-                  Hybrid Superiority Confirmed (+18.4% Uplift)
+                <div className="px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
+                  {benchmark?.evaluatedUsers ? `${benchmark.evaluatedUsers} profiles included` : "No benchmark data available"}
                 </div>
               </div>
 
@@ -579,14 +539,14 @@ export default function AdminPage() {
                             {m.name}
                           </span>
                           <span className="text-[11px] text-slate-400 font-normal hidden sm:inline">
-                            — {m.description}
+                            {m.name === "Content-Based (CBF)" ? "— skills and interests" : m.name === "Collaborative (CF)" ? "— accepted connection patterns" : "— weighted combination"}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="font-mono font-bold text-slate-800">{m.ndcgAt10.toFixed(3)} NDCG</span>
                           {m.isBest && (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                              Production
+                              Highest proxy score
                             </span>
                           )}
                         </div>
@@ -609,6 +569,9 @@ export default function AdminPage() {
                     </div>
                   );
                 })}
+                {models.length === 0 && (
+                  <p className="text-xs text-slate-500">The evaluation needs enough verified profiles and at least one candidate meeting the prototype relevance rule. No comparison scores are available right now.</p>
+                )}
               </div>
             </section>
 
@@ -624,7 +587,7 @@ export default function AdminPage() {
                     Dynamic Weight Adaptation: Content vs. Collaborative Signals
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    How the model adapts its weights based on total platform interactions (N = {benchmark?.totalInteractions ?? 0}) using the exponential decay formula.
+                    The live formula uses N = {benchmark?.totalInteractions ?? 0} accepted mentorship and connection requests. These are hand-set weights, not trained model parameters.
                   </p>
                 </div>
 
@@ -641,7 +604,7 @@ export default function AdminPage() {
               {/* Progress Bar of Weights */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs font-bold text-slate-700">
-                  <span className="text-[#0e2740]">Content Vector Similarity (Skills &amp; Department)</span>
+                  <span className="text-[#0e2740]">Profile overlap (Skills &amp; Interests)</span>
                   <span className="text-emerald-700">Collaborative Interaction Graph</span>
                 </div>
                 <div className="w-full h-4 rounded-full bg-slate-100 overflow-hidden flex shadow-inner border border-slate-200/60">
@@ -669,12 +632,14 @@ export default function AdminPage() {
                     Mathematical Formulation:
                   </b>
                   <p className="font-mono text-indigo-900 bg-white p-2.5 rounded-lg border border-slate-200 text-[11px] leading-relaxed">
-                    W_content(N) = 0.5 + 0.35 · e^(-N / 20)
+                    progress = min(N / 50, 1)
                     <br />
-                    W_collab(N) = 1.0 - W_content(N)
+                    alpha = 0.9 - progress × 0.4
+                    <br />
+                    beta = 1 - alpha
                   </p>
                   <p className="text-slate-600 text-[11px] leading-relaxed">
-                    When new Pride Centre cadets register with zero past handshakes (N=0), the engine anchors on 85% skill cosine similarity, guaranteeing rich pairings on Day 1.
+                    At zero accepted requests, profile overlap has 90% weight and connection patterns have 10%. The 50/50 balance is reached after 50 accepted request records. This schedule is a prototype setting and does not guarantee a good match.
                   </p>
                 </div>
 
@@ -683,11 +648,11 @@ export default function AdminPage() {
                     Operational Maturation:
                   </b>
                   <p className="text-slate-600 text-[11px] leading-relaxed">
-                    As flight deck crew, engineers, and frequent flyers complete bilateral mentorship handshakes and route reconnects, the model seamlessly blends collaborative graph signals until balancing at 50/50 equilibrium.
+                    N counts accepted mentorship and connection requests. Flight Reconnect records and event RSVPs are not used in this score. At or above 50 accepted requests, the formula keeps the signals at 50/50.
                   </p>
                   <div className="flex items-center gap-1.5 pt-1 text-[11px] text-emerald-700 font-semibold">
                     <Icon name="check" size={14} />
-                    <span>Cold-start vulnerability completely eliminated.</span>
+                    <span>Collaborative weight is capped at 50%; cold-start risk remains.</span>
                   </div>
                 </div>
               </div>
@@ -696,60 +661,27 @@ export default function AdminPage() {
             {/* Feature Weight Signals */}
             <section className="p-6 sm:p-8 bg-white border border-slate-200/80 rounded-2xl shadow-xs space-y-6">
               <h3 className="text-lg font-bold text-slate-900 pb-3 border-b border-slate-100">
-                Scoring Signal Architecture &amp; Feature Contribution
+                What the live recommendation score uses
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
                   <div className="flex justify-between items-center text-xs font-bold text-slate-800">
-                    <span>Aviation Technical Skills</span>
-                    <span className="text-[#c8102e]">45%</span>
+                    <span>Shared skills</span><span className="text-[#c8102e]">60% of content</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                    <div className="h-full bg-[#c8102e]" style={{ width: "45%" }} />
-                  </div>
-                  <p className="text-[11px] text-slate-500">
-                    B787 Type rating, CRM, Flight Dispatch, Avionics maintenance compatibility.
-                  </p>
+                  <p className="text-[11px] text-slate-500">Jaccard overlap: shared skills divided by all distinct skills in the two profiles.</p>
                 </div>
-
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
                   <div className="flex justify-between items-center text-xs font-bold text-slate-800">
-                    <span>Department &amp; Unit Synergy</span>
-                    <span className="text-[#0e2740]">25%</span>
+                    <span>Shared interests</span><span className="text-[#0e2740]">40% of content</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                    <div className="h-full bg-[#0e2740]" style={{ width: "25%" }} />
-                  </div>
-                  <p className="text-[11px] text-slate-500">
-                    Flight Operations, In-flight Cabin Crew, Ground Handling, Cargo Operations.
-                  </p>
+                  <p className="text-[11px] text-slate-500">Jaccard overlap of interest sets. Skills and interests together make the content score.</p>
                 </div>
-
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
                   <div className="flex justify-between items-center text-xs font-bold text-slate-800">
-                    <span>Mentorship Role Synergy</span>
-                    <span className="text-[#b48a28]">15%</span>
+                    <span>Accepted connections</span><span className="text-emerald-700">{currentBeta}% currently</span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                    <div className="h-full bg-[#b48a28]" style={{ width: "15%" }} />
-                  </div>
-                  <p className="text-[11px] text-slate-500">
-                    Reciprocal pairing: Mentors matched with Mentees seeking guidance.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
-                  <div className="flex justify-between items-center text-xs font-bold text-slate-800">
-                    <span>Route &amp; Interaction Proximity</span>
-                    <span className="text-emerald-600">15%</span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                    <div className="h-full bg-emerald-600" style={{ width: "15%" }} />
-                  </div>
-                  <p className="text-[11px] text-slate-500">
-                    Accepted connection handshakes, shared flight legs, and event RSVPs.
-                  </p>
+                  <p className="text-[11px] text-slate-500">Accepted mentorship and connection links from members with similar connection patterns create a weighted vote. Other activity types are not used here.</p>
                 </div>
               </div>
             </section>
