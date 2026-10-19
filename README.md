@@ -210,7 +210,18 @@ npm run db:push
 npm run seed
 ```
 
-`db:push` applies the Prisma schema to the configured database. `seed` creates the fabricated stakeholder accounts, profiles, skills, interests, requests, and feedback. Seed demo accounts use the shared password `Test1234!`; use them only in a local demonstration database and never reuse that password for a real service.
+`db:push` applies the Prisma schema to the configured database. `seed` creates the fabricated stakeholder accounts, profiles, skills, interests, requests, and feedback, and saves synthetic numeric feature snapshots on the requests. This gives a fresh demo database resolved examples for the adaptive recommender. The dataset is fabricated and its model scores are for demonstrating the workflow, not evidence of real-world accuracy. Seed demo accounts use the shared password `Test1234!`; use them only in a separate demo database and never reuse that password for a real service. Do not point these commands at the production database.
+
+For a hosted demo, create a **new, empty PostgreSQL database/project** (do not clone production data). In PowerShell, apply the schema and load the fabricated dataset into that database:
+
+```powershell
+$env:DATABASE_URL = "<new-demo-database-connection-string>"
+npm run db:push
+npm run seed
+Remove-Item Env:DATABASE_URL
+```
+
+Then add that same `DATABASE_URL` in Vercel with the **Preview** environment selected, leaving Production unchanged. Also make the preview's `NEXTAUTH_SECRET`, `ML_SERVICE_URL`, and `ML_SERVICE_TOKEN` available in the Preview environment if you want to sign in and test the hosted recommender there. Push or redeploy a non-production branch to create a Preview deployment using the demo database. For local setup, use the same PowerShell commands and start the app with `npm run dev`; neither setup changes Vercel Production.
 
 For current sample data counts and how it is generated, see [`docs/DATA.md`](docs/DATA.md).
 
