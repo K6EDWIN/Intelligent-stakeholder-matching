@@ -35,6 +35,7 @@ export default function KQAppShell({ children }) {
         { href: "/recommendations", icon: "sparkles", label: "Smart Matches", badge: "Engine" },
         { href: "/directory", icon: "directory", label: "Stakeholder Directory" },
         { href: "/requests", icon: "requests", label: "Mentorship & Requests" },
+        { href: "/messages", icon: "requests", label: "Messages" },
         { href: "/notifications", icon: "bell", label: "Notifications", badge: unreadCount ? String(unreadCount) : null },
       ],
     },

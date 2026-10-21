@@ -66,6 +66,10 @@ model User {
 
   notifications Notification[]
 
+  conversationsAsParticipantOne Conversation[] @relation("ConversationParticipantOne")
+  conversationsAsParticipantTwo Conversation[] @relation("ConversationParticipantTwo")
+  messagesSent                  Message[]
+
   adminActions AdminAction[]
 }
 
@@ -293,4 +297,33 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, readAt, createdAt])
+}
+
+model Conversation {
+  id               String   @id @default(cuid())
+  participantOneId String
+  participantTwoId String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  participantOne User @relation("ConversationParticipantOne", fields: [participantOneId], references: [id], onDelete: Cascade)
+  participantTwo User @relation("ConversationParticipantTwo", fields: [participantTwoId], references: [id], onDelete: Cascade)
+  messages       Message[]
+
+  @@unique([participantOneId, participantTwoId])
+  @@index([participantOneId, updatedAt])
+  @@index([participantTwoId, updatedAt])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  body           String   @db.VarChar(2000)
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
 }
