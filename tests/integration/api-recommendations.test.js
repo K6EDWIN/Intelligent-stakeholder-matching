@@ -26,6 +26,23 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+// Keep API tests independent from ML_SERVICE_URL in CI. The hosted provider is
+// an external service and should be covered by its own integration check.
+vi.mock("@/lib/hosted-ml", () => ({
+  getAdaptivePredictions: vi.fn(async ({ candidates, localModel }) => ({
+    provider: "LOCAL",
+    model: {
+      active: localModel.active,
+      sampleCount: localModel.sampleCount,
+      acceptedCount: localModel.acceptedCount,
+      declinedCount: localModel.declinedCount,
+      confidence: localModel.confidence,
+      weights: localModel.weights || null,
+    },
+    predictions: candidates.map(() => null),
+  })),
+}));
+
 describe("GET /api/recommendations API Endpoint", () => {
   beforeEach(() => {
     vi.clearAllMocks();
