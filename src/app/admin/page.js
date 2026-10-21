@@ -48,7 +48,14 @@ export default function AdminPage() {
   // Recommender Live Simulation State
   const [simTargetUserId, setSimTargetUserId] = useState("");
   const [simSearch, setSimSearch] = useState("");
+  const [simRoleFilter, setSimRoleFilter] = useState("ALL");
+  const [simDepartmentFilter, setSimDepartmentFilter] = useState("ALL");
+  const [simDepartments, setSimDepartments] = useState([]);
+  const [selectedSimUser, setSelectedSimUser] = useState(null);
+  const [simResultsOpen, setSimResultsOpen] = useState(false);
   const [simUserOptions, setSimUserOptions] = useState([]);
+  const [simUsersPage, setSimUsersPage] = useState(1);
+  const [simUsersTotal, setSimUsersTotal] = useState(0);
   const [simUsersLoading, setSimUsersLoading] = useState(false);
   const [simulationData, setSimulationData] = useState(null);
   const [simulating, setSimulating] = useState(false);
@@ -116,12 +123,19 @@ export default function AdminPage() {
     const timer = setTimeout(async () => {
       setSimUsersLoading(true);
       try {
-        const query = new URLSearchParams({ q: simSearch });
+        const query = new URLSearchParams({
+          q: simSearch,
+          role: simRoleFilter,
+          department: simDepartmentFilter,
+          page: String(simUsersPage),
+        });
+        if (!simDepartments.length) query.set("includeDepartments", "true");
         const res = await fetch(`/api/admin/simulation-users?${query}`, { signal: controller.signal });
         const data = await res.json();
         if (res.ok) {
           setSimUserOptions(data.users || []);
-          setSimTargetUserId((current) => (data.users || []).some((u) => u.id === current) ? current : (data.users?.[0]?.id || ""));
+          setSimUsersTotal(data.total || 0);
+          setSimDepartments(data.departments || []);
         }
       } catch (err) {
         if (err.name !== "AbortError") setSimError(err.message);
@@ -130,7 +144,24 @@ export default function AdminPage() {
       }
     }, 220);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [status, session?.user?.role, simSearch]);
+  }, [status, session?.user?.role, simSearch, simRoleFilter, simDepartmentFilter, simUsersPage, simDepartments.length]);
+
+  const resetSimulationTarget = () => {
+    setSimTargetUserId("");
+    setSelectedSimUser(null);
+    setSimulationData(null);
+    setSimError("");
+    setSimUsersPage(1);
+  };
+
+  const selectSimulationUser = (user) => {
+    setSimTargetUserId(user.id);
+    setSelectedSimUser(user);
+    setSimSearch("");
+    setSimResultsOpen(false);
+    setSimulationData(null);
+    setSimError("");
+  };
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -784,40 +815,100 @@ export default function AdminPage() {
                     Simulate Live Recommendation Scoring for Any Stakeholder
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Search the directory by name, email, or department, then inspect live scores for that member. Results are searched on the server and capped to a short list.
+                    Find a member by name or email, narrow the results by department and stakeholder type, then run their live scoring simulation.
                   </p>
                 </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-                  <label className="relative">
-                    <span className="sr-only">Search stakeholders for simulation</span>
-                    <Icon name="search" size={15} className="absolute left-3 text-slate-400" />
-                    <input value={simSearch} onChange={(e) => setSimSearch(e.target.value)} placeholder="Search name, email, department" className="w-full sm:w-56 pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs outline-none text-slate-800 focus:border-[#c8102e]" />
-                  </label>
-                  <select
-                    value={simTargetUserId}
-                    onChange={(e) => setSimTargetUserId(e.target.value)}
-                    aria-label="Choose stakeholder for simulation"
-                    className="px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs outline-none text-slate-800 font-medium max-w-xs focus:border-[#c8102e]"
-                  >
-                    {simUserOptions.length === 0 && <option value="">{simUsersLoading ? "Searching…" : "No matching stakeholders"}</option>}
-                    {simUserOptions.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.profile?.fullName || u.email} · {u.role}
-                      </option>
-                    ))}
-                  </select>
-
-                  <Button
-                    size="sm"
-                    disabled={simulating || !simTargetUserId}
-                    onClick={() => runSimulation()}
-                    icon="sparkles"
-                  >
-                    {simulating ? "Calculating..." : "Run Simulation"}
-                  </Button>
-                </div>
               </div>
+
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(240px,1fr)_minmax(180px,220px)_minmax(170px,200px)_auto] md:items-end">
+                <div className="relative">
+                  <label htmlFor="simulation-member-search" className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500">Search members</label>
+                  <div className={`flex items-center rounded-xl border bg-white transition focus-within:ring-4 focus-within:ring-red-50 ${simResultsOpen ? "border-[#c8102e]" : "border-slate-300 hover:border-slate-400"}`}>
+                    <Icon name="search" size={16} className="ml-3 shrink-0 text-slate-400" />
+                    <input
+                      id="simulation-member-search"
+                      value={simSearch}
+                      onFocus={() => setSimResultsOpen(true)}
+                      onBlur={() => setTimeout(() => setSimResultsOpen(false), 150)}
+                      onChange={(event) => { resetSimulationTarget(); setSimSearch(event.target.value); setSimResultsOpen(true); }}
+                      onKeyDown={(event) => { if (event.key === "Escape") setSimResultsOpen(false); }}
+                      placeholder="Search by name or email"
+                      autoComplete="off"
+                      className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400"
+                    />
+                    {simUsersLoading && <span className="mr-3 h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-[#c8102e]" aria-label="Searching" />}
+                    {simSearch && <button type="button" onClick={() => { resetSimulationTarget(); setSimSearch(""); setSimResultsOpen(true); }} aria-label="Clear member search" className="mr-3 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"><Icon name="close" size={13} /></button>}
+                  </div>
+                  {simResultsOpen && (
+                    <div className="relative z-20 mt-2 flex max-h-[22rem] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10 md:absolute md:left-0 md:right-0 md:top-full md:mt-2">
+                      <div className="min-h-0 flex-1 overflow-y-auto">
+                        {simUserOptions.length ? simUserOptions.map((user) => (
+                          <button key={user.id} type="button" onClick={() => selectSimulationUser(user)} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
+                            <Avatar name={user.profile?.fullName || user.email} size="sm" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-semibold text-slate-900">{user.profile?.fullName || user.email}</span>
+                              <span className="mt-0.5 block truncate text-xs text-slate-500">{user.email}</span>
+                            </span>
+                            <span className="max-w-36 shrink-0 text-right">
+                              <span className="block truncate text-[11px] font-semibold text-slate-700">{user.profile?.department || "No department"}</span>
+                              <span className="block text-[10px] text-slate-400">{ROLE_LABELS[user.role] || user.role}</span>
+                            </span>
+                          </button>
+                        )) : (
+                          <div className="px-4 py-7 text-center">
+                            <p className="text-sm font-semibold text-slate-700">{simUsersLoading ? "Searching members…" : "No members match these filters"}</p>
+                            {!simUsersLoading && <p className="mt-1 text-xs text-slate-500">Try another name, department, or stakeholder type.</p>}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-2.5 py-2">
+                        <span className="text-[10px] font-medium text-slate-500">
+                          {simUsersTotal === 0 ? "No results" : `Showing ${(simUsersPage - 1) * 25 + 1}–${Math.min(simUsersPage * 25, simUsersTotal)} of ${simUsersTotal}`}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button type="button" disabled={simUsersPage <= 1 || simUsersLoading} onMouseDown={(event) => event.preventDefault()} onClick={() => setSimUsersPage((page) => Math.max(1, page - 1))} className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+                          <span className="min-w-12 text-center text-[10px] text-slate-500">Page {simUsersPage}</span>
+                          <button type="button" disabled={simUsersPage * 25 >= simUsersTotal || simUsersLoading} onMouseDown={(event) => event.preventDefault()} onClick={() => setSimUsersPage((page) => page + 1)} className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <label>
+                  <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500">Department / designation</span>
+                  <select value={simDepartmentFilter} onChange={(event) => { resetSimulationTarget(); setSimDepartmentFilter(event.target.value); }} className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition hover:border-slate-400 focus:border-[#c8102e] focus:ring-4 focus:ring-red-50">
+                    <option value="ALL">All departments</option>
+                    {simDepartments.map((department) => <option key={department} value={department}>{department}</option>)}
+                  </select>
+                </label>
+
+                <label>
+                  <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500">Stakeholder type</span>
+                  <select value={simRoleFilter} onChange={(event) => { resetSimulationTarget(); setSimRoleFilter(event.target.value); }} className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition hover:border-slate-400 focus:border-[#c8102e] focus:ring-4 focus:ring-red-50">
+                    <option value="ALL">All member types</option>
+                    {Object.entries(ROLE_LABELS).filter(([role]) => role !== "ADMIN").map(([role, label]) => <option key={role} value={role}>{label}</option>)}
+                  </select>
+                </label>
+
+                <Button size="sm" disabled={simulating || !simTargetUserId} onClick={() => runSimulation()} icon="sparkles" className="h-[46px] justify-center px-5">
+                  {simulating ? "Calculating..." : "Run Simulation"}
+                </Button>
+              </div>
+
+              {selectedSimUser && (
+                <div className="flex flex-col gap-3 rounded-xl border border-[#c8102e]/20 bg-red-50/50 p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Avatar name={selectedSimUser.profile?.fullName || selectedSimUser.email} size="sm" />
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#b10e28]">Selected simulation target</p>
+                      <p className="truncate text-sm font-bold text-slate-900">{selectedSimUser.profile?.fullName || selectedSimUser.email}</p>
+                      <p className="truncate text-xs text-slate-500">{selectedSimUser.profile?.department || "No department"} · {ROLE_LABELS[selectedSimUser.role] || selectedSimUser.role}</p>
+                    </div>
+                  </div>
+                  <button type="button" onClick={resetSimulationTarget} className="self-start rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-white hover:text-slate-900 sm:self-auto">Change member</button>
+                </div>
+              )}
 
               {simError && (
                 <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
@@ -941,7 +1032,7 @@ export default function AdminPage() {
                   </div>
                   <p className="font-semibold text-slate-700">Ready to simulate recommendations</p>
                   <p className="text-[11px] text-slate-400 max-w-sm mx-auto">
-                    Select any stakeholder from the dropdown menu above and click <b>Run Simulation</b> to observe live score calculation.
+                    Search for a stakeholder, choose a result, and click <b>Run Simulation</b> to inspect their live scoring breakdown.
                   </p>
                 </div>
               )}
