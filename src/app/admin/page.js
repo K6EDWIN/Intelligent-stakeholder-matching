@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -51,6 +51,7 @@ export default function AdminPage() {
   const [simRoleFilter, setSimRoleFilter] = useState("ALL");
   const [simDepartmentFilter, setSimDepartmentFilter] = useState("ALL");
   const [simDepartments, setSimDepartments] = useState([]);
+  const simDepartmentsLoaded = useRef(false);
   const [selectedSimUser, setSelectedSimUser] = useState(null);
   const [simResultsOpen, setSimResultsOpen] = useState(false);
   const [simUserOptions, setSimUserOptions] = useState([]);
@@ -129,22 +130,23 @@ export default function AdminPage() {
           department: simDepartmentFilter,
           page: String(simUsersPage),
         });
-        if (!simDepartments.length) query.set("includeDepartments", "true");
+        if (!simDepartmentsLoaded.current) query.set("includeDepartments", "true");
         const res = await fetch(`/api/admin/simulation-users?${query}`, { signal: controller.signal });
         const data = await res.json();
         if (res.ok) {
           setSimUserOptions(data.users || []);
           setSimUsersTotal(data.total || 0);
           setSimDepartments(data.departments || []);
+          simDepartmentsLoaded.current = true;
         }
       } catch (err) {
         if (err.name !== "AbortError") setSimError(err.message);
       } finally {
         if (!controller.signal.aborted) setSimUsersLoading(false);
       }
-    }, 220);
+    }, simSearch ? 80 : 0);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [status, session?.user?.role, activeTab, simSearch, simRoleFilter, simDepartmentFilter, simUsersPage, simDepartments.length]);
+  }, [status, session?.user?.role, activeTab, simSearch, simRoleFilter, simDepartmentFilter, simUsersPage]);
 
   const resetSimulationTarget = () => {
     setSimTargetUserId("");
@@ -157,7 +159,6 @@ export default function AdminPage() {
   const selectSimulationUser = (user) => {
     setSimTargetUserId(user.id);
     setSelectedSimUser(user);
-    setSimSearch("");
     setSimResultsOpen(false);
     setSimulationData(null);
     setSimError("");
@@ -851,14 +852,14 @@ export default function AdminPage() {
                       value={simSearch}
                       onFocus={() => setSimResultsOpen(true)}
                       onBlur={() => setTimeout(() => setSimResultsOpen(false), 150)}
-                      onChange={(event) => { resetSimulationTarget(); setSimSearch(event.target.value); setSimResultsOpen(true); }}
+                      onChange={(event) => { setSimUsersLoading(true); resetSimulationTarget(); setSimSearch(event.target.value); setSimResultsOpen(true); }}
                       onKeyDown={(event) => { if (event.key === "Escape") setSimResultsOpen(false); }}
                       placeholder="Search by name or email"
                       autoComplete="off"
                       className="min-w-0 flex-1 bg-transparent px-3 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400"
                     />
                     {simUsersLoading && <span className="mr-3 h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-[#c8102e]" aria-label="Searching" />}
-                    {simSearch && <button type="button" onClick={() => { resetSimulationTarget(); setSimSearch(""); setSimResultsOpen(true); }} aria-label="Clear member search" className="mr-3 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"><Icon name="close" size={13} /></button>}
+                    {simSearch && <button type="button" onClick={() => { setSimUsersLoading(true); resetSimulationTarget(); setSimSearch(""); setSimResultsOpen(true); }} aria-label="Clear member search" className="mr-3 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"><Icon name="close" size={13} /></button>}
                   </div>
                   {simResultsOpen && (
                     <div className="relative z-20 mt-2 flex max-h-[22rem] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10 md:absolute md:left-0 md:right-0 md:top-full md:mt-2">
@@ -887,9 +888,9 @@ export default function AdminPage() {
                           {simUsersTotal === 0 ? "No results" : `Showing ${(simUsersPage - 1) * 25 + 1}–${Math.min(simUsersPage * 25, simUsersTotal)} of ${simUsersTotal}`}
                         </span>
                         <div className="flex items-center gap-1.5">
-                          <button type="button" disabled={simUsersPage <= 1 || simUsersLoading} onMouseDown={(event) => event.preventDefault()} onClick={() => setSimUsersPage((page) => Math.max(1, page - 1))} className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+                          <button type="button" disabled={simUsersPage <= 1 || simUsersLoading} onMouseDown={(event) => event.preventDefault()} onClick={() => { setSimUsersLoading(true); setSimUsersPage((page) => Math.max(1, page - 1)); }} className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
                           <span className="min-w-12 text-center text-[10px] text-slate-500">Page {simUsersPage}</span>
-                          <button type="button" disabled={simUsersPage * 25 >= simUsersTotal || simUsersLoading} onMouseDown={(event) => event.preventDefault()} onClick={() => setSimUsersPage((page) => page + 1)} className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+                          <button type="button" disabled={simUsersPage * 25 >= simUsersTotal || simUsersLoading} onMouseDown={(event) => event.preventDefault()} onClick={() => { setSimUsersLoading(true); setSimUsersPage((page) => page + 1); }} className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
                         </div>
                       </div>
                     </div>
@@ -898,7 +899,7 @@ export default function AdminPage() {
 
                 <label>
                   <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500">Department / designation</span>
-                  <select value={simDepartmentFilter} onChange={(event) => { resetSimulationTarget(); setSimDepartmentFilter(event.target.value); }} className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition hover:border-slate-400 focus:border-[#c8102e] focus:ring-4 focus:ring-red-50">
+                  <select value={simDepartmentFilter} onChange={(event) => { setSimUsersLoading(true); resetSimulationTarget(); setSimDepartmentFilter(event.target.value); }} className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition hover:border-slate-400 focus:border-[#c8102e] focus:ring-4 focus:ring-red-50">
                     <option value="ALL">All departments</option>
                     {simDepartments.map((department) => <option key={department} value={department}>{department}</option>)}
                   </select>
@@ -906,7 +907,7 @@ export default function AdminPage() {
 
                 <label>
                   <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500">Stakeholder type</span>
-                  <select value={simRoleFilter} onChange={(event) => { resetSimulationTarget(); setSimRoleFilter(event.target.value); }} className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition hover:border-slate-400 focus:border-[#c8102e] focus:ring-4 focus:ring-red-50">
+                  <select value={simRoleFilter} onChange={(event) => { setSimUsersLoading(true); resetSimulationTarget(); setSimRoleFilter(event.target.value); }} className="w-full appearance-none rounded-xl border border-slate-300 bg-white px-3.5 py-3 text-sm text-slate-800 outline-none transition hover:border-slate-400 focus:border-[#c8102e] focus:ring-4 focus:ring-red-50">
                     <option value="ALL">All member types</option>
                     {Object.entries(ROLE_LABELS).filter(([role]) => role !== "ADMIN").map(([role, label]) => <option key={role} value={role}>{label}</option>)}
                   </select>
