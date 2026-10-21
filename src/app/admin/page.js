@@ -29,7 +29,7 @@ export default function AdminPage() {
   const router = useRouter();
 
   // Active Navigation Tab
-  const [activeTab, setActiveTab] = useState("model"); // "model" | "stakeholders" | "telemetry"
+  const [activeTab, setActiveTab] = useState("model"); // model | recommender | stakeholders | telemetry
 
   // Data States
   const [stats, setStats] = useState(null);
@@ -118,7 +118,7 @@ export default function AdminPage() {
   }, [status, session]);
 
   useEffect(() => {
-    if (status !== "authenticated" || session?.user?.role !== "ADMIN") return undefined;
+    if (status !== "authenticated" || session?.user?.role !== "ADMIN" || activeTab !== "recommender") return undefined;
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       setSimUsersLoading(true);
@@ -144,7 +144,7 @@ export default function AdminPage() {
       }
     }, 220);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [status, session?.user?.role, simSearch, simRoleFilter, simDepartmentFilter, simUsersPage, simDepartments.length]);
+  }, [status, session?.user?.role, activeTab, simSearch, simRoleFilter, simDepartmentFilter, simUsersPage, simDepartments.length]);
 
   const resetSimulationTarget = () => {
     setSimTargetUserId("");
@@ -392,6 +392,19 @@ export default function AdminPage() {
 
             <button
               type="button"
+              onClick={() => setActiveTab("recommender")}
+              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${
+                activeTab === "recommender"
+                  ? "border-[#c8102e] text-white bg-slate-800/50"
+                  : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
+              }`}
+            >
+              <Icon name="sparkles" size={14} className={activeTab === "recommender" ? "text-[#c8102e]" : ""} />
+              <span>Live Recommender</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab("stakeholders")}
               className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${
                 activeTab === "stakeholders"
@@ -439,11 +452,13 @@ export default function AdminPage() {
               </div>
               <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
                 {activeTab === "model" && "Recommender Algorithm Telemetry & Benchmark Suite"}
+                {activeTab === "recommender" && "Live Recommender Simulation"}
                 {activeTab === "stakeholders" && "Stakeholder Verification & Account Directory"}
                 {activeTab === "telemetry" && "Community Interactions & Engagement Funnel"}
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
                 {activeTab === "model" && "Live scoring diagnostics and a rule-based ranking comparison. These prototype scores are not independent evidence of real-world quality."}
+                {activeTab === "recommender" && "Search for a stakeholder, adjust the filters, and inspect the model's live recommendation scores for that member."}
                 {activeTab === "stakeholders" && "Manage privileges, audit Pride Centre credentials, and oversee account security."}
                 {activeTab === "telemetry" && "Real-time mentorship handshakes, bilateral connections, and route co-travel metrics."}
               </p>
@@ -803,6 +818,12 @@ export default function AdminPage() {
               </div>
             </section>
 
+          </div>
+        )}
+
+        {/* Live recommender is a dedicated panel next to model analytics. */}
+        {activeTab === "recommender" && (
+          <div className="space-y-8">
             {/* Interactive Live Model Simulator */}
             <section className="p-6 sm:p-8 bg-white border border-slate-200/80 rounded-2xl shadow-xs space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
