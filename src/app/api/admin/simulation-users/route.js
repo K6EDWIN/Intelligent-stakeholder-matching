@@ -13,6 +13,9 @@ export async function GET(request) {
   const role = searchParams.get("role") || "ALL";
   const department = searchParams.get("department") || "ALL";
   const includeDepartments = searchParams.get("includeDepartments") === "true";
+  const pageSize = 25;
+  const requestedPage = Number.parseInt(searchParams.get("page") || "1", 10);
+  const page = Number.isFinite(requestedPage) ? Math.max(1, requestedPage) : 1;
   const validRoles = ["ALUMNI", "STAFF", "FORMER_STAFF", "FREQUENT_FLYER"];
   const filters = [{ role: { not: "ADMIN" } }];
   if (validRoles.includes(role)) filters.push({ role });
@@ -28,9 +31,10 @@ export async function GET(request) {
     });
   }
 
-  const [users, profiles] = await Promise.all([
+  const where = { AND: filters };
+  const [users, total, profiles] = await Promise.all([
     prisma.user.findMany({
-      where: { AND: filters },
+      where,
       select: {
         id: true,
         email: true,
@@ -38,8 +42,10 @@ export async function GET(request) {
         profile: { select: { fullName: true, department: true } },
       },
       orderBy: [{ profile: { fullName: "asc" } }, { email: "asc" }],
-      take: 25,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     }),
+    prisma.user.count({ where }),
     includeDepartments
       ? prisma.profile.findMany({
           where: { department: { not: null }, user: { role: { not: "ADMIN" } } },
@@ -53,6 +59,10 @@ export async function GET(request) {
   return NextResponse.json({
     users,
     departments: profiles.map((profile) => profile.department).filter(Boolean),
-    limited: users.length === 25,
+    total,
+    page,
+    pageSize,
+    hasPrevious: page > 1,
+    hasNext: page * pageSize < total,
   });
 }

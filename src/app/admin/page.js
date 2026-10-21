@@ -54,6 +54,8 @@ export default function AdminPage() {
   const [selectedSimUser, setSelectedSimUser] = useState(null);
   const [simResultsOpen, setSimResultsOpen] = useState(false);
   const [simUserOptions, setSimUserOptions] = useState([]);
+  const [simUsersPage, setSimUsersPage] = useState(1);
+  const [simUsersTotal, setSimUsersTotal] = useState(0);
   const [simUsersLoading, setSimUsersLoading] = useState(false);
   const [simulationData, setSimulationData] = useState(null);
   const [simulating, setSimulating] = useState(false);
@@ -125,12 +127,14 @@ export default function AdminPage() {
           q: simSearch,
           role: simRoleFilter,
           department: simDepartmentFilter,
+          page: String(simUsersPage),
         });
         if (!simDepartments.length) query.set("includeDepartments", "true");
         const res = await fetch(`/api/admin/simulation-users?${query}`, { signal: controller.signal });
         const data = await res.json();
         if (res.ok) {
           setSimUserOptions(data.users || []);
+          setSimUsersTotal(data.total || 0);
           setSimDepartments(data.departments || []);
         }
       } catch (err) {
@@ -140,13 +144,14 @@ export default function AdminPage() {
       }
     }, 220);
     return () => { clearTimeout(timer); controller.abort(); };
-  }, [status, session?.user?.role, simSearch, simRoleFilter, simDepartmentFilter, simDepartments.length]);
+  }, [status, session?.user?.role, simSearch, simRoleFilter, simDepartmentFilter, simUsersPage, simDepartments.length]);
 
   const resetSimulationTarget = () => {
     setSimTargetUserId("");
     setSelectedSimUser(null);
     setSimulationData(null);
     setSimError("");
+    setSimUsersPage(1);
   };
 
   const selectSimulationUser = (user) => {
@@ -835,7 +840,8 @@ export default function AdminPage() {
                     {simSearch && <button type="button" onClick={() => { resetSimulationTarget(); setSimSearch(""); setSimResultsOpen(true); }} aria-label="Clear member search" className="mr-3 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"><Icon name="close" size={13} /></button>}
                   </div>
                   {simResultsOpen && (
-                    <div className="relative z-20 mt-2 max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10 md:absolute md:left-0 md:right-0 md:top-full md:mt-2">
+                    <div className="relative z-20 mt-2 flex max-h-[22rem] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-900/10 md:absolute md:left-0 md:right-0 md:top-full md:mt-2">
+                      <div className="min-h-0 flex-1 overflow-y-auto">
                         {simUserOptions.length ? simUserOptions.map((user) => (
                           <button key={user.id} type="button" onClick={() => selectSimulationUser(user)} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
                             <Avatar name={user.profile?.fullName || user.email} size="sm" />
@@ -854,7 +860,17 @@ export default function AdminPage() {
                             {!simUsersLoading && <p className="mt-1 text-xs text-slate-500">Try another name, department, or stakeholder type.</p>}
                           </div>
                         )}
-                        {simUserOptions.length === 25 && <p className="border-t border-slate-100 px-3 py-2 text-[10px] text-slate-400">Showing the first 25 matches. Add a name or email to narrow the search.</p>}
+                      </div>
+                      <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-2.5 py-2">
+                        <span className="text-[10px] font-medium text-slate-500">
+                          {simUsersTotal === 0 ? "No results" : `Showing ${(simUsersPage - 1) * 25 + 1}–${Math.min(simUsersPage * 25, simUsersTotal)} of ${simUsersTotal}`}
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button type="button" disabled={simUsersPage <= 1 || simUsersLoading} onMouseDown={(event) => event.preventDefault()} onClick={() => setSimUsersPage((page) => Math.max(1, page - 1))} className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+                          <span className="min-w-12 text-center text-[10px] text-slate-500">Page {simUsersPage}</span>
+                          <button type="button" disabled={simUsersPage * 25 >= simUsersTotal || simUsersLoading} onMouseDown={(event) => event.preventDefault()} onClick={() => setSimUsersPage((page) => page + 1)} className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
