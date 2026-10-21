@@ -32,6 +32,14 @@ export async function GET() {
     });
   }
 
+  if (session.user.role === "ADMIN" && (profile.isPublic || profile.mentorshipRole || profile.mentorshipNeeds || profile.availability)) {
+    profile = await prisma.profile.update({
+      where: { id: profile.id },
+      data: { isPublic: false, mentorshipRole: null, mentorshipNeeds: null, availability: null },
+      include: { skills: { include: { skill: true } }, interests: { include: { interest: true } } },
+    });
+  }
+
   return NextResponse.json({
     profile: {
       ...profile,
@@ -84,6 +92,7 @@ export async function PUT(request) {
   // Update the scalar fields, then fully resync the skill/interest join
   // tables to match whatever was just submitted (simplest correct approach
   // at this data scale -- delete old links, insert the new selection).
+  const isAdmin = session.user.role === "ADMIN";
   await prisma.$transaction([
     prisma.profile.update({
       where: { id: profile.id },
@@ -91,18 +100,18 @@ export async function PUT(request) {
         fullName,
         bio,
         department,
-        professionalBackground,
-        trainingHistory,
-        careerGoals,
-        mentorshipNeeds,
-        mentorshipRole: mentorshipRole || null,
-        availability,
-        isPublic: isPublic ?? true,
+        professionalBackground: isAdmin ? null : professionalBackground,
+        trainingHistory: isAdmin ? null : trainingHistory,
+        careerGoals: isAdmin ? null : careerGoals,
+        mentorshipNeeds: isAdmin ? null : mentorshipNeeds,
+        mentorshipRole: isAdmin ? null : mentorshipRole || null,
+        availability: isAdmin ? null : availability,
+        isPublic: isAdmin ? false : isPublic ?? true,
       },
     }),
     prisma.profileSkill.deleteMany({ where: { profileId: profile.id } }),
     prisma.profileInterest.deleteMany({ where: { profileId: profile.id } }),
-    ...(skillIds.length
+    ...(!isAdmin && skillIds.length
       ? [
           prisma.profileSkill.createMany({
             data: skillIds.map((skillId) => ({
@@ -112,7 +121,7 @@ export async function PUT(request) {
           }),
         ]
       : []),
-    ...(interestIds.length
+    ...(!isAdmin && interestIds.length
       ? [
           prisma.profileInterest.createMany({
             data: interestIds.map((interestId) => ({

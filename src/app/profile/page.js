@@ -17,6 +17,7 @@ const ROLE_OPTIONS = [
 export default function ProfilePage() {
   const { status, data: session } = useSession();
   const router = useRouter();
+  const isAdmin = session?.user?.role === "ADMIN";
 
   const [meta, setMeta] = useState({ skills: [], interests: [] });
   const [form, setForm] = useState({
@@ -164,14 +165,14 @@ export default function ProfilePage() {
                   {form.fullName || "Your Profile"}
                 </h1>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  {form.department || "Kenya Airways Stakeholder"} · {session?.user?.email} · {session?.user?.role === "ADMIN" ? "Administrator" : "Verified Member"}
+                  {isAdmin ? "Executive Administration" : form.department || "Kenya Airways Stakeholder"} · {session?.user?.email} · {isAdmin ? "Executive Administrator" : "Verified Member"}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold">
                 <Icon name="shield" size={13} />
-                Verified Member
+                {isAdmin ? "Executive Access" : "Verified Member"}
               </span>
             </div>
           </div>
@@ -197,7 +198,7 @@ export default function ProfilePage() {
           <section className="card p-6 sm:p-8 space-y-5">
             <h2 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
               <Icon name="profile" size={16} className="text-[#c8102e]" />
-              Personal &amp; Department Information
+              {isAdmin ? "Executive Profile" : "Personal & Department Information"}
             </h2>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -216,11 +217,11 @@ export default function ProfilePage() {
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Aviation Department / Unit
+                  {isAdmin ? "Office / Unit" : "Aviation Department / Unit"}
                 </label>
                 <input
                   name="department"
-                  placeholder="e.g. Flight Operations, In-flight, Ground Ops, Cargo"
+                  placeholder={isAdmin ? "e.g. Office of the Administrator" : "e.g. Flight Operations, In-flight, Ground Ops, Cargo"}
                   value={form.department}
                   onChange={handleChange}
                   className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e] transition"
@@ -243,8 +244,38 @@ export default function ProfilePage() {
             </div>
           </section>
 
+          {isAdmin && (
+            <section className="card p-6 sm:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <Icon name="shield" size={16} className="text-[#c8102e]" />
+                    Executive account
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-2 max-w-xl">
+                    Your account is set up for platform oversight. It is not listed in member matching and has no mentor or mentee availability.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-xs min-w-64">
+                  <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
+                    <span className="block text-slate-500">Access level</span>
+                    <strong className="block text-slate-900 mt-1">Platform administrator</strong>
+                  </div>
+                  <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-3">
+                    <span className="block text-emerald-700">Account status</span>
+                    <strong className="block text-emerald-900 mt-1">Active · Verified</strong>
+                  </div>
+                  <div className="col-span-2 rounded-xl bg-slate-50 border border-slate-200 p-3">
+                    <span className="block text-slate-500">Account reference</span>
+                    <strong className="block text-slate-900 mt-1 break-all">{session?.user?.id}</strong>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* Section 2: Mentorship Settings */}
-          <section className="card p-6 sm:p-8 space-y-5">
+          {!isAdmin && <section className="card p-6 sm:p-8 space-y-5">
             <h2 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
               <Icon name="sparkles" size={16} className="text-[#c59b27]" />
               Mentorship Participation &amp; Career Trajectory
@@ -310,10 +341,10 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
-          </section>
+          </section>}
 
           {/* Section 3: Skills & Taxonomy */}
-          <section className="card p-6 sm:p-8 space-y-5">
+          {!isAdmin && <section className="card p-6 sm:p-8 space-y-5">
             <h2 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
               <Icon name="academic" size={16} className="text-emerald-700" />
               Skills &amp; Interests (Profile Competencies)
@@ -386,7 +417,7 @@ export default function ProfilePage() {
                 </label>
               </div>
             </div>
-          </section>
+          </section>}
 
           {/* Save Button */}
           <div className="flex justify-end pb-8">

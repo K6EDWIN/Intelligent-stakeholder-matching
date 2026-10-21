@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createNotification } from "@/lib/notifications";
+import { ensureConversation } from "@/lib/conversations";
 
 const VALID_STATUSES = ["ACCEPTED", "DECLINED"];
 
@@ -50,6 +51,10 @@ export async function PATCH(request, { params }) {
     where: { id },
     data: { status },
   });
+
+  if (status === "ACCEPTED") {
+    await ensureConversation(existing.senderId, existing.receiverId);
+  }
 
   const responder = await prisma.profile.findUnique({ where: { userId: session.user.id }, select: { fullName: true } });
   await createNotification({

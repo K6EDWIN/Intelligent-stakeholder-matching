@@ -63,6 +63,9 @@ export async function POST(request) {
       { status: 400 }
     );
   }
+  if (session.user.role === "ADMIN") {
+    return NextResponse.json({ error: "Administrator accounts do not join the member connection network" }, { status: 403 });
+  }
 
   const [receiver, senderProfile, acceptedMentorships, acceptedConnections] = await Promise.all([
     prisma.user.findUnique({
@@ -88,6 +91,9 @@ export async function POST(request) {
   ]);
   if (!receiver) {
     return NextResponse.json({ error: "Recipient not found" }, { status: 404 });
+  }
+  if (receiver.role === "ADMIN") {
+    return NextResponse.json({ error: "Administrator accounts are not available for member matching" }, { status: 403 });
   }
 
   const existing = await prisma.connectionRequest.findFirst({
