@@ -1161,3 +1161,17 @@ html[data-view-mode="modern"] .admin-console main select {
 @media (max-width: 720px) {
   .pc-mobile-menu { top: 72px; right: 12px; left: 12px; width: auto; }
 }
+
+/* Let the admin masthead grow after wrapping so its controls cannot overlap tabs. */
+@media (max-width: 1550px) and (min-width: 1025px) {
+  .admin-header-top { height: auto !important; min-height: 0; }
+  .admin-header-brand { width: 100%; }
+  .admin-header-actions { min-height: 48px; }
+  .admin-tabs { min-height: 54px; margin-top: 4px; }
+}
+@media (max-width: 1024px) {
+  .admin-header-top { height: auto !important; }
+  .admin-tabs { margin-top: 4px; }
+}
+.pc-nav-actions { min-width: 0; flex: 0 0 auto; }
+.pc-nav-actions > a { white-space: nowrap; }

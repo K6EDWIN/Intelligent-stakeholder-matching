@@ -45,12 +45,18 @@ export default function Home() {
             </nav>
             <div className="pc-nav-actions">
               <ViewModeToggle compact />
-              <Link className="pc-nav-signin" href={session?.user ? portalHref : "/login"}>
-                {session?.user ? "Open portal" : "Sign in"}
-              </Link>
-              <Link className="pc-nav-join" href={session?.user ? portalHref : "/register"}>
-                {session?.user ? "Go to workspace" : "Join the network"}<Icon name="arrow" size={15} />
-              </Link>
+              {session?.user ? (
+                <Link className="pc-nav-join" href={portalHref}>
+                  Open workspace<Icon name="arrow" size={15} />
+                </Link>
+              ) : (
+                <>
+                  <Link className="pc-nav-signin" href="/login">Sign in</Link>
+                  <Link className="pc-nav-join" href="/register">
+                    Join the network<Icon name="arrow" size={15} />
+                  </Link>
+                </>
+              )}
             </div>
             <button
               type="button"
