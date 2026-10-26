@@ -317,10 +317,10 @@ export default function AdminPage() {
       {/* 1. EXECUTIVE ADMIN TOP BAR                                     */}
       {/* ============================================================== */}
       <header className="sticky top-0 z-40 bg-[#071626] border-b border-slate-800 text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-18 py-3.5">
+        <div className="admin-header-inner max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="admin-header-top flex items-center justify-between h-18 py-3.5">
             {/* Left: Brand & Title */}
-            <div className="flex items-center gap-4">
+            <div className="admin-header-brand flex items-center gap-4">
               <KQLogo light />
               <div className="hidden sm:block h-7 w-px bg-slate-700/80" />
               <div>
@@ -335,7 +335,7 @@ export default function AdminPage() {
             </div>
 
             {/* Right: Operational Status & User Badge */}
-            <div className="flex items-center gap-3">
+            <div className="admin-header-actions flex items-center gap-3">
               <ViewModeToggle compact />
               <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-950/60 border border-emerald-700/40 text-emerald-400 text-xs">
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
@@ -374,7 +374,7 @@ export default function AdminPage() {
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex items-center gap-1 sm:gap-2 border-t border-slate-800/80 pt-1 -mb-px overflow-x-auto">
+          <div className="admin-tabs flex items-center gap-1 sm:gap-2 border-t border-slate-800/80 pt-1 -mb-px overflow-x-auto">
             <button
               type="button"
               onClick={() => setActiveTab("model")}
