@@ -329,7 +329,7 @@ export default function AdminPage() {
                   OPERATIONS CONSOLE
                 </div>
                 <h1 className="text-sm sm:text-base font-extrabold text-white tracking-tight leading-none mt-0.5">
-                  Kenya Airways Flight Intelligence &amp; Governance
+                  Flight Intelligence &amp; Governance
                 </h1>
               </div>
             </div>
@@ -340,7 +340,7 @@ export default function AdminPage() {
               <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-950/60 border border-emerald-700/40 text-emerald-400 text-xs">
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 <span className="font-semibold text-[11px] tracking-wide uppercase">
-                  Evaluation response · {benchmark?.latencyMs ?? "—"}ms
+                  Evaluation · {benchmark?.latencyMs ?? "—"}ms
                 </span>
               </div>
 
@@ -350,7 +350,7 @@ export default function AdminPage() {
                 title="Preview platform as an end-user stakeholder"
               >
                 <Icon name="sparkles" size={13} />
-                <span className="hidden sm:inline">Stakeholder Portal</span>
+                <span className="hidden sm:inline">Portal</span>
               </Link>
 
               <Link
@@ -359,7 +359,7 @@ export default function AdminPage() {
                 title="View and edit your administrator profile"
               >
                 <Avatar name={session?.user?.name || session?.user?.email} size="sm" role="ADMIN" />
-                <span className="hidden sm:inline">My Profile</span>
+                <span className="hidden sm:inline">Profile</span>
               </Link>
 
               <button
@@ -368,7 +368,7 @@ export default function AdminPage() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition"
               >
                 <Icon name="close" size={13} />
-                <span className="hidden sm:inline">Sign Out</span>
+                <span className="hidden sm:inline">Sign out</span>
               </button>
             </div>
           </div>

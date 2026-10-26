@@ -1175,3 +1175,33 @@ html[data-view-mode="modern"] .admin-console main select {
 }
 .pc-nav-actions { min-width: 0; flex: 0 0 auto; }
 .pc-nav-actions > a { white-space: nowrap; }
+
+/* Keep the admin identity, controls, and brand aligned across a single desktop row. */
+@media (min-width: 1025px) {
+  .admin-console > header .admin-header-inner { max-width: 1920px !important; padding-inline: clamp(18px,2.3vw,42px) !important; }
+  .admin-header-top {
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) auto !important;
+    align-items: center;
+    gap: clamp(10px,1.15vw,18px);
+    height: auto !important;
+    min-height: 82px;
+    padding-block: 9px;
+  }
+  .admin-header-brand { width: auto !important; min-width: 0; flex: initial; gap: clamp(9px,1vw,15px); }
+  .admin-header-brand .logo { flex: 0 1 auto; min-width: 0; }
+  .admin-header-brand .logo-copy small { font-size: 9px; letter-spacing: .055em; }
+  .admin-header-brand > div:last-child { flex: 0 1 270px; min-width: 0; max-width: 270px; }
+  .admin-header-brand h1 { max-width: 270px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: clamp(12px,.95vw,16px) !important; }
+  .admin-header-actions { width: auto; flex-wrap: nowrap; justify-content: flex-end; gap: clamp(5px,.55vw,9px) !important; }
+  .admin-header-actions .view-mode-toggle { flex: 0 0 auto; }
+  .admin-header-actions > div.hidden.lg\:flex { max-width: 150px; padding-inline: 8px; gap: 6px; }
+  .admin-header-actions > div.hidden.lg\:flex span:last-child { font-size: 9px; letter-spacing: .025em; white-space: nowrap; }
+  .admin-header-actions > a,
+  .admin-header-actions > button { padding-inline: 9px; font-size: 10px; }
+  .admin-tabs { display: grid; grid-template-columns: repeat(4,max-content); justify-content: space-between; gap: 6px !important; min-height: 54px; margin-top: 0; }
+  .admin-tabs > button { padding-inline: clamp(8px,.8vw,13px); font-size: 10px; letter-spacing: .07em; }
+}
+@media (max-width: 1024px) {
+  .admin-header-top { height: auto !important; }
+}
