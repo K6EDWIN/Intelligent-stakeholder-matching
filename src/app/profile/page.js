@@ -156,15 +156,15 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="px-6 sm:px-8 pb-6 pt-0 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 -mt-10 relative z-10">
-            <div className="flex items-end gap-4">
+            <div className="flex min-w-0 items-end gap-4">
               <div className="border-4 border-white rounded-full shadow-sm bg-white">
                 <Avatar name={form.fullName || session?.user?.email} size="xl" />
               </div>
-              <div className="mb-1">
-                <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+              <div className="mb-1 min-w-0">
+                <h1 className="break-words text-2xl font-extrabold text-slate-900 tracking-tight">
                   {form.fullName || "Your Profile"}
                 </h1>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="mt-0.5 break-words text-xs text-slate-500">
                   {isAdmin ? "Executive Administration" : form.department || "Kenya Airways Stakeholder"} · {session?.user?.email} · {isAdmin ? "Executive Administrator" : "Verified Member"}
                 </p>
               </div>
@@ -256,7 +256,7 @@ export default function ProfilePage() {
                     Your account is set up for platform oversight. It is not listed in member matching and has no mentor or mentee availability.
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-3 text-xs min-w-64">
+                <div className="grid min-w-0 grid-cols-1 gap-3 text-xs sm:min-w-64 sm:grid-cols-2">
                   <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
                     <span className="block text-slate-500">Access level</span>
                     <strong className="block text-slate-900 mt-1">Platform administrator</strong>
@@ -265,7 +265,7 @@ export default function ProfilePage() {
                     <span className="block text-emerald-700">Account status</span>
                     <strong className="block text-emerald-900 mt-1">Active · Verified</strong>
                   </div>
-                  <div className="col-span-2 rounded-xl bg-slate-50 border border-slate-200 p-3">
+                  <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 sm:col-span-2">
                     <span className="block text-slate-500">Account reference</span>
                     <strong className="block text-slate-900 mt-1 break-all">{session?.user?.id}</strong>
                   </div>

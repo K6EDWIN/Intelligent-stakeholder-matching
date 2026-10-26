@@ -76,7 +76,7 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#071626] text-slate-100 flex flex-col justify-between">
+    <div className="auth-page min-h-screen w-full bg-[#071626] text-slate-100 flex flex-col justify-between">
       {/* Top Header Bar */}
       <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
         <KQLogo light />

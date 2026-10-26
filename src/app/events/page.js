@@ -271,10 +271,10 @@ export default function EventsPage() {
                       key={e.id}
                       className="card p-5 hover:border-slate-300 transition"
                     >
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div>
+                      <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
+                        <div className="min-w-0 flex-1">
                           <h3 className="font-bold text-base text-slate-900">{e.title}</h3>
-                          <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-1">
                             <span className="flex items-center gap-1">
                               <Icon name="calendar" size={12} />
                               {d.toLocaleDateString(undefined, {
@@ -286,10 +286,10 @@ export default function EventsPage() {
                               })}
                             </span>
                             <span>·</span>
-                            <span>{e.location}</span>
+                            <span className="min-w-0 break-words">{e.location}</span>
                           </div>
                         </div>
-                        <Tag gold={e.isJoined}>
+                        <Tag gold={e.isJoined} className="shrink-0">
                           {e.participantCount} {e.participantCount === 1 ? "Attending" : "Attending"}
                         </Tag>
                       </div>
@@ -298,8 +298,8 @@ export default function EventsPage() {
                         {e.description}
                       </p>
 
-                      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                        <span className="text-slate-500">
+                      <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+                        <span className="min-w-0 flex-1 text-slate-500">
                           Organized by {e.createdByName}
                         </span>
 
@@ -307,7 +307,7 @@ export default function EventsPage() {
                           variant={e.isJoined ? "secondary" : "primary"}
                           onClick={() => toggleRsvp(e.id, e.isJoined)}
                           disabled={isPending}
-                          className="text-xs py-1.5 px-3 min-h-0"
+                          className="text-xs py-1.5 px-3 min-h-0 w-full sm:w-auto"
                         >
                           {isPending
                             ? "Updating..."
