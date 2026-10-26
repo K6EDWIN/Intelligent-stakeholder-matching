@@ -45,7 +45,9 @@ export default function RecommendationsPage() {
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
-  const [minScore, setMinScore] = useState(60);
+  // A new member may not have enough profile or network history to score
+  // above 60% yet. Start broad so cold-start recommendations remain visible.
+  const [minScore, setMinScore] = useState(0);
   const [mentorshipFilter, setMentorshipFilter] = useState("ALL");
 
   // Modal State
@@ -223,6 +225,16 @@ export default function RecommendationsPage() {
           </div>
         </div>
 
+        {recommendations.length > 0 && recommendations.every((item) => item.matchPercent === 0) && (
+          <div role="status" className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-bold">Showing people to explore while we learn what fits you</p>
+              <p className="mt-1 text-amber-900">Add or update your skills, interests, and mentorship goals to give the recommender more signals for personal matches.</p>
+            </div>
+            <Button onClick={() => router.push("/profile")} className="shrink-0">Improve my profile</Button>
+          </div>
+        )}
+
         {/* Filter Toolbar */}
         <div className="card p-5 sm:p-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-center">
@@ -277,7 +289,7 @@ export default function RecommendationsPage() {
               </div>
               <input
                 type="range"
-                min="40"
+                min="0"
                 max="95"
                 step="5"
                 value={minScore}
@@ -296,7 +308,7 @@ export default function RecommendationsPage() {
               onClick={() => {
                 setSearchQuery("");
                 setRoleFilter("ALL");
-                setMinScore(60);
+                setMinScore(0);
                 setMentorshipFilter("ALL");
               }}
               className="text-[#c8102e] font-semibold hover:underline cursor-pointer"
@@ -312,9 +324,9 @@ export default function RecommendationsPage() {
             <div className="w-12 h-12 mx-auto rounded-full bg-slate-100 text-slate-400 flex items-center justify-center">
               <Icon name="search" size={22} />
             </div>
-            <h3 className="font-bold text-slate-800 text-base">No Matching Stakeholders Found</h3>
+            <h3 className="font-bold text-slate-800 text-base">No Stakeholders Match These Filters</h3>
             <p className="text-sm text-slate-500 max-w-sm mx-auto">
-              Try adjusting the minimum match slider or search query to broaden your network discovery.
+              Try a broader search or reset your filters to see more people in the network.
             </p>
           </div>
         ) : (
@@ -341,7 +353,7 @@ export default function RecommendationsPage() {
                             : "bg-slate-100 text-slate-800 border border-slate-200"
                         }`}
                       >
-                        <span>{item.matchPercent}% Match</span>
+                        <span>{item.matchPercent === 0 ? "New suggestion" : `${item.matchPercent}% Match`}</span>
                       </div>
                     </div>
 
@@ -427,9 +439,8 @@ export default function RecommendationsPage() {
                         {(item.sharedSkills || []).slice(0, 4).map((skill) => (
                           <Tag key={skill}>{skill}</Tag>
                         ))}
-                        {(!item.sharedSkills || item.sharedSkills.length === 0) && (
-                          <Tag>Aviation Specialist</Tag>
-                        )}
+                        {(!item.sharedSkills || item.sharedSkills.length === 0) && item.matchPercent > 0 && <Tag>Aviation Specialist</Tag>}
+                        {(!item.sharedSkills || item.sharedSkills.length === 0) && item.matchPercent === 0 && <span className="text-xs text-slate-500">No shared skills yet</span>}
                       </div>
                     </div>
                   </div>

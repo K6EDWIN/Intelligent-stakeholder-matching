@@ -227,21 +227,21 @@ export default function OpportunitiesPage() {
                     key={o.id}
                     className="card p-5 hover:border-slate-300 transition"
                   >
-                    <div className="flex items-start justify-between gap-3 mb-2">
-                      <div>
+                    <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
+                      <div className="min-w-0 flex-1">
                         <h3 className="font-bold text-base text-slate-900">{o.title}</h3>
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-slate-500 break-words">
                           Shared by {o.postedBy?.profile?.fullName || "Kenya Airways Member"}
                         </span>
                       </div>
-                      <Tag gold={o.type.includes("Career")}>{o.type}</Tag>
+                      <Tag gold={o.type.includes("Career")} className="shrink-0">{o.type}</Tag>
                     </div>
 
                     <p className="text-sm text-slate-700 leading-relaxed mt-2 whitespace-pre-wrap">
                       {o.description}
                     </p>
 
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
                       <span className="flex items-center gap-1.5 text-emerald-700 font-semibold">
                         <Icon name="check" size={13} /> Verified Community Post
                       </span>

@@ -394,6 +394,9 @@ h1, h2, h3, h4, h5, h6 {
   border-bottom: 1px solid var(--border-card);
 }
 
+/* The compact brand and section selector are reserved for the mobile header. */
+.mobile-brand { display: none; }
+
 .header-right {
   display: flex;
   align-items: center;
@@ -555,6 +558,11 @@ html[data-view-mode="modern"] .home-page > main > section:first-child > div > di
 @media (max-width: 640px) {
   .view-mode-toggle.compact .view-mode-option { padding: 7px 8px; }
   html[data-view-mode="modern"] .app-page { padding-inline: 16px; }
+  .app-header { height: auto; min-height: 64px; flex-wrap: wrap; gap: 8px; padding-block: 9px; }
+  .mobile-brand { width: 100%; min-width: 0; justify-content: space-between; gap: 10px; }
+  .mobile-brand > .logo { flex: 0 0 auto; }
+  .mobile-brand select { min-width: 0; max-width: calc(100% - 58px); flex: 1 1 auto; }
+  .header-right { width: 100%; justify-content: flex-end; gap: 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
@@ -614,6 +622,10 @@ html[data-view-mode="modern"] body .border-slate-300 { border-color: var(--moder
 html[data-view-mode="modern"] body input,
 html[data-view-mode="modern"] body select,
 html[data-view-mode="modern"] body textarea { color: #f5f1f2; background: rgba(255,255,255,.055); border-color: var(--modern-line); }
+html[data-view-mode="modern"] body select,
+html[data-view-mode="modern"] body input[type="date"],
+html[data-view-mode="modern"] body input[type="datetime-local"],
+html[data-view-mode="modern"] body input[type="time"] { color-scheme: dark; }
 html[data-view-mode="modern"] .shell,
 html[data-view-mode="modern"] .shell-main,
 html[data-view-mode="modern"] .shell-main > main,
@@ -646,10 +658,13 @@ html[data-view-mode="modern"] .app-header {
 }
 html[data-view-mode="modern"] .app-header > div:first-child { color: #aaa8b3; }
 html[data-view-mode="modern"] .app-page { max-width: 1540px; padding: 48px 48px 84px; color: var(--modern-copy); }
-html[data-view-mode="modern"] .app-page h1 { font-size: clamp(2.6rem,5vw,4.9rem); line-height: .98; letter-spacing: -.065em; color: #fbf8f6 !important; }
+html[data-view-mode="modern"] .app-page h1 { font-size: clamp(2.15rem,3.6vw,3.4rem); line-height: 1.02; letter-spacing: -.055em; color: #fbf8f6 !important; }
 html[data-view-mode="modern"] .app-page h2 { color: #f7f3f1 !important; letter-spacing: -.045em; }
 html[data-view-mode="modern"] .app-page h3,
 html[data-view-mode="modern"] .app-page h4 { color: #f2eff2 !important; }
+html[data-view-mode="modern"] .app-page h2.text-slate-900,
+html[data-view-mode="modern"] .app-page h3.text-slate-900,
+html[data-view-mode="modern"] .app-page h4.text-slate-900 { color: #f7f3f1 !important; }
 html[data-view-mode="modern"] .app-page p,
 html[data-view-mode="modern"] .app-page label { color: var(--modern-muted); }
 html[data-view-mode="modern"] .app-page .text-slate-900,
@@ -665,18 +680,27 @@ html[data-view-mode="modern"] .app-page .bg-slate-200 { background-color: var(--
 html[data-view-mode="modern"] .app-page .border-slate-100,
 html[data-view-mode="modern"] .app-page .border-slate-200,
 html[data-view-mode="modern"] .app-page .border-slate-300 { border-color: var(--modern-line) !important; }
-html[data-view-mode="modern"] .card,
-html[data-view-mode="modern"] .app-page [class*="rounded-xl"],
-html[data-view-mode="modern"] .app-page [class*="rounded-lg"] {
+html[data-view-mode="modern"] .card {
   border-color: var(--modern-line);
   border-radius: 21px;
   box-shadow: 0 18px 54px rgba(0,0,0,.16);
   backdrop-filter: blur(18px);
 }
+html[data-view-mode="modern"] .app-page [class*="rounded-xl"],
+html[data-view-mode="modern"] .app-page [class*="rounded-lg"] {
+  border-color: var(--modern-line);
+  border-radius: 15px;
+}
 html[data-view-mode="modern"] .card:hover { border-color: hsl(var(--modern-hue) 70% 66% / .55); box-shadow: 0 24px 64px rgba(0,0,0,.26); transform: translateY(-5px); }
 html[data-view-mode="modern"] .app-page input,
 html[data-view-mode="modern"] .app-page select,
 html[data-view-mode="modern"] .app-page textarea { color: #f5f1f2; background: rgba(255,255,255,.055) !important; border-color: var(--modern-line) !important; }
+html[data-view-mode="modern"] body input[type="range"],
+html[data-view-mode="modern"] body input[type="checkbox"],
+html[data-view-mode="modern"] body input[type="radio"] {
+  background: transparent !important;
+  accent-color: hsl(var(--modern-hue) 78% 58%);
+}
 html[data-view-mode="modern"] .app-page input::placeholder,
 html[data-view-mode="modern"] .app-page textarea::placeholder { color: #817f8a; }
 html[data-view-mode="modern"] .btn { border-radius: 999px; min-height: 44px; }
@@ -979,6 +1003,11 @@ html[data-view-mode="modern"] .sidebar {
   border-right-color: rgba(255,255,255,.1);
 }
 html[data-view-mode="modern"] .sidebar .logo-mark { background: linear-gradient(145deg,#ff6478,#c8102e); }
+html[data-view-mode="modern"] .sidebar nav { scrollbar-width: thin; scrollbar-color: rgba(191,200,218,.35) transparent; }
+html[data-view-mode="modern"] .sidebar nav::-webkit-scrollbar { width: 7px; }
+html[data-view-mode="modern"] .sidebar nav::-webkit-scrollbar-track { background: transparent; }
+html[data-view-mode="modern"] .sidebar nav::-webkit-scrollbar-thumb { border-radius: 999px; background: rgba(191,200,218,.3); }
+html[data-view-mode="modern"] .sidebar nav::-webkit-scrollbar-thumb:hover { background: rgba(237,64,90,.65); }
 html[data-view-mode="modern"] .sidebar-nav-item.active {
   background: linear-gradient(100deg,hsl(var(--modern-hue) 80% 54% / .32),hsl(calc(var(--modern-hue) + 42) 75% 48% / .1));
   box-shadow: inset 3px 0 hsl(var(--modern-hue) 92% 66%), 0 8px 24px rgba(0,0,0,.12);
@@ -987,8 +1016,6 @@ html[data-view-mode="modern"] .app-header {
   background: rgba(12,13,20,.75) !important;
   border-color: rgba(255,255,255,.1);
 }
-html[data-view-mode="modern"] .app-page [class*="rounded-xl"],
-html[data-view-mode="modern"] .app-page [class*="rounded-lg"],
 html[data-view-mode="modern"] .card {
   background: linear-gradient(145deg,rgba(31,33,46,.9),rgba(19,20,29,.88)) !important;
   border-color: rgba(255,255,255,.11) !important;
@@ -1028,10 +1055,14 @@ html[data-view-mode="modern"] .admin-console > header ~ div.bg-white .bg-slate-5
   border-color: rgba(255,255,255,.12) !important;
 }
 html[data-view-mode="modern"] .admin-console main .bg-white,
-html[data-view-mode="modern"] .admin-console main [class*="rounded-xl"],
-html[data-view-mode="modern"] .admin-console main [class*="rounded-lg"] {
+html[data-view-mode="modern"] .admin-console main .card {
   background: linear-gradient(145deg,rgba(31,33,46,.94),rgba(19,20,29,.92)) !important;
   border-color: rgba(255,255,255,.12) !important;
+}
+html[data-view-mode="modern"] .admin-console main [class*="rounded-xl"],
+html[data-view-mode="modern"] .admin-console main [class*="rounded-lg"] {
+  border-color: rgba(255,255,255,.12) !important;
+  border-radius: 15px;
 }
 html[data-view-mode="modern"] .admin-console main .bg-slate-50,
 html[data-view-mode="modern"] .admin-console main .bg-slate-100,
@@ -1205,3 +1236,138 @@ html[data-view-mode="modern"] .admin-console main select {
 @media (max-width: 1024px) {
   .admin-header-top { height: auto !important; }
 }
+
+/* Modern message workspace: keep the full chat surface on the immersive theme. */
+html[data-view-mode="modern"] .messages-page h1 { font-size: clamp(2.35rem,4vw,3.7rem); line-height: 1; }
+html[data-view-mode="modern"] .messages-panel {
+  min-height: min(72vh, 780px);
+  background: linear-gradient(145deg,rgba(25,27,39,.97),rgba(15,17,26,.98)) !important;
+  border-color: var(--modern-line) !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,.3), 0 0 60px hsl(var(--modern-hue) 80% 55% / .08);
+}
+html[data-view-mode="modern"] .messages-list { background: rgba(13,15,23,.62); border-color: var(--modern-line) !important; }
+html[data-view-mode="modern"] .messages-list-heading,
+html[data-view-mode="modern"] .messages-thread-header,
+html[data-view-mode="modern"] .messages-composer {
+  background: rgba(22,24,34,.95) !important;
+  border-color: var(--modern-line) !important;
+}
+html[data-view-mode="modern"] .messages-thread { background: linear-gradient(145deg,rgba(18,20,29,.92),rgba(10,12,19,.98)) !important; }
+html[data-view-mode="modern"] .messages-thread-history {
+  background: radial-gradient(ellipse at 76% 18%,hsl(var(--modern-hue) 80% 55% / .08),transparent 42%),transparent;
+}
+html[data-view-mode="modern"] .messages-conversation-row {
+  color: #dedbe3;
+  border-color: var(--modern-line) !important;
+  background: transparent;
+}
+html[data-view-mode="modern"] .messages-conversation-row:hover { background: rgba(255,255,255,.055) !important; }
+html[data-view-mode="modern"] .messages-conversation-row.is-active {
+  color: #fff;
+  background: linear-gradient(105deg,hsl(var(--modern-hue) 78% 52% / .2),rgba(255,255,255,.035)) !important;
+  box-shadow: inset 3px 0 hsl(var(--modern-hue) 90% 66%);
+}
+html[data-view-mode="modern"] .messages-conversation-row strong,
+html[data-view-mode="modern"] .messages-conversation-row.is-active strong { color: #f8f5f3 !important; }
+html[data-view-mode="modern"] .messages-conversation-row small { color: #9794a1 !important; }
+html[data-view-mode="modern"] .messages-bubble-mine {
+  background: linear-gradient(135deg,#253956,hsl(var(--modern-hue) 54% 34%)) !important;
+  border: 1px solid hsl(var(--modern-hue) 90% 72% / .22);
+  color: #fff !important;
+}
+html[data-view-mode="modern"] .messages-bubble-theirs {
+  background: rgba(255,255,255,.075) !important;
+  border-color: var(--modern-line) !important;
+  color: #f1edf2 !important;
+}
+html[data-view-mode="modern"] .messages-alert {
+  color: #ffb1bb !important;
+  background: rgba(237,64,90,.12) !important;
+  border-color: rgba(237,64,90,.28) !important;
+}
+html[data-view-mode="modern"] .messages-composer textarea { background: rgba(255,255,255,.055) !important; }
+
+/* Semantic notices across app pages need matching dark surfaces and readable copy. */
+html[data-view-mode="modern"] .app-page .bg-red-50,
+html[data-view-mode="modern"] .app-page .bg-red-100,
+html[data-view-mode="modern"] .app-page .bg-rose-50,
+html[data-view-mode="modern"] .app-page .bg-rose-100,
+html[data-view-mode="modern"] .app-page [class*="bg-red-50/"],
+html[data-view-mode="modern"] .app-page [class*="bg-red-100/"],
+html[data-view-mode="modern"] .app-page [class*="bg-rose-50/"],
+html[data-view-mode="modern"] .app-page [class*="bg-rose-100/"] { background: rgba(237,64,90,.13) !important; border-color: rgba(237,64,90,.24) !important; }
+html[data-view-mode="modern"] .app-page .bg-amber-50,
+html[data-view-mode="modern"] .app-page .bg-amber-100,
+html[data-view-mode="modern"] .app-page .bg-yellow-50,
+html[data-view-mode="modern"] .app-page .bg-yellow-100,
+html[data-view-mode="modern"] .app-page [class*="bg-amber-50/"],
+html[data-view-mode="modern"] .app-page [class*="bg-amber-100/"],
+html[data-view-mode="modern"] .app-page [class*="bg-yellow-50/"],
+html[data-view-mode="modern"] .app-page [class*="bg-yellow-100/"] { background: rgba(245,182,74,.12) !important; border-color: rgba(245,182,74,.24) !important; }
+html[data-view-mode="modern"] .app-page .bg-emerald-50,
+html[data-view-mode="modern"] .app-page .bg-emerald-100,
+html[data-view-mode="modern"] .app-page .bg-green-50,
+html[data-view-mode="modern"] .app-page .bg-green-100,
+html[data-view-mode="modern"] .app-page [class*="bg-emerald-50/"],
+html[data-view-mode="modern"] .app-page [class*="bg-emerald-100/"],
+html[data-view-mode="modern"] .app-page [class*="bg-green-50/"],
+html[data-view-mode="modern"] .app-page [class*="bg-green-100/"] { background: rgba(43,190,139,.12) !important; border-color: rgba(43,190,139,.24) !important; }
+html[data-view-mode="modern"] .app-page .bg-blue-50,
+html[data-view-mode="modern"] .app-page .bg-blue-100,
+html[data-view-mode="modern"] .app-page .bg-indigo-50,
+html[data-view-mode="modern"] .app-page .bg-indigo-100,
+html[data-view-mode="modern"] .app-page .bg-purple-50,
+html[data-view-mode="modern"] .app-page .bg-purple-100,
+html[data-view-mode="modern"] .app-page [class*="bg-blue-50/"],
+html[data-view-mode="modern"] .app-page [class*="bg-blue-100/"],
+html[data-view-mode="modern"] .app-page [class*="bg-indigo-50/"],
+html[data-view-mode="modern"] .app-page [class*="bg-indigo-100/"],
+html[data-view-mode="modern"] .app-page [class*="bg-purple-50/"],
+html[data-view-mode="modern"] .app-page [class*="bg-purple-100/"] { background: rgba(105,131,255,.12) !important; border-color: rgba(105,131,255,.24) !important; }
+html[data-view-mode="modern"] .app-page .text-red-600,
+html[data-view-mode="modern"] .app-page .text-red-700,
+html[data-view-mode="modern"] .app-page .text-red-800,
+html[data-view-mode="modern"] .app-page .text-rose-600,
+html[data-view-mode="modern"] .app-page .text-rose-700,
+html[data-view-mode="modern"] .app-page .text-rose-800,
+html[data-view-mode="modern"] .app-page [class*="text-[#b10e28]"],
+html[data-view-mode="modern"] .app-page [class*="text-[#bb162b]"],
+html[data-view-mode="modern"] .app-page [class*="text-[#c8102e]"] { color: #ff9cab !important; }
+html[data-view-mode="modern"] .app-page .text-amber-700,
+html[data-view-mode="modern"] .app-page .text-amber-800,
+html[data-view-mode="modern"] .app-page .text-amber-900,
+html[data-view-mode="modern"] .app-page .text-amber-950,
+html[data-view-mode="modern"] .app-page .text-yellow-700,
+html[data-view-mode="modern"] .app-page .text-yellow-800,
+html[data-view-mode="modern"] .app-page .text-yellow-900,
+html[data-view-mode="modern"] .app-page [class*="text-[#c59b27]"] { color: #f4ce83 !important; }
+html[data-view-mode="modern"] .app-page .text-emerald-600,
+html[data-view-mode="modern"] .app-page .text-emerald-700,
+html[data-view-mode="modern"] .app-page .text-emerald-800,
+html[data-view-mode="modern"] .app-page .text-emerald-900,
+html[data-view-mode="modern"] .app-page .text-green-600,
+html[data-view-mode="modern"] .app-page .text-green-700,
+html[data-view-mode="modern"] .app-page .text-green-800,
+html[data-view-mode="modern"] .app-page .text-green-900 { color: #83e3bd !important; }
+html[data-view-mode="modern"] .app-page .text-blue-700,
+html[data-view-mode="modern"] .app-page .text-blue-800,
+html[data-view-mode="modern"] .app-page .text-blue-900,
+html[data-view-mode="modern"] .app-page .text-indigo-700,
+html[data-view-mode="modern"] .app-page .text-indigo-800,
+html[data-view-mode="modern"] .app-page .text-indigo-900,
+html[data-view-mode="modern"] .app-page .text-purple-700,
+html[data-view-mode="modern"] .app-page .text-purple-800,
+html[data-view-mode="modern"] .app-page .text-purple-900,
+html[data-view-mode="modern"] .app-page [class*="text-[#0e2740]"],
+html[data-view-mode="modern"] .app-page [class*="text-[#182231]"] { color: #b7c9ff !important; }
+
+/* Login and enrollment use their own layout, so give their status colors the
+   same readable Modern accents as the authenticated workspace. */
+html[data-view-mode="modern"] .auth-page [class*="text-[#c8102e]"],
+html[data-view-mode="modern"] .auth-page [class*="text-[#b10e28]"],
+html[data-view-mode="modern"] .auth-page [class*="text-[#bb162b]"] { color: #ff9cab !important; }
+html[data-view-mode="modern"] .auth-page [class*="text-[#c59b27]"] { color: #f4ce83 !important; }
+html[data-view-mode="modern"] .auth-page .bg-red-50,
+html[data-view-mode="modern"] .auth-page [class*="bg-red-50/"] { background: rgba(237,64,90,.13) !important; border-color: rgba(237,64,90,.24) !important; }
+html[data-view-mode="modern"] .auth-page .bg-emerald-50 { background: rgba(43,190,139,.12) !important; border-color: rgba(43,190,139,.24) !important; }
+html[data-view-mode="modern"] .auth-page .text-emerald-700 { color: #83e3bd !important; }
