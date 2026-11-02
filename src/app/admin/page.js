@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -39,6 +39,13 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [pendingUserId, setPendingUserId] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
+  const [adminAccess, setAdminAccess] = useState({ admins: [], invitations: [], currentAdminId: "" });
+  const [adminAccessLoading, setAdminAccessLoading] = useState(false);
+  const [adminInviteEmail, setAdminInviteEmail] = useState("");
+  const [adminInviteSending, setAdminInviteSending] = useState(false);
+  const [adminInviteMessage, setAdminInviteMessage] = useState("");
+  const [adminInviteError, setAdminInviteError] = useState("");
+  const [adminAccessActionId, setAdminAccessActionId] = useState(null);
 
   // Stakeholder Registry Filters
   const [userSearch, setUserSearch] = useState("");
@@ -147,6 +154,70 @@ export default function AdminPage() {
     }, simSearch ? 80 : 0);
     return () => { clearTimeout(timer); controller.abort(); };
   }, [status, session?.user?.role, activeTab, simSearch, simRoleFilter, simDepartmentFilter, simUsersPage]);
+
+  const loadAdminAccess = useCallback(async () => {
+    setAdminAccessLoading(true);
+    try {
+      const response = await fetch("/api/admin/invitations");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not load administrator access");
+      setAdminAccess(data);
+      setAdminInviteError("");
+    } catch (err) {
+      setAdminInviteError(err.message || "Could not load administrator access");
+    } finally {
+      setAdminAccessLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.role === "ADMIN" && activeTab === "admins") {
+      Promise.resolve().then(loadAdminAccess);
+    }
+  }, [status, session?.user?.role, activeTab, loadAdminAccess]);
+
+  const inviteAdministrator = useCallback(async (event) => {
+    event.preventDefault();
+    setAdminInviteSending(true);
+    setAdminInviteError("");
+    setAdminInviteMessage("");
+    try {
+      const response = await fetch("/api/admin/invitations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: adminInviteEmail }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not send the administrator invitation");
+      setAdminInviteMessage(data.message);
+      setAdminInviteEmail("");
+      await loadAdminAccess();
+    } catch (err) {
+      setAdminInviteError(err.message || "Could not send the administrator invitation");
+    } finally {
+      setAdminInviteSending(false);
+    }
+  }, [adminInviteEmail, loadAdminAccess]);
+
+  const administerAccount = useCallback(async (userId, action) => {
+    setAdminAccessActionId(userId);
+    setAdminInviteError("");
+    try {
+      const response = await fetch(action === "revoke"
+        ? `/api/admin/invitations/${userId}`
+        : `/api/admin/admins/${userId}`, { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not update administrator access");
+      setAdminInviteMessage(action === "revoke"
+        ? "Invitation revoked. Its setup link can no longer activate administrator access."
+        : `Administrator access removed. The account returned to ${ROLE_LABELS[data.restoredRole] || data.restoredRole}.`);
+      await loadAdminAccess();
+    } catch (err) {
+      setAdminInviteError(err.message || "Could not update administrator access");
+    } finally {
+      setAdminAccessActionId(null);
+    }
+  }, [loadAdminAccess]);
 
   const resetSimulationTarget = () => {
     setSimTargetUserId("");
@@ -436,6 +507,18 @@ export default function AdminPage() {
           <Icon name="dashboard" size={14} className={activeTab === "telemetry" ? "text-[#c8102e]" : ""} />
           <span>Platform Funnel &amp; Telemetry</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("admins")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "admins"
+              ? "border-[#c8102e] text-white bg-slate-800/50"
+              : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
+            }`}
+        >
+          <Icon name="shield" size={14} className={activeTab === "admins" ? "text-[#c8102e]" : ""} />
+          <span>Administrator Access</span>
+        </button>
         <div className="admin-sidebar-footer">
           <Link href="/recommendations" className="admin-sidebar-link"><Icon name="sparkles" size={15} /> Stakeholder Portal</Link>
           <Link href="/profile" className="admin-sidebar-link"><Icon name="profile" size={15} /> Admin Profile</Link>
@@ -464,12 +547,14 @@ export default function AdminPage() {
                 {activeTab === "recommender" && "Live Recommender Simulation"}
                 {activeTab === "stakeholders" && "Stakeholder Verification & Account Directory"}
                 {activeTab === "telemetry" && "Community Interactions & Engagement Funnel"}
+                {activeTab === "admins" && "Administrator Access & Invitations"}
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
                 {activeTab === "model" && "Compare baseline ranking methods and monitor the adaptive recommender."}
                 {activeTab === "recommender" && "Search for a stakeholder, adjust the filters, and inspect the model's live recommendation scores for that member."}
                 {activeTab === "stakeholders" && "Manage privileges, audit Pride Centre credentials, and oversee account security."}
                 {activeTab === "telemetry" && "Real-time mentorship handshakes, bilateral connections, and route co-travel metrics."}
+                {activeTab === "admins" && "Invite trusted administrators by email, track setup, and manage elevated access."}
               </p>
             </div>
 
@@ -1241,8 +1326,127 @@ export default function AdminPage() {
           </div>
         )}
 
+        {activeTab === "admins" && (
+          <div className="space-y-6">
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs sm:p-8">
+              <div className="mb-6 flex items-start gap-4 border-b border-slate-100 pb-5">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-[#c8102e]">
+                  <Icon name="shield" size={21} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Invite an administrator</h3>
+                  <p className="mt-1 max-w-3xl text-sm leading-relaxed text-slate-500">
+                    Add a person by the email address on their Google account. We’ll email a one-time setup link; they must create a password before administrator access is activated. After setup, they can sign in with either that password or Google using the same email.
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={inviteAdministrator} className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                <label className="min-w-0">
+                  <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-slate-500">Google account email</span>
+                  <input
+                    id="admin-invite-email"
+                    type="email"
+                    autoComplete="email"
+                    maxLength={254}
+                    required
+                    value={adminInviteEmail}
+                    onChange={(event) => setAdminInviteEmail(event.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[#c8102e] focus:ring-4 focus:ring-red-50"
+                  />
+                </label>
+                <div className="flex items-end">
+                  <Button type="submit" disabled={adminInviteSending || !adminInviteEmail.trim()} icon="profile" className="h-[46px] w-full justify-center px-5 sm:w-auto">
+                    {adminInviteSending ? "Sending invitation…" : "Send secure invitation"}
+                  </Button>
+                </div>
+              </form>
+
+              <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-xs leading-relaxed text-blue-900">
+                <b>Access protection:</b> the invite expires after 24 hours, can only be used once, and Google sign-in stays blocked for a newly invited administrator until setup is complete. Keep at least one active administrator account.
+              </div>
+              {adminInviteMessage && <div role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{adminInviteMessage}</div>}
+              {adminInviteError && <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{adminInviteError}</div>}
+            </section>
+
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs sm:p-8">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Active administrators</h3>
+                  <p className="mt-1 text-xs text-slate-500">Google sign-in is matched to the exact invited email address.</p>
+                </div>
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-700">{adminAccess.admins.length} active</span>
+              </div>
+              {adminAccessLoading ? (
+                <p className="py-8 text-center text-sm text-slate-500">Loading administrator accounts…</p>
+              ) : adminAccess.admins.length === 0 ? (
+                <p className="py-8 text-center text-sm text-slate-500">No verified administrators are available.</p>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {adminAccess.admins.map((admin) => {
+                    const isSelf = admin.id === adminAccess.currentAdminId;
+                    const isBusy = adminAccessActionId === admin.id;
+                    return (
+                      <div key={admin.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <Avatar name={admin.profile?.fullName || admin.email} size="sm" role="ADMIN" />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-slate-900">{admin.profile?.fullName || "Administrator"}{isSelf ? <span className="ml-2 text-xs font-medium text-slate-500">You</span> : null}</p>
+                            <p className="truncate text-xs text-slate-500">{admin.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 sm:justify-end">
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Verified access</span>
+                          <button
+                            type="button"
+                            disabled={isSelf || adminAccess.admins.length <= 1 || isBusy}
+                            title={isSelf ? "You cannot remove your own access here" : adminAccess.admins.length <= 1 ? "The last administrator must remain active" : "Remove administrator access"}
+                            onClick={() => administerAccount(admin.id, "remove")}
+                            className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            {isBusy ? "Updating…" : "Remove access"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs sm:p-8">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Pending invitations</h3>
+                  <p className="mt-1 text-xs text-slate-500">Unaccepted invitations expire after 24 hours.</p>
+                </div>
+                <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900">{adminAccess.invitations.length} pending</span>
+              </div>
+              {adminAccess.invitations.length === 0 ? (
+                <p className="py-7 text-center text-sm text-slate-500">There are no pending administrator invitations.</p>
+              ) : (
+                <div className="divide-y divide-slate-100">
+                  {adminAccess.invitations.map((invitation) => (
+                    <div key={invitation.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-slate-900">{invitation.email}</p>
+                        <p className="mt-1 text-xs text-slate-500">Invited by {invitation.invitedBy} · {invitation.expired ? "Invitation expired" : `Expires ${new Date(invitation.expiresAt).toLocaleString()}`}</p>
+                      </div>
+                      <div className="flex gap-2 sm:justify-end">
+                        <button type="button" onClick={() => { setAdminInviteEmail(invitation.email); document.getElementById("admin-invite-email")?.focus(); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">Prepare resend</button>
+                        <button type="button" disabled={adminAccessActionId === invitation.id} onClick={() => administerAccount(invitation.id, "revoke")} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50">{adminAccessActionId === invitation.id ? "Revoking…" : "Revoke invite"}</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
         {/* ============================================================ */}
-        {/* TAB 3: PLATFORM FUNNEL & INTERACTION TELEMETRY                */}
+        {/* TAB 4: PLATFORM FUNNEL & INTERACTION TELEMETRY                */}
         {/* ============================================================ */}
         {activeTab === "telemetry" && stats && (
           <div className="space-y-6">
