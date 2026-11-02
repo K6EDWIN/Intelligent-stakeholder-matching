@@ -138,6 +138,8 @@ export default function KQAppShell({ children }) {
               <div className="relative shrink-0">
                 <Avatar
                   name={session.user.name || session.user.email}
+                  src={session.user.image}
+                  userId={session.user.id}
                   size="sm"
                   role={session.user.role}
                 />
@@ -241,6 +243,8 @@ export default function KQAppShell({ children }) {
                 >
                   <Avatar
                     name={session.user.name || session.user.email}
+                      src={session.user.image}
+                      userId={session.user.id}
                     size="sm"
                     role={session.user.role}
                   />
