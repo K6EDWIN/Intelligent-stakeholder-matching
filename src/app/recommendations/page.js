@@ -193,35 +193,62 @@ export default function RecommendationsPage() {
   return (
     <KQAppShell>
       <div className="app-page space-y-6">
-        {/* Header with Enterprise Telemetry */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-slate-200">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#c8102e] mb-1">
-              <span className="w-2 h-2 rounded-full bg-[#c8102e]" />
-              Kenya Airways PrideConnect
+        <section className="relative overflow-hidden rounded-2xl bg-[#0e2740] px-6 py-7 text-white shadow-lg sm:px-8 sm:py-8">
+          <div className="absolute -right-16 -top-20 size-64 rounded-full bg-[#c8102e]/20 blur-2xl" aria-hidden="true" />
+          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#f6c453]">
+                <span className="size-2 rounded-full bg-[#f6c453]" />
+                Kenya Airways PrideConnect
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                Welcome back{session?.user?.name ? `, ${session.user.name.split(" ")[0]}` : ""}.
+              </h1>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-200">
+                Discover people, ideas, and opportunities that can move your aviation journey forward.
+              </p>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-              Stakeholder Recommendations
-            </h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Intelligent matches based on aviation competencies, Pride Centre background, and community interactions.
-            </p>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => router.push("/profile")} className="btn btn-secondary border-white/20 bg-white/10 text-white hover:bg-white/20">
+                <Icon name="profile" size={14} /> Improve profile
+              </button>
+              <button type="button" onClick={() => router.push("/directory")} className="btn btn-primary">
+                <Icon name="search" size={14} /> Browse directory
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {[
+            { label: "People to explore", value: recommendations.length, href: "#matches", icon: "users" },
+            { label: "Strong matches", value: recommendations.filter((item) => item.matchPercent >= 75).length, href: "#matches", icon: "sparkles" },
+            { label: "Your next step", value: "Connect", href: "/requests", icon: "requests" },
+          ].map((stat) => (
+            <a key={stat.label} href={stat.href} className="card flex items-center gap-3 p-4 transition hover:-translate-y-0.5">
+              <span className="flex size-10 items-center justify-center rounded-xl bg-[#fef2f2] text-[#c8102e]"><Icon name={stat.icon} size={17} /></span>
+              <span><b className="block text-lg font-bold text-slate-900">{stat.value}</b><span className="text-xs text-slate-500">{stat.label}</span></span>
+            </a>
+          ))}
+        </div>
+
+        {/* Header with Enterprise Telemetry */}
+        <div id="matches" className="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Recommended connections</h2>
+            <p className="mt-1 text-sm text-slate-500">Matches shaped by skills, shared experience, and community interactions.</p>
           </div>
 
-          {/* Adaptive model status */}
-          <div className="flex items-center gap-4 bg-white p-3 rounded-lg border border-slate-200 shadow-sm text-xs">
+          <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-3 text-xs shadow-sm">
             <div className="border-r border-slate-200 pr-3">
-              <span className="text-slate-400 block text-[11px] font-semibold uppercase">Recommendation engine</span>
-              <span className="font-semibold text-slate-800">{meta.model?.provider === "HOSTED_API" ? "Hosted adaptive ML" : meta.model?.active ? "Adaptive ML" : "Learning from outcomes"}</span>
+              <span className="block text-[11px] font-semibold uppercase text-slate-400">Engine</span>
+              <span className="font-semibold text-slate-800">{meta.model?.provider === "HOSTED_API" ? "Adaptive ML" : meta.model?.active ? "Adaptive ML" : "Learning"}</span>
             </div>
             <div className="border-r border-slate-200 pr-3 font-mono">
-              <span className="text-slate-400 block text-[11px] font-semibold uppercase">ML ranking influence</span>
+              <span className="block text-[11px] font-semibold uppercase text-slate-400">Influence</span>
               <span className="text-slate-700"><b>{meta.model?.confidence || 0}%</b></span>
             </div>
-            <div>
-              <span className="text-slate-400 block text-[11px] font-semibold uppercase">Resolved examples</span>
-              <span className="font-semibold text-slate-700">{meta.model?.trainingExamples || 0} logged</span>
-            </div>
+            <div><span className="block text-[11px] font-semibold uppercase text-slate-400">Examples</span><span className="font-semibold text-slate-700">{meta.model?.trainingExamples || 0}</span></div>
           </div>
         </div>
 
