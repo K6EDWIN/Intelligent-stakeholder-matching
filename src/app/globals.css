@@ -4667,6 +4667,90 @@ html[data-view-mode="modern"] .auth-page input::placeholder { color: #91a5ba !im
 html[data-view-mode="modern"] .auth-page .view-mode-toggle { background: #0c1f33 !important; border-color: #294967 !important; }
 html[data-view-mode="modern"] .auth-page .view-mode-option.selected { color: #fff !important; background: #c8102e !important; }
 
+/* Catch opacity-suffixed utility backgrounds too (for example bg-slate-50/90).
+   Tailwind emits a distinct class for these, so the exact-color overrides above
+   do not match them; that left light cards with light-mode text in Modern. */
+html[data-view-mode="modern"] .app-page [class*="bg-slate-50/"],
+html[data-view-mode="modern"] .app-page [class*="bg-slate-100/"],
+html[data-view-mode="modern"] .app-page [class*="bg-slate-200/"],
+html[data-view-mode="modern"] .app-page .bg-slate-300,
+html[data-view-mode="modern"] .app-page .bg-slate-400,
+html[data-view-mode="modern"] .admin-console main [class*="bg-slate-50/"],
+html[data-view-mode="modern"] .admin-console main [class*="bg-slate-100/"],
+html[data-view-mode="modern"] .admin-console main [class*="bg-slate-200/"],
+html[data-view-mode="modern"] .admin-console main .bg-slate-300,
+html[data-view-mode="modern"] .admin-console main .bg-slate-400 {
+  color: var(--modern-copy) !important;
+  background-color: var(--modern-panel-raised) !important;
+  border-color: var(--modern-edge) !important;
+}
+html[data-view-mode="modern"] .app-page [class*="bg-red-50"],
+html[data-view-mode="modern"] .app-page [class*="bg-rose-50"],
+html[data-view-mode="modern"] .admin-console main [class*="bg-red-50"],
+html[data-view-mode="modern"] .admin-console main [class*="bg-rose-50"] {
+  color: var(--modern-copy) !important;
+  background-color: #3b1b2a !important;
+  border-color: var(--modern-edge) !important;
+}
+html[data-view-mode="modern"] .app-page [class*="bg-emerald-50"],
+html[data-view-mode="modern"] .admin-console main [class*="bg-emerald-50"] {
+  color: #d1fae5 !important;
+  background-color: #073c35 !important;
+  border-color: #087f68 !important;
+}
+html[data-view-mode="modern"] .app-page [class*="bg-emerald-200/"],
+html[data-view-mode="modern"] .admin-console main [class*="bg-emerald-200/"] {
+  color: #d1fae5 !important;
+  background-color: #064e3b !important;
+  border-color: #047857 !important;
+}
+html[data-view-mode="modern"] .app-page [class*="bg-amber-50"],
+html[data-view-mode="modern"] .app-page [class*="bg-yellow-50"],
+html[data-view-mode="modern"] .admin-console main [class*="bg-amber-50"],
+html[data-view-mode="modern"] .admin-console main [class*="bg-yellow-50"] {
+  color: #fde68a !important;
+  background-color: #3a301a !important;
+  border-color: #74602a !important;
+}
+html[data-view-mode="modern"] .app-page [class*="bg-blue-50"],
+html[data-view-mode="modern"] .admin-console main [class*="bg-blue-50"] {
+  color: #dbeafe !important;
+  background-color: #123557 !important;
+  border-color: #285783 !important;
+}
+html[data-view-mode="modern"] .app-page [class*="bg-purple-50"],
+html[data-view-mode="modern"] .app-page [class*="bg-violet-50"],
+html[data-view-mode="modern"] .admin-console main [class*="bg-purple-50"],
+html[data-view-mode="modern"] .admin-console main [class*="bg-violet-50"] {
+  color: #ede9fe !important;
+  background-color: #30284b !important;
+  border-color: #574584 !important;
+}
+html[data-view-mode="modern"] .app-page [class~="text-red-600"],
+html[data-view-mode="modern"] .app-page [class~="text-red-700"],
+html[data-view-mode="modern"] .app-page [class~="text-red-800"],
+html[data-view-mode="modern"] .app-page [class~="text-rose-600"],
+html[data-view-mode="modern"] .app-page [class~="text-rose-700"],
+html[data-view-mode="modern"] .app-page [class~="text-rose-800"],
+html[data-view-mode="modern"] .admin-console main [class~="text-red-600"],
+html[data-view-mode="modern"] .admin-console main [class~="text-red-700"],
+html[data-view-mode="modern"] .admin-console main [class~="text-red-800"],
+html[data-view-mode="modern"] .admin-console main [class~="text-rose-600"],
+html[data-view-mode="modern"] .admin-console main [class~="text-rose-700"],
+html[data-view-mode="modern"] .admin-console main [class~="text-rose-800"] { color: #fda4af !important; }
+html[data-view-mode="modern"] .app-page [class~="text-emerald-600"],
+html[data-view-mode="modern"] .app-page [class~="text-emerald-700"],
+html[data-view-mode="modern"] .app-page [class~="text-emerald-800"],
+html[data-view-mode="modern"] .admin-console main [class~="text-emerald-600"],
+html[data-view-mode="modern"] .admin-console main [class~="text-emerald-700"],
+html[data-view-mode="modern"] .admin-console main [class~="text-emerald-800"] { color: #6ee7b7 !important; }
+html[data-view-mode="modern"] .app-page [class~="text-amber-700"],
+html[data-view-mode="modern"] .app-page [class~="text-amber-800"],
+html[data-view-mode="modern"] .app-page [class~="text-amber-900"],
+html[data-view-mode="modern"] .admin-console main [class~="text-amber-700"],
+html[data-view-mode="modern"] .admin-console main [class~="text-amber-800"],
+html[data-view-mode="modern"] .admin-console main [class~="text-amber-900"] { color: #fcd34d !important; }
+
 /* One left-side admin navigation layout in both modes; Modern changes color, not structure. */
 html[data-view-mode="modern"] .admin-console .admin-header-brand { display: flex !important; }
 html[data-view-mode="modern"] .admin-console .admin-header-actions .admin-view-toggle,
@@ -4686,6 +4770,8 @@ html[data-view-mode="classic"] .admin-console .admin-header-actions .admin-view-
   padding: 20px 13px 24px !important;
   flex-direction: column !important;
   align-items: stretch !important;
+  justify-content: flex-start !important;
+  align-content: flex-start !important;
   gap: 5px !important;
   overflow: auto !important;
   color: #cbd5e1;
