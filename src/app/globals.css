@@ -4254,365 +4254,523 @@ html[data-view-mode="classic"] .admin-console .admin-product-label { color: #647
   html[data-view-mode="modern"] .admin-console main { padding: 22px 15px 44px; }
 }
 
-/* Stitch-inspired Modern workspace theme: navy rail, light canvas, KQ red actions. */
-html[data-view-mode="modern"] {
-  --modern-canvas: #f4f6fb;
-  --modern-surface: #ffffff;
-  --modern-ink: #10243a;
-  --modern-muted: #60738a;
-  --modern-border: #dce5f1;
-  --modern-rail: #071a2d;
-  --modern-accent: #c8102e;
+
+
+/* ========================================================================== */
+/* COHESIVE THEME SYSTEM (Classic Light & Modern Dark Executive Command)     */
+/* ========================================================================== */
+
+/* --- 1. Top-Right ViewMode Toggle (Unified Styling) --- */
+.view-mode-toggle {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding: 3px !important;
+  border-radius: 9999px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  gap: 2px !important;
+}
+
+html[data-view-mode="classic"] .view-mode-toggle {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+html[data-view-mode="classic"] .view-mode-option {
+  padding: 4px 10px !important;
+  border-radius: 9999px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  transition: all 0.2s ease !important;
+}
+html[data-view-mode="classic"] .view-mode-option.selected {
+  background-color: #c8102e !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(200, 16, 46, 0.3) !important;
+}
+
+html[data-view-mode="modern"] .view-mode-toggle {
+  background-color: #0b1c30 !important;
+  border: 1px solid #1e3a5f !important;
+}
+html[data-view-mode="modern"] .view-mode-option {
+  padding: 4px 10px !important;
+  border-radius: 9999px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  transition: all 0.2s ease !important;
+}
+html[data-view-mode="modern"] .view-mode-option.selected {
+  background-color: #c8102e !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 4px rgba(200, 16, 46, 0.4) !important;
+}
+
+/* --- 2. Uniform Sidebar Rail (Always Uniform Across Pages) --- */
+.sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  width: 264px !important;
+  background-color: #071626 !important;
+  border-right: 1px solid #1e3a5f !important;
+  z-index: 50 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 20px 14px 16px !important;
+  color: #ffffff !important;
+}
+.sidebar .sidebar-nav-heading {
+  color: #8da4be !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  padding: 12px 10px 4px !important;
+}
+.sidebar .sidebar-nav-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 9px 12px !important;
+  border-radius: 10px !important;
+  color: #c3d0df !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  transition: all 0.15s ease !important;
+}
+.sidebar .sidebar-nav-item:hover {
+  background-color: #0e2740 !important;
+  color: #ffffff !important;
+}
+.sidebar .sidebar-nav-item.active {
+  background-color: #c8102e !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+.sidebar .sidebar-profile {
+  background-color: #0c1f33 !important;
+  border: 1px solid #1e3a5f !important;
+  border-radius: 12px !important;
+  padding: 10px !important;
+}
+
+/* --- 3. CLASSIC MODE (Crisp Light Theme - High Contrast, No Whited-out Text) --- */
+html[data-view-mode="classic"] {
   color-scheme: light;
+}
+html[data-view-mode="classic"] body,
+html[data-view-mode="classic"] .shell,
+html[data-view-mode="classic"] .shell-main>main {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+html[data-view-mode="classic"] .app-header {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+}
+html[data-view-mode="classic"] .app-page .card,
+html[data-view-mode="classic"] .app-page article {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+}
+html[data-view-mode="classic"] .app-page h1,
+html[data-view-mode="classic"] .app-page h2,
+html[data-view-mode="classic"] .app-page h3,
+html[data-view-mode="classic"] .app-page h4 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+html[data-view-mode="classic"] .app-page p,
+html[data-view-mode="classic"] .app-page .text-slate-500 {
+  color: #475569 !important;
+}
+/* Ensure Atmospheric Command Header text remains bright white */
+html[data-view-mode="classic"] .app-page section[class*="bg-gradient"] h1,
+html[data-view-mode="classic"] .app-page section[class*="bg-gradient"] h2,
+html[data-view-mode="classic"] .app-page section[class*="bg-gradient"] p,
+html[data-view-mode="classic"] .app-page section[class*="bg-gradient"] span {
+  color: #ffffff !important;
+}
+
+/* --- 4. MODERN MODE (Dark Executive Operations - Image 5) --- */
+html[data-view-mode="modern"] {
+  color-scheme: dark;
 }
 html[data-view-mode="modern"] body,
 html[data-view-mode="modern"] .shell,
 html[data-view-mode="modern"] .shell-main,
-html[data-view-mode="modern"] .shell-main>main {
-  color: var(--modern-ink) !important;
-  background: var(--modern-canvas) !important;
+html[data-view-mode="modern"] .shell-main>main,
+html[data-view-mode="modern"] .admin-console {
+  background-color: #071626 !important;
+  color: #f8fafc !important;
 }
-html[data-view-mode="modern"] body::before { display: none !important; }
-html[data-view-mode="modern"] .sidebar {
-  color: #e8eef7 !important;
-  background: var(--modern-rail) !important;
-  border-color: rgba(255,255,255,.1) !important;
-  box-shadow: 12px 0 36px rgba(7,26,45,.08);
-}
-html[data-view-mode="modern"] .sidebar .logo-copy b { color: #fff !important; }
-html[data-view-mode="modern"] .sidebar .logo-copy small,
-html[data-view-mode="modern"] .sidebar-nav-heading { color: #9fb1c7 !important; }
-html[data-view-mode="modern"] .sidebar-nav-item { color: #c3d0df !important; border-radius: 10px; }
-html[data-view-mode="modern"] .sidebar-nav-item.active {
-  color: #fff !important;
-  background: var(--modern-accent) !important;
-  box-shadow: none !important;
-}
-html[data-view-mode="modern"] .sidebar-nav-item.active svg { color: #fff !important; }
-html[data-view-mode="modern"] .sidebar-nav-item:hover:not(.active) { color: #fff !important; background: rgba(255,255,255,.07) !important; }
-html[data-view-mode="modern"] .sidebar-profile { background: rgba(255,255,255,.055) !important; border-color: rgba(255,255,255,.08) !important; }
 html[data-view-mode="modern"] .app-header {
-  color: var(--modern-ink) !important;
-  background: rgba(255,255,255,.96) !important;
-  border-color: var(--modern-border) !important;
-  box-shadow: 0 4px 18px rgba(16,36,58,.04);
-  backdrop-filter: blur(16px);
+  background-color: #071626 !important;
+  border-bottom: 1px solid #1e3a5f !important;
+  color: #f8fafc !important;
 }
-html[data-view-mode="modern"] .app-header .view-mode-toggle,
-html[data-view-mode="modern"] .admin-console .view-mode-toggle {
-  color: #51657d !important;
-  background: #edf3fc !important;
-  border-color: var(--modern-border) !important;
-  box-shadow: none !important;
+html[data-view-mode="modern"] .app-header > div:first-child span {
+  color: #cbd5e1 !important;
 }
-html[data-view-mode="modern"] .app-header .view-mode-option.selected,
-html[data-view-mode="modern"] .admin-console .view-mode-option.selected {
-  color: var(--modern-ink) !important;
-  background: #fff !important;
-  box-shadow: 0 1px 3px rgba(16,36,58,.12) !important;
+html[data-view-mode="modern"] .app-page .card,
+html[data-view-mode="modern"] .app-page article,
+html[data-view-mode="modern"] .admin-console .card,
+html[data-view-mode="modern"] .admin-console .bg-white,
+html[data-view-mode="modern"] .admin-console>header~div.bg-white {
+  background-color: #0c1f33 !important;
+  border-color: #1e3a5f !important;
+  color: #f8fafc !important;
 }
-html[data-view-mode="modern"] .admin-console .admin-sidebar-layout .view-mode-toggle { color: #dce7f4 !important; background: rgba(255,255,255,.08) !important; border-color: rgba(255,255,255,.1) !important; }
-html[data-view-mode="modern"] .admin-console .admin-sidebar-layout .view-mode-option.selected { color: var(--modern-ink) !important; background: #fff !important; }
-html[data-view-mode="modern"] .app-header a,
-html[data-view-mode="modern"] .app-header button,
-html[data-view-mode="modern"] .app-header span { color: inherit; }
-html[data-view-mode="modern"] .app-page { color: var(--modern-ink) !important; background: var(--modern-canvas) !important; }
 html[data-view-mode="modern"] .app-page h1,
 html[data-view-mode="modern"] .app-page h2,
 html[data-view-mode="modern"] .app-page h3,
-html[data-view-mode="modern"] .app-page h4 { color: var(--modern-ink) !important; font-family: var(--font-heading); font-weight: 650; letter-spacing: -.035em; }
-html[data-view-mode="modern"] .app-page p,
-html[data-view-mode="modern"] .app-page label,
-html[data-view-mode="modern"] .app-page .text-slate-500,
-html[data-view-mode="modern"] .app-page .text-slate-600 { color: var(--modern-muted) !important; }
-html[data-view-mode="modern"] .app-page .bg-white,
-html[data-view-mode="modern"] .app-page .card {
-  color: var(--modern-ink) !important;
-  background: var(--modern-surface) !important;
-  border-color: var(--modern-border) !important;
-  border-radius: 14px;
-  box-shadow: 0 4px 16px rgba(16,36,58,.035);
+html[data-view-mode="modern"] .app-page h4,
+html[data-view-mode="modern"] .admin-console h1,
+html[data-view-mode="modern"] .admin-console h2,
+html[data-view-mode="modern"] .admin-console h3,
+html[data-view-mode="modern"] .admin-console h4 {
+  color: #ffffff !important;
 }
-html[data-view-mode="modern"] .app-page .card:hover { border-color: var(--modern-border) !important; box-shadow: 0 8px 20px rgba(16,36,58,.07) !important; transform: none !important; }
-html[data-view-mode="modern"] .app-page .bg-slate-50,
-html[data-view-mode="modern"] .app-page .bg-slate-100 { color: #24415f !important; background: #edf3fc !important; }
-html[data-view-mode="modern"] .app-page .border-slate-100,
-html[data-view-mode="modern"] .app-page .border-slate-200 { border-color: var(--modern-border) !important; }
+html[data-view-mode="modern"] .app-page p,
+html[data-view-mode="modern"] .app-page .text-slate-500,
+html[data-view-mode="modern"] .admin-console .text-slate-500,
+html[data-view-mode="modern"] .admin-console .text-slate-400 {
+  color: #94a3b8 !important;
+}
 html[data-view-mode="modern"] .app-page .text-slate-900,
 html[data-view-mode="modern"] .app-page .text-slate-800,
-html[data-view-mode="modern"] .app-page .text-slate-700 { color: var(--modern-ink) !important; }
-html[data-view-mode="modern"] .app-page .btn-primary,
-html[data-view-mode="modern"] .app-page button.bg-\[\#c8102e\],
-html[data-view-mode="modern"] .app-page a.bg-\[\#c8102e\] {
-  color: #fff !important;
-  background: var(--modern-accent) !important;
-  border-color: var(--modern-accent) !important;
-  box-shadow: none;
+html[data-view-mode="modern"] .app-page .text-slate-700,
+html[data-view-mode="modern"] .admin-console .text-slate-900,
+html[data-view-mode="modern"] .admin-console .text-slate-800,
+html[data-view-mode="modern"] .admin-console .text-slate-700 {
+  color: #f1f5f9 !important;
 }
-html[data-view-mode="modern"] .app-page .tag-crimson { color: #a50d25 !important; background: #fff1f2 !important; border-color: #fecdd3 !important; }
-html[data-view-mode="modern"] .app-page input:focus,
-html[data-view-mode="modern"] .app-page select:focus,
-html[data-view-mode="modern"] .app-page textarea:focus { border-color: #c8102e !important; box-shadow: 0 0 0 3px rgba(200,16,46,.12) !important; outline: none; }
+html[data-view-mode="modern"] .app-page .bg-slate-50,
+html[data-view-mode="modern"] .app-page .bg-slate-100,
+html[data-view-mode="modern"] .admin-console .bg-slate-50,
+html[data-view-mode="modern"] .admin-console .bg-slate-100 {
+  background-color: #071626 !important;
+  border-color: #1e3a5f !important;
+  color: #f1f5f9 !important;
+}
 html[data-view-mode="modern"] .app-page input,
 html[data-view-mode="modern"] .app-page select,
-html[data-view-mode="modern"] .app-page textarea {
-  color: var(--modern-ink) !important;
-  background: #fff !important;
-  border-color: var(--modern-border) !important;
-  color-scheme: light;
+html[data-view-mode="modern"] .app-page textarea,
+html[data-view-mode="modern"] .admin-console input,
+html[data-view-mode="modern"] .admin-console select,
+html[data-view-mode="modern"] .admin-console textarea {
+  background-color: #071626 !important;
+  border-color: #1e3a5f !important;
+  color: #ffffff !important;
 }
-html[data-view-mode="modern"] .admin-console,
-html[data-view-mode="modern"] .admin-console main { color: var(--modern-ink) !important; background: var(--modern-canvas) !important; }
-html[data-view-mode="modern"] .admin-console>header { background: #fff !important; border-color: var(--modern-border) !important; box-shadow: 0 4px 18px rgba(16,36,58,.04); }
-html[data-view-mode="modern"] .admin-console .admin-header-actions .admin-profile-link { color: var(--modern-ink) !important; background: #f2f5fa !important; border-color: var(--modern-border) !important; }
-html[data-view-mode="modern"] .admin-console .admin-sidebar-brand,
-html[data-view-mode="modern"] .admin-console .admin-sidebar-footer,
-html[data-view-mode="modern"] .admin-console .admin-tabs { color: #e8eef7; background: var(--modern-rail); }
-html[data-view-mode="modern"] .admin-console>header~div.bg-white { color: var(--modern-ink) !important; background: #fff !important; border-color: var(--modern-border) !important; }
-html[data-view-mode="modern"] .admin-console>header~div.bg-white h2 { color: var(--modern-ink) !important; }
-html[data-view-mode="modern"] .admin-console .admin-info-banner { color: #52657d; background: #edf3fc; border-color: var(--modern-border); }
-html[data-view-mode="modern"] .admin-console main .bg-white,
-html[data-view-mode="modern"] .admin-console main .card,
-html[data-view-mode="modern"] .admin-console .admin-kpi-grid>div { color: var(--modern-ink) !important; background: #fff !important; border-color: var(--modern-border) !important; box-shadow: 0 4px 16px rgba(16,36,58,.035); }
-html[data-view-mode="modern"] .admin-console main h1,
-html[data-view-mode="modern"] .admin-console main h2,
-html[data-view-mode="modern"] .admin-console main h3,
-html[data-view-mode="modern"] .admin-console main h4 { color: var(--modern-ink) !important; font-family: var(--font-heading); }
-html[data-view-mode="modern"] .admin-console main .text-slate-950,
-html[data-view-mode="modern"] .admin-console main .text-slate-900,
-html[data-view-mode="modern"] .admin-console main .text-slate-800,
-html[data-view-mode="modern"] .admin-console main .text-slate-700,
-html[data-view-mode="modern"] .admin-console main .text-slate-600 { color: var(--modern-ink) !important; }
-html[data-view-mode="modern"] .admin-console main .text-slate-500,
-html[data-view-mode="modern"] .admin-console main .text-slate-400,
-html[data-view-mode="modern"] .admin-console .admin-kpi-baseline { color: var(--modern-muted) !important; }
-html[data-view-mode="modern"] .admin-console .admin-kpi-value { color: var(--modern-ink) !important; }
-html[data-view-mode="modern"] .admin-console main input,
-html[data-view-mode="modern"] .admin-console main select,
-html[data-view-mode="modern"] .admin-console main textarea { color: var(--modern-ink) !important; background: #fff !important; border-color: var(--modern-border) !important; color-scheme: light; }
-html[data-view-mode="modern"] .messages-panel { color: var(--modern-ink) !important; background: #fff !important; border-color: var(--modern-border) !important; box-shadow: 0 4px 16px rgba(16,36,58,.035); }
-html[data-view-mode="modern"] .messages-list,
-html[data-view-mode="modern"] .messages-list-heading,
-html[data-view-mode="modern"] .messages-thread-header,
-html[data-view-mode="modern"] .messages-composer { color: var(--modern-ink) !important; background: #fff !important; border-color: var(--modern-border) !important; }
-html[data-view-mode="modern"] .messages-thread,
-html[data-view-mode="modern"] .messages-thread-history { background: #f4f7fc !important; }
-html[data-view-mode="modern"] .messages-conversation-row { color: var(--modern-ink) !important; background: transparent; border-color: var(--modern-border) !important; }
-html[data-view-mode="modern"] .messages-conversation-row:hover { background: #f4f7fc !important; }
-html[data-view-mode="modern"] .messages-conversation-row.is-active { background: #fff1f2 !important; box-shadow: inset 3px 0 var(--modern-accent); }
-html[data-view-mode="modern"] .messages-conversation-row strong { color: var(--modern-ink) !important; }
-html[data-view-mode="modern"] .messages-conversation-row small { color: var(--modern-muted) !important; }
-html[data-view-mode="modern"] .messages-bubble-mine { color: #fff !important; background: #0e2740 !important; border-color: #0e2740 !important; }
-html[data-view-mode="modern"] .messages-bubble-theirs { color: var(--modern-ink) !important; background: #fff !important; border-color: var(--modern-border) !important; }
-html[data-view-mode="modern"] .messages-composer textarea { color: var(--modern-ink) !important; background: #fff !important; }
-@media (max-width: 1024px) {
-  html[data-view-mode="modern"] .sidebar { background: var(--modern-rail) !important; }
+html[data-view-mode="modern"] .app-page input:focus,
+html[data-view-mode="modern"] .app-page select:focus,
+html[data-view-mode="modern"] .app-page textarea:focus,
+html[data-view-mode="modern"] .admin-console input:focus,
+html[data-view-mode="modern"] .admin-console select:focus,
+html[data-view-mode="modern"] .admin-console textarea:focus {
+  border-color: #c8102e !important;
+  box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.3) !important;
 }
 
-/* Consistent Stitch system across the member workspace and operations console. */
+/* Ensure Admin tabs are horizontal and never warp into a side rail */
+.admin-tabs {
+  position: static !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+  margin: 0 !important;
+  padding: 4px 16px !important;
+  overflow-x: auto !important;
+  background-color: #071626 !important;
+  border-top: 1px solid #1e3a5f !important;
+  border-bottom: 1px solid #1e3a5f !important;
+}
+.admin-tabs::before {
+  display: none !important;
+}
+.admin-sidebar-brand,
+.admin-sidebar-footer {
+  display: none !important;
+}
+
+/* Final contrast and layout pass: keep the same rails, change the surface mode. */
 html[data-view-mode="modern"] {
-  --modern-canvas: #f6f8fd;
-  --modern-surface: #ffffff;
-  --modern-soft: #edf3ff;
-  --modern-ink: #0b1c30;
-  --modern-muted: #5c6f87;
-  --modern-border: #dce5f1;
-  --modern-rail: #071626;
-  --modern-accent: #c8102e;
-  --modern-shadow: 0 2px 8px rgba(7, 22, 38, .035), 0 12px 30px rgba(7, 22, 38, .035);
-  color-scheme: light;
+  color-scheme: dark;
+  --modern-night: #071626;
+  --modern-panel: #0c1f33;
+  --modern-panel-raised: #102b45;
+  --modern-edge: #1e3a5f;
+  --modern-copy: #f1f5f9;
+  --modern-subtle: #c1cede;
+  --modern-dim: #9aabc0;
+  --modern-red: #c8102e;
 }
-
 html[data-view-mode="modern"] body,
 html[data-view-mode="modern"] .shell,
 html[data-view-mode="modern"] .shell-main,
 html[data-view-mode="modern"] .shell-main > main,
 html[data-view-mode="modern"] .admin-console,
-html[data-view-mode="modern"] .admin-console main {
-  color: var(--modern-ink) !important;
-  background: var(--modern-canvas) !important;
+html[data-view-mode="modern"] .admin-console main,
+html[data-view-mode="modern"] .home-page,
+html[data-view-mode="modern"] .login-page,
+html[data-view-mode="modern"] .register-page {
+  color: var(--modern-copy) !important;
+  background: var(--modern-night) !important;
 }
-
-html[data-view-mode="modern"] .sidebar {
-  width: 264px;
-  padding: 20px 14px 14px;
-  background: var(--modern-rail) !important;
-  border-right: 1px solid #1e3a5f !important;
-  box-shadow: 8px 0 28px rgba(7, 22, 38, .07);
-}
-html[data-view-mode="modern"] .shell-main { margin-left: 264px; }
-html[data-view-mode="modern"] .sidebar .logo {
-  margin: 0 4px 17px;
-  padding: 6px 4px 18px;
-  border-bottom: 1px solid #1e3a5f;
-}
-html[data-view-mode="modern"] .sidebar .logo::after { display: none; }
-html[data-view-mode="modern"] .sidebar .logo-mark { background: var(--modern-accent) !important; box-shadow: none; }
-html[data-view-mode="modern"] .sidebar-nav-heading { padding: 15px 10px 6px; color: #91a6bd !important; font-size: 10px; letter-spacing: .12em; }
-html[data-view-mode="modern"] .sidebar-nav-item {
-  min-height: 42px;
-  height: auto;
-  margin: 2px 0;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  color: #d3deeb !important;
-  font-size: 13px;
-}
-html[data-view-mode="modern"] .sidebar-nav-item.active {
-  color: #fff !important;
-  background: var(--modern-accent) !important;
-  border-color: var(--modern-accent);
-  border-left: 3px solid #e11d3f;
-  box-shadow: none;
-}
-html[data-view-mode="modern"] .sidebar-nav-item.active svg { color: #ff8b9b !important; }
-html[data-view-mode="modern"] .sidebar-nav-item:hover:not(.active) { background: #102b45 !important; transform: none; }
-html[data-view-mode="modern"] .sidebar-profile { border-color: #1e3a5f !important; }
-
-html[data-view-mode="modern"] .app-header {
-  min-height: 68px;
-  height: auto;
-  padding: 10px clamp(18px, 2.5vw, 36px);
-  color: var(--modern-ink) !important;
-  background: rgba(255,255,255,.96) !important;
-  border-bottom: 1px solid var(--modern-border) !important;
-  box-shadow: 0 2px 10px rgba(7,22,38,.035);
-  backdrop-filter: blur(16px);
-}
-html[data-view-mode="modern"] .app-header .view-mode-toggle {
-  background: #edf3ff !important;
-  border: 1px solid var(--modern-border) !important;
-  border-radius: 999px;
-}
-html[data-view-mode="modern"] .app-header .view-mode-option.selected {
-  color: #fff !important;
-  background: var(--modern-accent) !important;
-  box-shadow: 0 2px 6px rgba(200,16,46,.2) !important;
-}
-html[data-view-mode="modern"] .app-header .icon-btn { color: #42566f !important; }
-
 html[data-view-mode="modern"] .app-page {
-  width: 100%;
-  max-width: 1540px;
-  padding: 30px clamp(20px, 3vw, 44px) 64px;
-  color: var(--modern-ink) !important;
+  color: var(--modern-copy) !important;
   background: transparent !important;
-  font-family: var(--font-sans);
 }
 html[data-view-mode="modern"] .app-page h1,
 html[data-view-mode="modern"] .app-page h2,
 html[data-view-mode="modern"] .app-page h3,
-html[data-view-mode="modern"] .app-page h4 {
-  color: var(--modern-ink) !important;
+html[data-view-mode="modern"] .app-page h4,
+html[data-view-mode="modern"] .admin-console main h1,
+html[data-view-mode="modern"] .admin-console main h2,
+html[data-view-mode="modern"] .admin-console main h3,
+html[data-view-mode="modern"] .admin-console main h4 {
+  color: #fff !important;
   font-family: var(--font-heading);
-  letter-spacing: -.035em;
 }
 html[data-view-mode="modern"] .app-page p,
 html[data-view-mode="modern"] .app-page label,
 html[data-view-mode="modern"] .app-page .text-slate-500,
-html[data-view-mode="modern"] .app-page .text-slate-600 { color: var(--modern-muted) !important; }
-html[data-view-mode="modern"] .app-page .card,
-html[data-view-mode="modern"] .app-page .bg-white {
-  color: var(--modern-ink) !important;
-  background-color: var(--modern-surface) !important;
-  border-color: var(--modern-border) !important;
-  box-shadow: var(--modern-shadow);
+html[data-view-mode="modern"] .app-page .text-slate-600,
+html[data-view-mode="modern"] .app-page .text-slate-400,
+html[data-view-mode="modern"] .app-page .text-gray-500,
+html[data-view-mode="modern"] .admin-console main .text-slate-500,
+html[data-view-mode="modern"] .admin-console main .text-slate-400 {
+  color: var(--modern-subtle) !important;
 }
-html[data-view-mode="modern"] .app-page .card { border-radius: 14px; }
-html[data-view-mode="modern"] .app-page .bg-slate-50,
-html[data-view-mode="modern"] .app-page .bg-slate-100,
-html[data-view-mode="modern"] .app-page .bg-slate-200 { background-color: var(--modern-soft) !important; }
-html[data-view-mode="modern"] .app-page .border-slate-100,
-html[data-view-mode="modern"] .app-page .border-slate-200,
-html[data-view-mode="modern"] .app-page .border-slate-300 { border-color: var(--modern-border) !important; }
+html[data-view-mode="modern"] .app-page .text-slate-950,
 html[data-view-mode="modern"] .app-page .text-slate-900,
 html[data-view-mode="modern"] .app-page .text-slate-800,
-html[data-view-mode="modern"] .app-page .text-slate-700 { color: var(--modern-ink) !important; }
-html[data-view-mode="modern"] .app-page input,
-html[data-view-mode="modern"] .app-page select,
-html[data-view-mode="modern"] .app-page textarea {
-  color: var(--modern-ink) !important;
-  background-color: #fff !important;
-  border-color: #cbd7e6 !important;
-  border-radius: 8px;
-  color-scheme: light;
-}
-html[data-view-mode="modern"] .app-page input:focus,
-html[data-view-mode="modern"] .app-page select:focus,
-html[data-view-mode="modern"] .app-page textarea:focus {
-  border-color: var(--modern-accent) !important;
-  box-shadow: 0 0 0 3px rgba(200,16,46,.11) !important;
-  outline: 0;
-}
-html[data-view-mode="modern"] .app-page .btn-primary,
-html[data-view-mode="modern"] .app-page button.bg-\[\#c8102e\],
-html[data-view-mode="modern"] .app-page a.bg-\[\#c8102e\] {
-  color: #fff !important;
-  background: var(--modern-accent) !important;
-  border-color: var(--modern-accent) !important;
-  box-shadow: none;
-}
-html[data-view-mode="modern"] .app-page .page-title {
-  padding: 22px 24px;
-  margin-bottom: 24px;
-  background: #fff;
-  border: 1px solid var(--modern-border);
-  border-radius: 14px;
-  box-shadow: var(--modern-shadow);
-}
-html[data-view-mode="modern"] .app-page .eyebrow { color: var(--modern-accent); }
-
-/* Convert the older full-bleed dark member banners into the supplied light command-card style. */
-html[data-view-mode="modern"] .app-page > section[class*="bg-[#101b2b]"],
-html[data-view-mode="modern"] .app-page > section[class*="bg-[#0e2740]"] {
-  color: var(--modern-ink) !important;
-  background: linear-gradient(115deg, #fff 0%, #f4f7ff 100%) !important;
-  border: 1px solid var(--modern-border);
-  border-radius: 14px !important;
-  box-shadow: var(--modern-shadow);
-}
-html[data-view-mode="modern"] .app-page > section[class*="bg-[#101b2b]"] h1,
-html[data-view-mode="modern"] .app-page > section[class*="bg-[#0e2740]"] h1,
-html[data-view-mode="modern"] .app-page > section[class*="bg-[#101b2b]"] p[class*="text-slate-300"],
-html[data-view-mode="modern"] .app-page > section[class*="bg-[#0e2740]"] p[class*="text-slate-300"],
-html[data-view-mode="modern"] .app-page > section[class*="bg-[#101b2b]"] [class*="text-rose-300"],
-html[data-view-mode="modern"] .app-page > section[class*="bg-[#0e2740]"] [class*="text-rose-300"],
-html[data-view-mode="modern"] .app-page > section[class*="bg-[#101b2b]"] :not(button).text-white,
-html[data-view-mode="modern"] .app-page > section[class*="bg-[#0e2740]"] :not(button).text-white { color: var(--modern-ink) !important; }
-html[data-view-mode="modern"] .app-page > section[class*="bg-[#101b2b]"] .bg-white\/10,
-html[data-view-mode="modern"] .app-page > section[class*="bg-[#0e2740]"] .bg-white\/10 { color: var(--modern-ink) !important; background: var(--modern-soft) !important; border-color: var(--modern-border) !important; }
-
-html[data-view-mode="modern"] .messages-panel { border-radius: 14px !important; }
-html[data-view-mode="modern"] .messages-thread,
-html[data-view-mode="modern"] .messages-thread-history { background: #f4f7fc !important; }
-html[data-view-mode="modern"] .messages-bubble-mine { background: #0e2740 !important; border-color: #0e2740 !important; }
-
-html[data-view-mode="modern"] .admin-console > header { background: #fff !important; border-color: var(--modern-border) !important; }
-html[data-view-mode="modern"] .admin-console .admin-tabs { background: var(--modern-rail) !important; }
-html[data-view-mode="modern"] .admin-console main .bg-slate-50,
-html[data-view-mode="modern"] .admin-console main .bg-slate-100 { background: var(--modern-soft) !important; }
-html[data-view-mode="modern"] .admin-console main .border-slate-100,
-html[data-view-mode="modern"] .admin-console main .border-slate-200,
-html[data-view-mode="modern"] .admin-console main .border-slate-300 { border-color: var(--modern-border) !important; }
+html[data-view-mode="modern"] .app-page .text-slate-700,
+html[data-view-mode="modern"] .app-page .text-gray-900,
+html[data-view-mode="modern"] .app-page .text-gray-800,
+html[data-view-mode="modern"] .app-page .text-gray-700,
+html[data-view-mode="modern"] .app-page [class*="text-[#071626]"],
+html[data-view-mode="modern"] .app-page [class*="text-[#0e2740]"],
+html[data-view-mode="modern"] .app-page [class*="text-[#182231]"],
+html[data-view-mode="modern"] .admin-console main .text-slate-950,
 html[data-view-mode="modern"] .admin-console main .text-slate-900,
 html[data-view-mode="modern"] .admin-console main .text-slate-800,
 html[data-view-mode="modern"] .admin-console main .text-slate-700,
-html[data-view-mode="modern"] .admin-console main .text-slate-600 { color: var(--modern-ink) !important; }
-html[data-view-mode="modern"] .admin-console main .text-slate-500,
-html[data-view-mode="modern"] .admin-console main .text-slate-400 { color: var(--modern-muted) !important; }
+html[data-view-mode="modern"] .admin-console main .text-slate-600 {
+  color: var(--modern-copy) !important;
+}
+html[data-view-mode="modern"] .shell-main main .text-gray-900,
+html[data-view-mode="modern"] .shell-main main .text-gray-800,
+html[data-view-mode="modern"] .shell-main main .text-gray-700,
+html[data-view-mode="modern"] .shell-main main .text-slate-950,
+html[data-view-mode="modern"] .shell-main main .text-slate-900,
+html[data-view-mode="modern"] .shell-main main .text-slate-800,
+html[data-view-mode="modern"] .shell-main main .text-slate-700 { color: var(--modern-copy) !important; }
+html[data-view-mode="modern"] .shell-main main .text-gray-500,
+html[data-view-mode="modern"] .shell-main main .text-gray-600,
+html[data-view-mode="modern"] .shell-main main .text-slate-500,
+html[data-view-mode="modern"] .shell-main main .text-slate-600 { color: var(--modern-subtle) !important; }
+html[data-view-mode="modern"] .app-page .card,
+html[data-view-mode="modern"] .app-page article,
+html[data-view-mode="modern"] .app-page .bg-white,
+html[data-view-mode="modern"] .app-page [class*="bg-white/"],
+html[data-view-mode="modern"] .shell-main main .card,
+html[data-view-mode="modern"] .shell-main main > .bg-white,
+html[data-view-mode="modern"] .admin-console main .card,
+html[data-view-mode="modern"] .admin-console main .bg-white,
+html[data-view-mode="modern"] .admin-console main [class*="bg-white/"] {
+  color: var(--modern-copy) !important;
+  background-color: var(--modern-panel) !important;
+  border-color: var(--modern-edge) !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,.16);
+}
+html[data-view-mode="modern"] .app-page .bg-slate-50,
+html[data-view-mode="modern"] .app-page .bg-slate-100,
+html[data-view-mode="modern"] .app-page .bg-slate-200,
+html[data-view-mode="modern"] .admin-console main .bg-slate-50,
+html[data-view-mode="modern"] .admin-console main .bg-slate-100,
+html[data-view-mode="modern"] .admin-console main .bg-slate-200 {
+  color: var(--modern-subtle) !important;
+  background-color: var(--modern-panel-raised) !important;
+  border-color: var(--modern-edge) !important;
+}
+html[data-view-mode="modern"] .app-page [class*="border-slate-"],
+html[data-view-mode="modern"] .admin-console main [class*="border-slate-"] { border-color: var(--modern-edge) !important; }
+html[data-view-mode="modern"] .app-page input,
+html[data-view-mode="modern"] .app-page select,
+html[data-view-mode="modern"] .app-page textarea,
+html[data-view-mode="modern"] .admin-console main input,
+html[data-view-mode="modern"] .admin-console main select,
+html[data-view-mode="modern"] .admin-console main textarea {
+  color: #fff !important;
+  background-color: #071626 !important;
+  border-color: #294967 !important;
+  color-scheme: dark;
+}
+html[data-view-mode="modern"] .app-page input::placeholder,
+html[data-view-mode="modern"] .app-page textarea::placeholder,
+html[data-view-mode="modern"] .admin-console input::placeholder,
+html[data-view-mode="modern"] .admin-console textarea::placeholder { color: #91a5ba !important; opacity: 1; }
+html[data-view-mode="modern"] .app-page input:focus,
+html[data-view-mode="modern"] .app-page select:focus,
+html[data-view-mode="modern"] .app-page textarea:focus,
+html[data-view-mode="modern"] .admin-console main input:focus,
+html[data-view-mode="modern"] .admin-console main select:focus,
+html[data-view-mode="modern"] .admin-console main textarea:focus {
+  border-color: #f05269 !important;
+  box-shadow: 0 0 0 3px rgba(200,16,46,.24) !important;
+}
+html[data-view-mode="modern"] .app-page .bg-gradient-to-r,
+html[data-view-mode="modern"] .app-page [class*="bg-[#071626]"],
+html[data-view-mode="modern"] .app-page [class*="bg-[#0e2740]"] { color: #fff !important; }
+html[data-view-mode="modern"] .app-page [class*="bg-gradient"] h1,
+html[data-view-mode="modern"] .app-page [class*="bg-gradient"] h2,
+html[data-view-mode="modern"] .app-page [class*="bg-gradient"] p,
+html[data-view-mode="modern"] .app-page [class*="bg-gradient"] span { color: inherit; }
+html[data-view-mode="modern"] .app-page .messages-panel,
+html[data-view-mode="modern"] .app-page .messages-list,
+html[data-view-mode="modern"] .app-page .messages-list-heading,
+html[data-view-mode="modern"] .app-page .messages-thread-header,
+html[data-view-mode="modern"] .app-page .messages-composer { color: var(--modern-copy) !important; background: var(--modern-panel) !important; }
+html[data-view-mode="modern"] .app-page .messages-thread,
+html[data-view-mode="modern"] .app-page .messages-thread-history { background: #091a2b !important; }
+html[data-view-mode="modern"] .app-page .messages-bubble-theirs { color: var(--modern-copy) !important; background: var(--modern-panel-raised) !important; }
+html[data-view-mode="modern"] .app-page .messages-bubble-mine { color: #fff !important; background: var(--modern-red) !important; }
+html[data-view-mode="modern"] .auth-page {
+  color: var(--modern-copy) !important;
+  background: radial-gradient(ellipse at 80% 8%, #12314d 0, #071626 42rem) !important;
+}
+html[data-view-mode="modern"] .auth-page > main > div > section:last-child > div {
+  color: var(--modern-copy) !important;
+  background: #0c1f33 !important;
+  border-color: #1e3a5f !important;
+}
+html[data-view-mode="modern"] .auth-page h2,
+html[data-view-mode="modern"] .auth-page .text-slate-900,
+html[data-view-mode="modern"] .auth-page .text-slate-800,
+html[data-view-mode="modern"] .auth-page .text-slate-700 { color: #f1f5f9 !important; }
+html[data-view-mode="modern"] .auth-page .text-slate-600,
+html[data-view-mode="modern"] .auth-page .text-slate-500 { color: #bdcada !important; }
+html[data-view-mode="modern"] .auth-page .bg-slate-50,
+html[data-view-mode="modern"] .auth-page .bg-slate-100,
+html[data-view-mode="modern"] .auth-page .bg-white { background-color: #102b45 !important; border-color: #294967 !important; }
+html[data-view-mode="modern"] .auth-page input,
+html[data-view-mode="modern"] .auth-page select,
+html[data-view-mode="modern"] .auth-page textarea { color: #fff !important; background: #071626 !important; border-color: #294967 !important; color-scheme: dark; }
+html[data-view-mode="modern"] .auth-page input::placeholder { color: #91a5ba !important; }
+html[data-view-mode="modern"] .auth-page .view-mode-toggle { background: #0c1f33 !important; border-color: #294967 !important; }
+html[data-view-mode="modern"] .auth-page .view-mode-option.selected { color: #fff !important; background: #c8102e !important; }
 
-/* Classic retains its original compact, neutral presentation and clear red selection. */
-html[data-view-mode="classic"] .app-header { background: #fff; }
-html[data-view-mode="classic"] .sidebar-nav-item.active { background: rgba(200,16,46,.12); }
-html[data-view-mode="classic"] .app-page .card { box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+/* One left-side admin navigation layout in both modes; Modern changes color, not structure. */
+html[data-view-mode="modern"] .admin-console .admin-header-brand { display: flex !important; }
+html[data-view-mode="modern"] .admin-console .admin-header-actions .admin-view-toggle,
+html[data-view-mode="classic"] .admin-console .admin-header-actions .admin-view-toggle { display: inline-flex !important; }
+.admin-console .admin-view-toggle { display: inline-flex !important; }
+.admin-console .admin-classic-menu { display: none !important; }
+.admin-console .admin-tabs {
+  position: fixed !important;
+  z-index: 35;
+  top: 82px;
+  bottom: 0;
+  left: 0;
+  display: flex !important;
+  width: 258px !important;
+  min-height: 0;
+  margin: 0 !important;
+  padding: 20px 13px 24px !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 5px !important;
+  overflow: auto !important;
+  color: #cbd5e1;
+  background: #071626 !important;
+  border: 0 !important;
+  border-right: 1px solid #1e3a5f !important;
+}
+.admin-console .admin-tabs::before {
+  content: "ADMIN WORKSPACE";
+  display: block !important;
+  padding: 4px 12px 13px;
+  color: #8da4be;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .14em;
+}
+.admin-console .admin-tabs > button {
+  display: flex;
+  width: 100%;
+  min-height: 46px;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+  padding: 0 12px;
+  color: #cbd5e1 !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 9px;
+  text-align: left;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: normal;
+}
+.admin-console .admin-tabs > button:hover { background: #102b45 !important; color: #fff !important; }
+.admin-console .admin-tabs > button[class*="border-[#c8102e]"] { background: rgba(200,16,46,.2) !important; border-left: 3px solid #e11d3f !important; color: #fff !important; }
+.admin-console .admin-tabs > button[class*="border-[#c8102e]"] .text-\[\#c8102e\] { color: #ff9cab !important; }
+.admin-console > header ~ div.bg-white,
+.admin-console main {
+  width: calc(100% - 258px) !important;
+  max-width: none !important;
+  margin-left: 258px !important;
+}
+.admin-console > header ~ div.bg-white > div { max-width: none !important; padding-inline: clamp(22px, 3vw, 48px) !important; }
+.admin-console > header { color: #fff !important; background: #071626 !important; }
+.admin-console main { padding: 30px clamp(22px, 3vw, 48px) 64px; }
+.admin-console > header ~ div.bg-white { background: #fff; border-color: #dce5f1; }
+html[data-view-mode="modern"] .admin-console > header { background: var(--modern-night) !important; border-color: var(--modern-edge) !important; }
+html[data-view-mode="modern"] .admin-console > header ~ div.bg-white { color: var(--modern-copy) !important; background: var(--modern-panel) !important; border-color: var(--modern-edge) !important; }
+html[data-view-mode="modern"] .admin-console > header ~ div.bg-white h1,
+html[data-view-mode="modern"] .admin-console > header ~ div.bg-white h2,
+html[data-view-mode="modern"] .admin-console > header ~ div.bg-white h3 { color: #fff !important; }
+html[data-view-mode="modern"] .admin-console > header ~ div.bg-white p,
+html[data-view-mode="modern"] .admin-console > header ~ div.bg-white .text-slate-500 { color: var(--modern-subtle) !important; }
+html[data-view-mode="modern"] .admin-console .admin-tabs { background: var(--modern-night) !important; }
+html[data-view-mode="modern"] .admin-console .admin-tabs::before { color: #8da4be; }
+html[data-view-mode="modern"] .admin-console main .admin-kpi-grid > div { background: var(--modern-panel) !important; border-color: var(--modern-edge) !important; }
+html[data-view-mode="modern"] .admin-console .admin-header-actions .admin-view-toggle { color: #cbd5e1 !important; }
+html[data-view-mode="modern"] .admin-console .admin-header-actions .view-mode-option.selected { color: #fff !important; background: var(--modern-red) !important; }
+html[data-view-mode="classic"] .admin-console .admin-tabs { background: #071626 !important; }
+html[data-view-mode="classic"] .admin-console .admin-tabs > button[class*="border-[#c8102e]"] { background: rgba(200,16,46,.18) !important; color: #fff !important; }
 
-@media (max-width: 1024px) {
-  html[data-view-mode="modern"] .shell-main { margin-left: 0; }
-  html[data-view-mode="modern"] .sidebar { width: 264px; }
-  html[data-view-mode="modern"] .app-page { padding: 24px 20px 52px; }
+@media (max-width: 900px) {
+  .admin-console .admin-tabs {
+    position: sticky !important;
+    top: auto;
+    bottom: auto;
+    width: 100% !important;
+    min-height: 54px;
+    padding: 6px 14px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    overflow-x: auto !important;
+    border-top: 1px solid #1e3a5f !important;
+    border-right: 0 !important;
+  }
+  .admin-console .admin-tabs::before { display: none !important; }
+  .admin-console .admin-tabs > button { width: max-content; min-width: max-content; min-height: 40px; }
+  .admin-console > header ~ div.bg-white,
+  .admin-console main { width: 100% !important; margin-left: 0 !important; }
+  .admin-console main { padding: 22px 18px 48px; }
 }
 @media (max-width: 640px) {
-  html[data-view-mode="modern"] .app-page { padding: 18px 14px 40px; }
-  html[data-view-mode="modern"] .app-page .page-title { padding: 18px; }
-  html[data-view-mode="modern"] .app-header { padding-inline: 14px; }
+  .admin-console .admin-header-actions { align-items: center; }
+  .admin-console .admin-header-actions .admin-view-toggle { order: -1; }
+  .view-mode-toggle.compact .view-mode-option { padding: 6px 9px !important; }
+  .admin-console main { padding: 18px 14px 40px; }
 }

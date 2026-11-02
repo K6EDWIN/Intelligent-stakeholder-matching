@@ -208,7 +208,7 @@ export default function RecommendationsPage() {
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span>LIVE ADAPTIVE MATCHING ENGINE</span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white" style={{ color: "#ffffff" }}>
                   Welcome back{session?.user?.name ? `, ${session.user.name.split(" ")[0]}` : ""}.
                 </h1>
                 <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">

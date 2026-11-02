@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import KQAppShell from "@/components/KQAppShell";
 import { Button, Avatar } from "@/components/KQBrand";
-import { Icon } from "@/components/KQIcons";
+import { Icon, GoogleIcon } from "@/components/KQIcons";
 
 const ROLE_OPTIONS = [
   { value: "", label: "Not participating in mentorship" },
@@ -38,6 +38,84 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [avatarSrc, setAvatarSrc] = useState(null);
+  const avatarStorageKey = session?.user?.id ? `kq_user_avatar:${session.user.id}` : null;
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        const stored = avatarStorageKey ? localStorage.getItem(avatarStorageKey) : null;
+        setAvatarSrc(stored || session?.user?.image || null);
+      } catch {
+        setAvatarSrc(session?.user?.image || null);
+      }
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [avatarStorageKey, session?.user?.image]);
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image file size must be less than 5MB");
+      return;
+    }
+    if (!avatarStorageKey) {
+      setError("Sign in again before changing your profile photo.");
+      return;
+    }
+
+    try {
+      const image = await createImageBitmap(file);
+      const scale = Math.min(1, 512 / Math.max(image.width, image.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Your browser could not prepare that image.");
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      image.close?.();
+      const dataUrl = canvas.toDataURL("image/webp", 0.82);
+      setAvatarSrc(dataUrl);
+      localStorage.setItem(avatarStorageKey, dataUrl);
+      window.dispatchEvent(new Event("kq-avatar-updated"));
+      setMessage("Profile photo updated on this device.");
+      setError("");
+    } catch (uploadError) {
+      setError(uploadError?.name === "QuotaExceededError"
+        ? "This browser is out of storage space. Remove an older profile photo and try again."
+        : uploadError.message || "Could not read that image. Try a JPG, PNG, or WebP file.");
+    }
+  };
+
+  const handleUseGooglePhoto = () => {
+    if (!session?.user?.image || !avatarStorageKey) {
+      setError("A Google profile photo is not available for this sign-in.");
+      return;
+    }
+    try {
+      localStorage.removeItem(avatarStorageKey);
+      setAvatarSrc(session.user.image);
+      window.dispatchEvent(new Event("kq-avatar-updated"));
+      setMessage("Using your Google profile photo.");
+      setError("");
+    } catch {
+      setError("Could not update your profile photo in this browser.");
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    try {
+      if (avatarStorageKey) localStorage.removeItem(avatarStorageKey);
+      setAvatarSrc(session?.user?.image || null);
+      window.dispatchEvent(new Event("kq-avatar-updated"));
+      setMessage(session?.user?.image ? "Using your Google profile photo." : "Profile picture reset to initials.");
+      setError("");
+    } catch {
+      setError("Could not remove the saved profile photo in this browser.");
+    }
+  };
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -156,17 +234,66 @@ export default function ProfilePage() {
             </div>
           </div>
           <div className="px-6 sm:px-8 pb-6 pt-0 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 -mt-10 relative z-10">
-            <div className="flex min-w-0 items-end gap-4">
-              <div className="border-4 border-white rounded-full shadow-sm bg-white">
-                <Avatar name={form.fullName || session?.user?.email} size="xl" />
+            <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4">
+              <div className="relative group shrink-0">
+                <div className="border-4 border-white rounded-full shadow-md bg-white overflow-hidden">
+                  <Avatar name={form.fullName || session?.user?.email} src={avatarSrc || session?.user?.image} userId={session?.user?.id} size="xl" />
+                </div>
+                <label
+                  htmlFor="profile-avatar-upload"
+                  className="absolute bottom-0 right-0 p-2 bg-[#c8102e] hover:bg-[#a00d24] text-white rounded-full shadow-md cursor-pointer transition transform hover:scale-105"
+                  title="Upload profile picture"
+                >
+                  <Icon name="profile" size={13} />
+                </label>
+                <input
+                  id="profile-avatar-upload"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
               </div>
-              <div className="mb-1 min-w-0">
+
+              <div className="min-w-0 text-center sm:text-left">
                 <h1 className="break-words text-2xl font-extrabold text-slate-900 tracking-tight">
                   {form.fullName || "Your Profile"}
                 </h1>
                 <p className="mt-0.5 break-words text-xs text-slate-500">
                   {isAdmin ? "Executive Administration" : form.department || "Kenya Airways Stakeholder"} · {session?.user?.email} · {isAdmin ? "Executive Administrator" : "Verified Member"}
                 </p>
+
+                {/* Profile Photo Quick Controls */}
+                <div className="flex items-center gap-2 mt-2.5 flex-wrap justify-center sm:justify-start">
+                  <label
+                    htmlFor="profile-avatar-upload"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer transition shadow-2xs"
+                  >
+                    <Icon name="profile" size={12} />
+                    <span>Upload Photo</span>
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={handleUseGooglePhoto}
+                    disabled={!session?.user?.image}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer transition shadow-2xs disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Import or sync photo from Google account"
+                  >
+                    <GoogleIcon size={14} />
+                    <span>{session?.user?.image ? "Use Google Photo" : "Google Photo"}</span>
+                  </button>
+
+                  {avatarSrc && (
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      className="px-2.5 py-1.5 text-xs text-red-600 hover:text-red-800 font-medium cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">

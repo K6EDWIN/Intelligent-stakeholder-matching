@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useSyncExternalStore } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useSyncExternalStore } from "react";
 
 const ViewModeContext = createContext({ mode: "classic", toggle: () => {} });
 const STORAGE_KEY = "prideconnect-view-mode";
@@ -31,7 +31,7 @@ function setSavedMode(mode) {
 export function ViewModeProvider({ children }) {
   const mode = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.dataset.viewMode = mode;
   }, [mode]);
 
