@@ -18,31 +18,38 @@ export default function KQAppShell({ children }) {
   useEffect(() => {
     if (!session?.user?.id) return undefined;
     let active = true;
-    const refresh = () => fetch("/api/notifications", { cache: "no-store" })
-      .then((res) => res.ok ? res.json() : null)
-      .then((data) => { if (active && data) setUnreadCount(data.unreadCount || 0); })
-      .catch(() => {});
+    const refresh = () =>
+      fetch("/api/notifications", { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (active && data) setUnreadCount(data.unreadCount || 0);
+        })
+        .catch(() => {});
     refresh();
     const interval = setInterval(refresh, 60000);
     window.addEventListener("notifications-updated", refresh);
-    return () => { active = false; clearInterval(interval); window.removeEventListener("notifications-updated", refresh); };
+    return () => {
+      active = false;
+      clearInterval(interval);
+      window.removeEventListener("notifications-updated", refresh);
+    };
   }, [session?.user?.id, pathname]);
 
   const navSections = [
     {
       heading: "Matching & Discovery",
       items: [
-        { href: "/recommendations", icon: "sparkles", label: "Smart Matches", badge: "Engine" },
+        { href: "/recommendations", icon: "sparkles", label: "Smart Matches", badge: "AI" },
         { href: "/directory", icon: "directory", label: "Stakeholder Directory" },
         { href: "/requests", icon: "requests", label: "Mentorship & Requests" },
-        { href: "/messages", icon: "requests", label: "Messages" },
+        { href: "/messages", icon: "message", label: "Messages" },
         { href: "/notifications", icon: "bell", label: "Notifications", badge: unreadCount ? String(unreadCount) : null },
       ],
     },
     {
       heading: "Ecosystem & Hubs",
       items: [
-        { href: "/flight-reconnect", icon: "flight", label: "Flight Reconnect" },
+        { href: "/flight-reconnect", icon: "flight", label: "Flight Reconnect", badge: "35k Ft" },
         { href: "/opportunities", icon: "opportunity", label: "Aviation Opportunities" },
         { href: "/events", icon: "events", label: "Pride Centre Events" },
       ],
@@ -57,18 +64,18 @@ export default function KQAppShell({ children }) {
 
   if (session?.user?.role === "ADMIN") {
     navSections.push({
-      heading: "Administration",
+      heading: "Governance & Ops",
       items: [
-        { href: "/admin", icon: "dashboard", label: "Admin Console", badge: "Admin" },
+        { href: "/admin", icon: "shield", label: "Ops Command / Admin", badge: "Secured" },
       ],
     });
   }
 
   const roleLabels = {
     ALUMNI: "Pride Centre Alumni",
-    STAFF: "Flight & Ground Staff",
+    STAFF: "Active Flight & Ground Staff",
     FORMER_STAFF: "Former KQ Staff",
-    FREQUENT_FLYER: "Frequent Flyer",
+    FREQUENT_FLYER: "Frequent Flyer • Asante",
     ADMIN: "System Administrator",
   };
 
@@ -76,6 +83,10 @@ export default function KQAppShell({ children }) {
 
   const handleMobileNav = (e) => {
     const target = e.target.value;
+    if (target === "LOGOUT") {
+      signOut({ callbackUrl: "/login" });
+      return;
+    }
     setMobileSelect(target);
     router.push(target);
   };
@@ -84,51 +95,73 @@ export default function KQAppShell({ children }) {
     <div className="shell">
       {/* Sidebar Navigation */}
       <aside className="sidebar">
-        <KQLogo light />
+        <div className="flex items-center justify-between mb-5 px-1">
+          <KQLogo light />
+          <span className="px-2 py-0.5 rounded-full bg-[#13283f] text-[#d5e4fa] text-[10px] font-mono tracking-wider">
+            v2.4
+          </span>
+        </div>
 
-        <nav>
+        <nav className="flex-1 overflow-y-auto">
           {navSections.map((section, idx) => (
-            <div key={idx} className="mb-2">
-              <div className="sidebar-nav-heading">{section.heading}</div>
-              {section.items.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`sidebar-nav-item ${isActive ? "active" : ""}`}
-                  >
-                    <Icon name={item.icon} size={16} />
-                    <span>{item.label}</span>
-                    {item.badge && <span className="nav-badge">{item.badge}</span>}
-                  </Link>
-                );
-              })}
+            <div key={idx} className="mb-4">
+              <div className="sidebar-nav-heading flex items-center justify-between">
+                <span>{section.heading}</span>
+              </div>
+              <div className="space-y-1">
+                {section.items.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`sidebar-nav-item ${isActive ? "active" : ""}`}
+                    >
+                      <Icon name={item.icon} size={16} />
+                      <span className="flex-1 truncate">{item.label}</span>
+                      {item.badge && <span className="nav-badge">{item.badge}</span>}
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           ))}
         </nav>
 
         {session?.user && (
-          <div className="sidebar-profile">
-            <Avatar
-              name={session.user.name || session.user.email}
-              size="sm"
-              role={session.user.role}
-            />
-            <span className="truncate">
-              <b className="truncate text-white text-xs block">
-                {session.user.name || session.user.email?.split("@")[0]}
-              </b>
-              <small className="text-[#94a3b8] text-[11px] block truncate">
-                {roleLabels[session.user.role] || "Verified Member"}
-              </small>
-            </span>
-            <button
-              onClick={() => signOut({ callbackUrl: "/" })}
-              title="Sign out of PrideConnect"
-              className="text-[#94a3b8] hover:text-white ml-auto p-1.5 transition rounded hover:bg-white/10"
+          <div className="sidebar-profile mt-auto">
+            <Link
+              href="/profile"
+              className="flex items-center gap-2.5 overflow-hidden flex-1 min-w-0 hover:opacity-95 transition"
+              title="View your profile"
             >
-              <Icon name="close" size={14} />
+              <div className="relative shrink-0">
+                <Avatar
+                  name={session.user.name || session.user.email}
+                  size="sm"
+                  role={session.user.role}
+                />
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-[#071626]" />
+              </div>
+              <div className="truncate flex-1 min-w-0">
+                <b className="truncate text-white text-xs block font-semibold leading-tight">
+                  {session.user.name || session.user.email?.split("@")[0]}
+                </b>
+                <small className="text-[#94a3b8] text-[11px] block truncate leading-tight mt-0.5">
+                  {roleLabels[session.user.role] || "Verified Member"}
+                </small>
+              </div>
+            </Link>
+
+            {/* Dedicated Log Out button in sidebar */}
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              title="Log out of Kenya Airways PrideConnect"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0e2740] hover:bg-[#c8102e] text-slate-300 hover:text-white text-xs font-semibold transition ml-2 shrink-0 border border-[#1e3a5f] hover:border-transparent cursor-pointer shadow-xs"
+            >
+              <Icon name="logout" size={14} />
+              <span className="text-[11px] font-medium hidden 2xl:inline">Log out</span>
             </button>
           </div>
         )}
@@ -138,32 +171,46 @@ export default function KQAppShell({ children }) {
       <div className="shell-main">
         <header className="app-header">
           {/* Mobile view brand + switcher */}
-          <div className="mobile-brand">
+          <div className="mobile-brand flex items-center gap-2">
             <KQLogo compact />
             <select
               aria-label="Navigate section"
               onChange={handleMobileNav}
               value={mobileSelect}
-              className="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-700 outline-none"
+              className="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-700 outline-none max-w-[150px] sm:max-w-[200px]"
             >
               {allNavItems.map((n) => (
                 <option key={n.href} value={n.href}>
                   {n.label}
                 </option>
               ))}
+              {session?.user && <option value="LOGOUT">➔ Log out</option>}
             </select>
+            {session?.user && (
+              <button
+                type="button"
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="p-1.5 text-slate-600 hover:text-[#c8102e] rounded-md transition hover:bg-slate-100"
+                title="Log out"
+              >
+                <Icon name="logout" size={16} />
+              </button>
+            )}
           </div>
 
           {/* Desktop Left: Enterprise Status Indicator */}
-          <div className="hidden lg:flex items-center gap-2 text-xs text-slate-500 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Kenya Airways Pride Centre Network</span>
+          <div className="hidden lg:flex items-center gap-2.5 text-xs text-slate-500 font-medium">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="font-semibold text-slate-700">JKIA Hub • Kenya Airways Pride Centre</span>
             <span className="text-slate-300">|</span>
-            <span className="text-slate-400">Institutional Intranet</span>
+            <span className="text-slate-500">Enterprise Network</span>
           </div>
 
           {/* Header Action Tools */}
-          <div className="header-right">
+          <div className="header-right flex items-center gap-2.5">
             <ViewModeToggle compact />
             <Link
               href="/directory"
@@ -178,20 +225,41 @@ export default function KQAppShell({ children }) {
               title="Notifications"
             >
               <Icon name="bell" size={16} />
-              {unreadCount > 0 && <span className="absolute -right-1 -top-1 min-w-4 h-4 px-1 rounded-full bg-[#c8102e] text-white text-[9px] leading-4 text-center font-bold">{unreadCount > 9 ? "9+" : unreadCount}</span>}
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 min-w-4 h-4 px-1 rounded-full bg-[#c8102e] text-white text-[9px] leading-4 text-center font-bold">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </Link>
 
             {session?.user ? (
-              <Link
-                href="/profile"
-                className="flex items-center gap-2.5 pl-2 hover:opacity-90 transition"
-              >
-                <Avatar
-                  name={session.user.name || session.user.email}
-                  size="sm"
-                  role={session.user.role}
-                />
-              </Link>
+              <div className="flex items-center gap-2 pl-1 border-l border-slate-200">
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 hover:opacity-90 transition p-1 rounded-lg"
+                  title="My Profile"
+                >
+                  <Avatar
+                    name={session.user.name || session.user.email}
+                    size="sm"
+                    role={session.user.role}
+                  />
+                  <span className="hidden xl:inline text-xs font-semibold text-slate-800 truncate max-w-[120px]">
+                    {session.user.name || session.user.email?.split("@")[0]}
+                  </span>
+                </Link>
+
+                {/* Primary Visible Header Log Out Button */}
+                <button
+                  type="button"
+                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  title="Log out of PrideConnect"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-700 hover:text-[#c8102e] text-xs font-semibold transition cursor-pointer shadow-xs"
+                >
+                  <Icon name="logout" size={14} className="text-slate-500 group-hover:text-[#c8102e]" />
+                  <span>Log out</span>
+                </button>
+              </div>
             ) : (
               <Link href="/login" className="btn btn-primary btn-sm">
                 Sign In
@@ -200,7 +268,7 @@ export default function KQAppShell({ children }) {
           </div>
         </header>
 
-        <main className="flex-1 bg-[#f1f4f8]">{children}</main>
+        <main className="flex-1 bg-[#f8fafc]">{children}</main>
       </div>
     </div>
   );

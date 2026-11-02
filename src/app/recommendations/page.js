@@ -9,9 +9,9 @@ import { Icon } from "@/components/KQIcons";
 
 const ROLE_LABELS = {
   ALUMNI: "Pride Centre Alumni",
-  STAFF: "Active KQ Staff",
-  FORMER_STAFF: "Former KQ Employee",
-  FREQUENT_FLYER: "Frequent Flyer",
+  STAFF: "Active Flight & Ground Staff",
+  FORMER_STAFF: "Former KQ Staff",
+  FREQUENT_FLYER: "Frequent Flyer • Asante",
   ADMIN: "System Administrator",
 };
 
@@ -45,8 +45,6 @@ export default function RecommendationsPage() {
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
-  // A new member may not have enough profile or network history to score
-  // above 60% yet. Start broad so cold-start recommendations remain visible.
   const [minScore, setMinScore] = useState(0);
   const [mentorshipFilter, setMentorshipFilter] = useState("ALL");
 
@@ -98,93 +96,88 @@ export default function RecommendationsPage() {
         !searchQuery ||
         item.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.department?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.sharedSkills?.some((s) =>
-          s.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+        (item.skills &&
+          item.skills.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase())));
 
       const matchesRole = roleFilter === "ALL" || item.role === roleFilter;
-      const matchesMinScore = (item.matchPercent || 0) >= minScore;
+      const matchesScore = item.matchPercent >= minScore;
       const matchesMentorship =
-        mentorshipFilter === "ALL" ||
-        (mentorshipFilter === "MENTOR" && (item.mentorshipRole === "MENTOR" || item.mentorshipRole === "BOTH")) ||
-        (mentorshipFilter === "MENTEE" && (item.mentorshipRole === "MENTEE" || item.mentorshipRole === "BOTH"));
+        mentorshipFilter === "ALL" || item.mentorshipRole === mentorshipFilter;
 
-      return matchesSearch && matchesRole && matchesMinScore && matchesMentorship;
+      return matchesSearch && matchesRole && matchesScore && matchesMentorship;
     });
   }, [recommendations, searchQuery, roleFilter, minScore, mentorshipFilter]);
 
-  const handleSendRequest = async (receiverId) => {
-    const targetId = receiverId || selectedMatch?.userId || selectedMatch?.id;
-    if (!targetId) {
-      alert("Recipient ID is missing. Please select a valid profile.");
-      return;
-    }
-
+  async function handleSendRequest(recipientId) {
+    if (!requestMessage.trim()) return;
     setSendingRequest(true);
     setFeedbackSuccess("");
+
     try {
-      const res = await fetch("/api/mentorship-requests", {
+      const res = await fetch("/api/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          receiverId: targetId,
-          userId: targetId,
-          message:
-            requestMessage ||
-            "Hello, I would value connecting with you on Kenya Airways PrideConnect for structured mentorship and professional networking.",
+          receiverId: recipientId,
+          type: "MENTORSHIP",
+          message: requestMessage,
         }),
       });
 
       const data = await res.json();
+
       if (!res.ok) {
-        alert(data.error || "Failed to send request");
-      } else {
-        setFeedbackSuccess("Mentorship request successfully sent!");
-        setTimeout(() => {
-          setSelectedMatch(null);
-          setRequestMessage("");
-          setFeedbackSuccess("");
-        }, 1600);
+        alert(data.error || "Could not send mentorship request");
+        setSendingRequest(false);
+        return;
       }
+
+      setFeedbackSuccess("Mentorship request dispatched successfully via KQ PrideConnect.");
+      setTimeout(() => {
+        setSelectedMatch(null);
+        setSendingRequest(false);
+        setFeedbackSuccess("");
+      }, 1500);
     } catch (err) {
-      alert("Error: " + err.message);
-    } finally {
+      alert("Failed to send request: " + err.message);
       setSendingRequest(false);
     }
-  };
+  }
 
-  if (status === "loading" || loading) {
+  if (loading) {
     return (
       <KQAppShell>
-        <div className="max-w-7xl mx-auto px-6 py-24 text-center">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-slate-100 text-[#0e2740] flex items-center justify-center">
-            <Icon name="sparkles" size={24} />
+        <div className="app-page space-y-6">
+          <div className="h-56 rounded-2xl bg-gradient-to-r from-slate-200 to-slate-100 animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-64 rounded-2xl bg-white border border-slate-200 p-6 space-y-4 animate-pulse">
+                <div className="flex gap-4">
+                  <div className="w-14 h-14 rounded-xl bg-slate-200" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-36 bg-slate-200 rounded" />
+                    <div className="h-3 w-48 bg-slate-100 rounded" />
+                  </div>
+                </div>
+                <div className="h-20 bg-slate-50 rounded-xl" />
+              </div>
+            ))}
           </div>
-          <h2 className="text-xl font-bold text-slate-800">
-            Loading Recommended Matches...
-          </h2>
-          <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
-            Evaluating profile skills, fleet specialization, and interaction graph patterns across Kenya Airways stakeholders.
-          </p>
         </div>
       </KQAppShell>
     );
   }
 
-  if (error === "Profile not found") {
+  if (error) {
     return (
       <KQAppShell>
-        <div className="max-w-xl mx-auto my-16 p-8 bg-white border border-slate-200 rounded-xl text-center shadow-sm">
-          <div className="w-14 h-14 bg-red-50 text-[#c8102e] rounded-full flex items-center justify-center mx-auto mb-4">
-            <Icon name="profile" size={28} />
+        <div className="p-8 max-w-xl mx-auto my-12 bg-white rounded-2xl border border-red-200 text-center space-y-4 shadow-sm">
+          <div className="w-12 h-12 mx-auto rounded-full bg-red-50 text-[#c8102e] flex items-center justify-center">
+            <Icon name="close" size={20} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">
-            Complete Your Profile
-          </h2>
-          <p className="text-slate-600 text-sm mb-6 leading-relaxed">
-            To match you with Kenya Airways mentors and peers, the recommendation system requires your aviation domain, technical competencies, and mentorship goals.
-          </p>
-          <Button onClick={() => router.push("/profile")}>Complete Profile Now</Button>
+          <h2 className="text-xl font-bold text-slate-900">Network Connection Issue</h2>
+          <p className="text-slate-600 text-sm leading-relaxed">{error}</p>
+          <Button onClick={() => window.location.reload()}>Retry Connection</Button>
         </div>
       </KQAppShell>
     );
@@ -193,77 +186,97 @@ export default function RecommendationsPage() {
   return (
     <KQAppShell>
       <div className="app-page space-y-6">
-        <section className="relative overflow-hidden rounded-2xl bg-[#0e2740] px-6 py-7 text-white shadow-lg sm:px-8 sm:py-8">
-          <div className="absolute -right-16 -top-20 size-64 rounded-full bg-[#c8102e]/20 blur-2xl" aria-hidden="true" />
-          <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl">
-              <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-[#f6c453]">
-                <span className="size-2 rounded-full bg-[#f6c453]" />
-                Kenya Airways PrideConnect
+        {/* ========================================================= */}
+        {/* ATMOSPHERIC COMMAND HEADER (STITCH REDESIGN)               */}
+        {/* ========================================================= */}
+        <section className="relative rounded-2xl overflow-hidden shadow-xl bg-gradient-to-r from-[#071626] via-[#0b2138] to-[#0e2740] text-white p-6 sm:p-8">
+          {/* Ambient Flight Vector Graphics */}
+          <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden" aria-hidden="true">
+            <svg className="w-full h-full" fill="none" preserveAspectRatio="none" viewBox="0 0 1000 320">
+              <path d="M-50,280 C200,240 450,90 750,130 C900,150 1050,40 1150,20" stroke="#d5e4fa" strokeDasharray="6 6" strokeWidth="1.5" />
+              <path d="M-20,310 C280,290 520,180 820,190 C960,195 1060,110 1120,70" stroke="#c8102e" strokeWidth="2" />
+              <circle cx="750" cy="130" fill="#ffffff" r="4" />
+              <circle cx="750" cy="130" fill="#c8102e" r="2" />
+              <circle cx="450" cy="180" fill="#34d399" r="3.5" />
+            </svg>
+          </div>
+
+          <div className="relative z-10 flex flex-col gap-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="space-y-2 max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#13283f] text-[#d5e4fa] text-xs font-mono tracking-wider shadow-inner">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>LIVE ADAPTIVE MATCHING ENGINE</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
+                  Welcome back{session?.user?.name ? `, ${session.user.name.split(" ")[0]}` : ""}.
+                </h1>
+                <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
+                  AI-driven stakeholder matchmaking connecting Kenya Airways alumni, flight operations, and corporate specialists across technical competencies and mentorship goals.
+                </p>
               </div>
-              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                Welcome back{session?.user?.name ? `, ${session.user.name.split(" ")[0]}` : ""}.
-              </h1>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-slate-200">
-                Discover people, ideas, and opportunities that can move your aviation journey forward.
-              </p>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => router.push("/profile")}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition backdrop-blur-xs"
+                >
+                  <Icon name="profile" size={14} />
+                  <span>Improve Profile</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push("/directory")}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#c8102e] hover:bg-[#a00d24] text-white text-xs font-semibold transition shadow-md"
+                >
+                  <Icon name="search" size={14} />
+                  <span>Browse Directory</span>
+                </button>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => router.push("/profile")} className="btn btn-secondary border-white/20 bg-white/10 text-white hover:bg-white/20">
-                <Icon name="profile" size={14} /> Improve profile
-              </button>
-              <button type="button" onClick={() => router.push("/directory")} className="btn btn-primary">
-                <Icon name="search" size={14} /> Browse directory
-              </button>
+
+            {/* Quick Metrics Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-[#05111e]/60 rounded-xl p-4 backdrop-blur-md border border-white/5">
+              <div className="flex flex-col">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Candidate Universe</span>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-xl sm:text-2xl font-bold text-white">{recommendations.length}</span>
+                  <span className="text-xs text-slate-400">Evaluated</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">High Affinity</span>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-xl sm:text-2xl font-bold text-emerald-400">
+                    {recommendations.filter((r) => r.matchPercent >= 75).length}
+                  </span>
+                  <span className="text-xs text-slate-400">Top Matches</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Matching Engine</span>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-xl sm:text-2xl font-bold text-white">Hybrid ML</span>
+                  <span className="text-xs text-emerald-400 font-mono">Active</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col">
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Model Influence</span>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-xl sm:text-2xl font-bold text-amber-400">{meta.model?.confidence || 0}%</span>
+                  <span className="text-xs text-slate-400 font-mono">Weight</span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {[
-            { label: "People to explore", value: recommendations.length, href: "#matches", icon: "users" },
-            { label: "Strong matches", value: recommendations.filter((item) => item.matchPercent >= 75).length, href: "#matches", icon: "sparkles" },
-            { label: "Your next step", value: "Connect", href: "/requests", icon: "requests" },
-          ].map((stat) => (
-            <a key={stat.label} href={stat.href} className="card flex items-center gap-3 p-4 transition hover:-translate-y-0.5">
-              <span className="flex size-10 items-center justify-center rounded-xl bg-[#fef2f2] text-[#c8102e]"><Icon name={stat.icon} size={17} /></span>
-              <span><b className="block text-lg font-bold text-slate-900">{stat.value}</b><span className="text-xs text-slate-500">{stat.label}</span></span>
-            </a>
-          ))}
-        </div>
-
-        {/* Header with Enterprise Telemetry */}
-        <div id="matches" className="flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Recommended connections</h2>
-            <p className="mt-1 text-sm text-slate-500">Matches shaped by skills, shared experience, and community interactions.</p>
-          </div>
-
-          <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-3 text-xs shadow-sm">
-            <div className="border-r border-slate-200 pr-3">
-              <span className="block text-[11px] font-semibold uppercase text-slate-400">Engine</span>
-              <span className="font-semibold text-slate-800">{meta.model?.provider === "HOSTED_API" ? "Adaptive ML" : meta.model?.active ? "Adaptive ML" : "Learning"}</span>
-            </div>
-            <div className="border-r border-slate-200 pr-3 font-mono">
-              <span className="block text-[11px] font-semibold uppercase text-slate-400">Influence</span>
-              <span className="text-slate-700"><b>{meta.model?.confidence || 0}%</b></span>
-            </div>
-            <div><span className="block text-[11px] font-semibold uppercase text-slate-400">Examples</span><span className="font-semibold text-slate-700">{meta.model?.trainingExamples || 0}</span></div>
-          </div>
-        </div>
-
-        {recommendations.length > 0 && recommendations.every((item) => item.matchPercent === 0) && (
-          <div role="status" className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="font-bold">Showing people to explore while we learn what fits you</p>
-              <p className="mt-1 text-amber-900">Add or update your skills, interests, and mentorship goals to give the recommender more signals for personal matches.</p>
-            </div>
-            <Button onClick={() => router.push("/profile")} className="shrink-0">Improve my profile</Button>
-          </div>
-        )}
-
         {/* Filter Toolbar */}
-        <div className="card p-5 sm:p-6 space-y-4">
+        <div className="card p-5 sm:p-6 space-y-4 rounded-2xl border border-slate-200/80 bg-white shadow-xs">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-center">
             {/* Search Input */}
             <div className="lg:col-span-5 relative">
@@ -273,10 +286,10 @@ export default function RecommendationsPage() {
                 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
               />
               <input
-                placeholder="Search by stakeholder name, skill, or fleet..."
+                placeholder="Search by stakeholder name, skill, or department..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-[#c8102e] focus:bg-white transition text-slate-800"
+                className="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#c8102e] focus:bg-white transition text-slate-800"
               />
             </div>
 
@@ -285,10 +298,10 @@ export default function RecommendationsPage() {
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-[#c8102e] text-slate-700"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#c8102e] text-slate-700 cursor-pointer"
               >
                 <option value="ALL">All Stakeholder Roles</option>
-                <option value="STAFF">Active KQ Staff</option>
+                <option value="STAFF">Active Flight & Ground Staff</option>
                 <option value="ALUMNI">Pride Centre Alumni</option>
                 <option value="FORMER_STAFF">Former Employees</option>
                 <option value="FREQUENT_FLYER">Frequent Flyers</option>
@@ -300,24 +313,24 @@ export default function RecommendationsPage() {
               <select
                 value={mentorshipFilter}
                 onChange={(e) => setMentorshipFilter(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-[#c8102e] text-slate-700"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-[#c8102e] text-slate-700 cursor-pointer"
               >
-                <option value="ALL">All Availability</option>
-                <option value="MENTOR">Available Mentors</option>
-                <option value="MENTEE">Seeking Mentorship</option>
+                <option value="ALL">All Mentorship</option>
+                <option value="MENTOR">Mentors Only</option>
+                <option value="MENTEE">Mentees Only</option>
               </select>
             </div>
 
-            {/* Score Slider */}
+            {/* Minimum Score Slider */}
             <div className="lg:col-span-2 flex flex-col justify-center">
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-600 mb-1">
-                <span>Min Match:</span>
-                <span className="text-[#c8102e] font-bold">{minScore}%</span>
+              <div className="flex justify-between text-xs text-slate-500 font-semibold mb-1">
+                <span>Min Match</span>
+                <span className="font-mono text-[#c8102e]">{minScore}%</span>
               </div>
               <input
                 type="range"
                 min="0"
-                max="95"
+                max="90"
                 step="5"
                 value={minScore}
                 onChange={(e) => setMinScore(Number(e.target.value))}
@@ -326,9 +339,9 @@ export default function RecommendationsPage() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs text-slate-500">
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
             <span>
-              Showing <b>{filteredMatches.length}</b> matches meeting criteria
+              Showing <b className="text-slate-800 font-bold">{filteredMatches.length}</b> matches meeting criteria
             </span>
             <button
               type="button"
@@ -347,140 +360,159 @@ export default function RecommendationsPage() {
 
         {/* Matches Grid */}
         {filteredMatches.length === 0 ? (
-          <div className="card p-12 text-center text-slate-500 space-y-2">
+          <div className="card p-12 text-center text-slate-500 space-y-3 rounded-2xl border border-slate-200 bg-white">
             <div className="w-12 h-12 mx-auto rounded-full bg-slate-100 text-slate-400 flex items-center justify-center">
               <Icon name="search" size={22} />
             </div>
             <h3 className="font-bold text-slate-800 text-base">No Stakeholders Match These Filters</h3>
             <p className="text-sm text-slate-500 max-w-sm mx-auto">
-              Try a broader search or reset your filters to see more people in the network.
+              Try adjusting your search query or reset filters to explore more professionals across the network.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredMatches.map((item) => {
               const roleDisplay = ROLE_LABELS[item.role] || item.role;
-              const isHighMatch = item.matchPercent >= 85;
+              const isHighMatch = item.matchPercent >= 80;
 
               return (
                 <article
                   key={item.userId}
-                  className="card p-6 sm:p-7 flex flex-col justify-between space-y-5"
+                  className="group relative bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-xl transition-all duration-300 p-6 sm:p-7 flex flex-col justify-between space-y-5"
                 >
-                  <div>
-                    {/* Header: Role Tag + Match Score */}
-                    <div className="flex items-center justify-between gap-2 pb-3.5 border-b border-slate-100">
-                      <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700">
-                        {roleDisplay}
+                  <div className="space-y-4">
+                    {/* Header: Role Tag + Match Affinity Tile */}
+                    <div className="flex items-start justify-between gap-3 pb-3.5 border-b border-slate-100">
+                      <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1.5">
+                        <Icon name="flight" size={13} className="text-[#0e2740]" />
+                        <span>{roleDisplay}</span>
                       </span>
-                      <div
-                        className={`px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1.5 ${
-                          isHighMatch
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : "bg-slate-100 text-slate-800 border border-slate-200"
-                        }`}
-                      >
-                        <span>{item.matchPercent === 0 ? "New suggestion" : `${item.matchPercent}% Match`}</span>
+
+                      {/* Stitch Score Affinity Tile */}
+                      <div className="flex flex-col items-end gap-1 bg-emerald-50/80 border border-emerald-200/70 px-3 py-1.5 rounded-xl shadow-2xs">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-base sm:text-lg font-bold text-emerald-800 font-mono">
+                            {item.matchPercent === 0 ? "New" : `${item.matchPercent}%`}
+                          </span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Affinity</span>
+                        </div>
+                        <div className="w-20 h-1.5 bg-emerald-200/70 rounded-full overflow-hidden">
+                          <div
+                            className="bg-emerald-600 h-full rounded-full transition-all duration-500"
+                            style={{ width: `${item.matchPercent || 15}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
 
                     {/* Member Profile Info */}
-                    <div className="flex items-start gap-4 mt-4">
-                      <Avatar name={item.fullName} size="lg" role={item.role} />
+                    <div className="flex items-start gap-4">
+                      <div className="relative shrink-0">
+                        <Avatar name={item.fullName} size="lg" role={item.role} />
+                        <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-[10px] text-white">
+                          ✓
+                        </span>
+                      </div>
+
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-bold text-slate-900 truncate">
+                        <h2 className="text-base sm:text-lg font-bold text-slate-900 truncate">
                           {item.fullName}
-                        </h3>
+                        </h2>
                         <p className="text-xs text-slate-500 truncate mt-0.5">
                           {item.department || "Kenya Airways Aviation Specialist"}
                         </p>
-                        <span className="inline-block mt-1 text-xs font-medium text-[#c8102e]">
-                          {item.mentorshipRole === "MENTOR"
-                            ? "Available Mentor"
-                            : item.mentorshipRole === "MENTEE"
-                            ? "Seeking Mentorship"
-                            : "Mentorship & Networking"}
-                        </span>
+                        <div className="flex items-center gap-2 pt-1 text-slate-500 text-xs">
+                          <span className="flex items-center gap-1 font-mono text-[11px]">
+                            <span>JKIA Hub</span>
+                          </span>
+                          <span>•</span>
+                          <span className="text-xs font-medium text-[#c8102e]">
+                            {item.mentorshipRole === "MENTOR"
+                              ? "Active Mentor"
+                              : item.mentorshipRole === "MENTEE"
+                              ? "Seeking Mentorship"
+                              : "Mentorship & Networking"}
+                          </span>
+                        </div>
                       </div>
                     </div>
 
                     {/* Breakdown Scores */}
-                    <div className="mt-4 p-3.5 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-2 text-xs">
+                    <div className="p-4 bg-slate-50/90 border border-slate-200/80 rounded-xl space-y-2.5 text-xs">
                       <div className="flex items-center justify-between text-slate-600">
-                        <span>Predicted request acceptance:</span>
-                        <b className="font-mono text-slate-900">{item.mlAcceptanceProbability == null ? "Gathering examples" : `${item.mlAcceptanceProbability}%`}</b>
+                        <span className="font-medium">Predicted acceptance probability:</span>
+                        <b className="font-mono text-slate-900">
+                          {item.mlAcceptanceProbability == null ? "Gathering examples" : `${item.mlAcceptanceProbability}%`}
+                        </b>
                       </div>
                       <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
                         <div
-                          className="bg-[#c8102e] h-full rounded-full"
+                          className="bg-[#c8102e] h-full rounded-full transition-all"
                           style={{ width: `${item.mlAcceptanceProbability ?? 0}%` }}
                         />
                       </div>
 
                       <div className="flex items-center justify-between text-slate-600 pt-1">
-                        <span>Profile &amp; skills similarity:</span>
+                        <span className="font-medium">Profile &amp; competency overlap:</span>
                         <b className="font-mono text-slate-900">{item.contentScore}%</b>
                       </div>
                       <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
                         <div
-                          className="bg-[#0e2740] h-full rounded-full"
+                          className="bg-[#0e2740] h-full rounded-full transition-all"
                           style={{ width: `${item.contentScore}%` }}
                         />
                       </div>
-                      <div className="flex items-center justify-between text-slate-600 pt-1">
-                        <span>Community network signal:</span>
-                        <b className="font-mono text-slate-900">{item.collaborativeScore}%</b>
-                      </div>
-                      <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                        <div
-                          className="bg-emerald-600 h-full rounded-full"
-                          style={{ width: `${item.collaborativeScore}%` }}
-                        />
-                      </div>
+
+                      {/* Signals Chips */}
                       <div className="pt-2 border-t border-slate-200/70">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Model signals · {item.mlInfluence ?? 0}% ranking influence</div>
-                        <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                          Model Signals · {item.mlInfluence ?? 0}% Influence
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 text-[11px]">
                           {[
                             `Skills ${item.signals?.skillOverlap ?? 0}%`,
                             `Interests ${item.signals?.interestOverlap ?? 0}%`,
-                            `Department ${item.signals?.sameDepartment ? "match" : "no match"}`,
-                            `Role fit ${item.signals?.mentorshipRoleFit ? "yes" : "no"}`,
-                            `Network ${item.signals?.sharedNetwork ?? 0}%`,
+                            item.signals?.sameDepartment ? "Department Match" : "Inter-Department",
                             item.signals?.requestType || "Mentorship",
-                          ].map((signal) => <span key={signal} className="px-2 py-1 rounded-full bg-white border border-slate-200 text-slate-600">{signal}</span>)}
+                          ].map((sig) => (
+                            <span key={sig} className="px-2.5 py-0.5 rounded-full bg-white border border-slate-200/90 text-slate-600 font-medium">
+                              {sig}
+                            </span>
+                          ))}
                         </div>
                       </div>
-                      {!meta.model?.active && (
-                        <p className="pt-1 text-[11px] text-slate-500">
-                          The model is collecting resolved request outcomes. Predictions will become personalized as members accept or decline requests.
-                        </p>
-                      )}
                     </div>
 
                     {/* Shared Skills Chips */}
-                    <div className="mt-4">
+                    <div>
                       <div className="text-[11px] uppercase font-semibold text-slate-400 mb-2 tracking-wider">
                         Shared Competencies
                       </div>
                       <div className="flex flex-wrap gap-1.5">
                         {(item.sharedSkills || []).slice(0, 4).map((skill) => (
-                          <Tag key={skill}>{skill}</Tag>
+                          <Tag key={skill} emerald={skill.toLowerCase().includes("flight") || skill.toLowerCase().includes("operations")}>
+                            {skill}
+                          </Tag>
                         ))}
-                        {(!item.sharedSkills || item.sharedSkills.length === 0) && item.matchPercent > 0 && <Tag>Aviation Specialist</Tag>}
-                        {(!item.sharedSkills || item.sharedSkills.length === 0) && item.matchPercent === 0 && <span className="text-xs text-slate-500">No shared skills yet</span>}
+                        {(!item.sharedSkills || item.sharedSkills.length === 0) && item.matchPercent > 0 && (
+                          <Tag>Aviation Specialist</Tag>
+                        )}
+                        {(!item.sharedSkills || item.sharedSkills.length === 0) && item.matchPercent === 0 && (
+                          <span className="text-xs text-slate-400">No shared skills recorded yet</span>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="pt-4 border-t border-slate-100 flex items-center gap-2.5">
+                  <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
                     <button
                       type="button"
                       onClick={() => {
                         setSelectedMatch(item);
                         setRequestMessage(TEMPLATE_MESSAGES[0].text);
                       }}
-                      className="btn btn-primary text-xs py-2.5 flex-1 rounded-lg"
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-[#c8102e] hover:bg-[#a00d24] text-white text-xs font-semibold flex items-center justify-center gap-2 transition shadow-xs cursor-pointer"
                     >
                       <Icon name="requests" size={14} />
                       <span>Request Mentorship</span>
@@ -488,10 +520,11 @@ export default function RecommendationsPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedMatch(item)}
-                      className="btn btn-secondary text-xs py-2.5 px-3.5 rounded-lg"
-                      title="View Details"
+                      className="py-2.5 px-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                      title="View Profile Details"
                     >
                       <Icon name="eye" size={14} />
+                      <span className="hidden sm:inline">Details</span>
                     </button>
                   </div>
                 </article>
@@ -503,24 +536,24 @@ export default function RecommendationsPage() {
         {/* Mentorship Request Modal */}
         {selectedMatch && (
           <div
-            className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
             onClick={() => setSelectedMatch(null)}
           >
             <div
-              className="bg-white rounded-xl max-w-lg w-full p-6 space-y-4 shadow-xl border border-slate-200 relative"
+              className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200 relative"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close Button */}
               <button
                 type="button"
                 onClick={() => setSelectedMatch(null)}
-                className="absolute top-4 right-4 p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
               >
                 <Icon name="close" size={16} />
               </button>
 
               {/* Profile Overview */}
-              <div className="flex items-start gap-3 pb-3 border-b border-slate-100">
+              <div className="flex items-start gap-4 pb-4 border-b border-slate-100">
                 <Avatar name={selectedMatch.fullName} size="lg" role={selectedMatch.role} />
                 <div>
                   <span className="text-xs font-semibold text-[#c8102e]">
@@ -537,21 +570,21 @@ export default function RecommendationsPage() {
 
               {/* Bio summary */}
               {selectedMatch.bio && (
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-600 leading-relaxed">
+                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed">
                   <b className="text-slate-800">Background:</b> {selectedMatch.bio}
                 </div>
               )}
 
               {/* Feedback Success Alert */}
               {feedbackSuccess && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-lg flex items-center gap-2">
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
                   <Icon name="check" size={16} />
                   <span>{feedbackSuccess}</span>
                 </div>
               )}
 
               {/* Message Composer */}
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Mentorship Request Message
                 </label>
@@ -563,7 +596,7 @@ export default function RecommendationsPage() {
                       key={idx}
                       type="button"
                       onClick={() => setRequestMessage(t.text)}
-                      className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-xs font-medium text-slate-700 transition cursor-pointer"
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-medium text-slate-700 transition cursor-pointer"
                     >
                       {t.title}
                     </button>
@@ -575,7 +608,7 @@ export default function RecommendationsPage() {
                   value={requestMessage}
                   onChange={(e) => setRequestMessage(e.target.value)}
                   placeholder="Introduce yourself, share your current role or aviation aspirations..."
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-md text-xs sm:text-sm outline-none focus:bg-white focus:border-[#c8102e] transition resize-none"
+                  className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:bg-white focus:border-[#c8102e] transition resize-none"
                 />
               </div>
 

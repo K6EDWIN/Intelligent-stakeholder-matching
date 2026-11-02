@@ -192,10 +192,10 @@ export default function AdminPage() {
         action === "verify"
           ? "Stakeholder verification badge granted."
           : action === "unverify"
-          ? "Stakeholder verification badge revoked."
-          : action === "suspend"
-          ? "Stakeholder account suspended and active sessions invalidated."
-          : "Stakeholder account restored to active standing."
+            ? "Stakeholder verification badge revoked."
+            : action === "suspend"
+              ? "Stakeholder account suspended and active sessions invalidated."
+              : "Stakeholder account restored to active standing."
       );
     } catch (err) {
       setPendingUserId(null);
@@ -363,10 +363,11 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: "/login" })}
-                className="admin-signout inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition"
+                className="admin-signout inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 hover:border-red-500/50 hover:bg-red-950/40 text-slate-300 hover:text-red-200 text-xs font-semibold transition cursor-pointer shadow-xs"
+                title="Log out of Admin Console"
               >
-                <Icon name="close" size={13} />
-                <span className="hidden sm:inline">Sign out</span>
+                <Icon name="logout" size={14} />
+                <span>Log out</span>
               </button>
               <details className="admin-classic-menu">
                 <summary><Avatar name={session?.user?.name || session?.user?.email} size="sm" role="ADMIN" /><span>Profile</span></summary>
@@ -374,7 +375,7 @@ export default function AdminPage() {
                   <Link href="/recommendations">Stakeholder Portal</Link>
                   <Link href="/profile">Admin Profile</Link>
                   <div className="admin-classic-menu-layout"><span>Layout</span><ViewModeToggle compact /></div>
-                  <button type="button" onClick={() => signOut({ callbackUrl: "/login" })}>Sign out</button>
+                  <button type="button" onClick={() => signOut({ callbackUrl: "/login" })}>Log out</button>
                 </div>
               </details>
             </div>
@@ -384,67 +385,63 @@ export default function AdminPage() {
 
       {/* Shared admin navigation: horizontal tabs in Classic, persistent rail in Modern. */}
       <nav className="admin-tabs flex items-center gap-1 sm:gap-2 border-t border-slate-800/80 pt-1 -mb-px overflow-x-auto" aria-label="Admin workspace">
-            <div className="admin-sidebar-brand"><KQLogo light /></div>
-            <button
-              type="button"
-              onClick={() => setActiveTab("model")}
-              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${
-                activeTab === "model"
-                  ? "border-[#c8102e] text-white bg-slate-800/50"
-                  : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
-              }`}
-            >
-              <Icon name="sparkles" size={14} className={activeTab === "model" ? "text-[#c8102e]" : ""} />
-              <span>Model Analytics &amp; Evaluation</span>
-            </button>
+        <div className="admin-sidebar-brand"><KQLogo light /></div>
+        <button
+          type="button"
+          onClick={() => setActiveTab("model")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "model"
+              ? "border-[#c8102e] text-white bg-slate-800/50"
+              : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
+            }`}
+        >
+          <Icon name="sparkles" size={14} className={activeTab === "model" ? "text-[#c8102e]" : ""} />
+          <span>Model Analytics &amp; Evaluation</span>
+        </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab("recommender")}
-              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${
-                activeTab === "recommender"
-                  ? "border-[#c8102e] text-white bg-slate-800/50"
-                  : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
-              }`}
-            >
-              <Icon name="sparkles" size={14} className={activeTab === "recommender" ? "text-[#c8102e]" : ""} />
-              <span>Live Recommender</span>
-            </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("recommender")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "recommender"
+              ? "border-[#c8102e] text-white bg-slate-800/50"
+              : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
+            }`}
+        >
+          <Icon name="sparkles" size={14} className={activeTab === "recommender" ? "text-[#c8102e]" : ""} />
+          <span>Live Recommender</span>
+        </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab("stakeholders")}
-              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${
-                activeTab === "stakeholders"
-                  ? "border-[#c8102e] text-white bg-slate-800/50"
-                  : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
-              }`}
-            >
-              <Icon name="directory" size={14} className={activeTab === "stakeholders" ? "text-[#c8102e]" : ""} />
-              <span>Stakeholder Governance</span>
-              <span className="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 text-[10px] font-mono">
-                {users.length}
-              </span>
-            </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("stakeholders")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "stakeholders"
+              ? "border-[#c8102e] text-white bg-slate-800/50"
+              : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
+            }`}
+        >
+          <Icon name="directory" size={14} className={activeTab === "stakeholders" ? "text-[#c8102e]" : ""} />
+          <span>Stakeholder Governance</span>
+          <span className="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 text-[10px] font-mono">
+            {users.length}
+          </span>
+        </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveTab("telemetry")}
-              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${
-                activeTab === "telemetry"
-                  ? "border-[#c8102e] text-white bg-slate-800/50"
-                  : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
-              }`}
-            >
-              <Icon name="dashboard" size={14} className={activeTab === "telemetry" ? "text-[#c8102e]" : ""} />
-              <span>Platform Funnel &amp; Telemetry</span>
-            </button>
-            <div className="admin-sidebar-footer">
-              <Link href="/recommendations" className="admin-sidebar-link"><Icon name="sparkles" size={15} /> Stakeholder Portal</Link>
-              <Link href="/profile" className="admin-sidebar-link"><Icon name="profile" size={15} /> Admin Profile</Link>
-              <div className="admin-sidebar-layout"><span>Layout</span><ViewModeToggle compact /></div>
-              <button type="button" className="admin-sidebar-link" onClick={() => signOut({ callbackUrl: "/login" })}><Icon name="close" size={15} /> Sign out</button>
-            </div>
+        <button
+          type="button"
+          onClick={() => setActiveTab("telemetry")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "telemetry"
+              ? "border-[#c8102e] text-white bg-slate-800/50"
+              : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
+            }`}
+        >
+          <Icon name="dashboard" size={14} className={activeTab === "telemetry" ? "text-[#c8102e]" : ""} />
+          <span>Platform Funnel &amp; Telemetry</span>
+        </button>
+        <div className="admin-sidebar-footer">
+          <Link href="/recommendations" className="admin-sidebar-link"><Icon name="sparkles" size={15} /> Stakeholder Portal</Link>
+          <Link href="/profile" className="admin-sidebar-link"><Icon name="profile" size={15} /> Admin Profile</Link>
+          <div className="admin-sidebar-layout"><span>Layout</span><ViewModeToggle compact /></div>
+          <button type="button" className="admin-sidebar-link" onClick={() => signOut({ callbackUrl: "/login" })}><Icon name="logout" size={15} /> Log out</button>
+        </div>
       </nav>
 
       {/* ============================================================== */}
@@ -615,15 +612,14 @@ export default function AdminPage() {
 
                       <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden flex">
                         <div
-                          className={`h-full transition-all duration-700 ${
-                            m.isBest
+                          className={`h-full transition-all duration-700 ${m.isBest
                               ? "bg-gradient-to-r from-emerald-600 to-teal-500"
                               : idx === 1
-                              ? "bg-slate-700"
-                              : idx === 2
-                              ? "bg-indigo-500"
-                              : "bg-slate-300"
-                          }`}
+                                ? "bg-slate-700"
+                                : idx === 2
+                                  ? "bg-indigo-500"
+                                  : "bg-slate-300"
+                            }`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
@@ -1098,11 +1094,10 @@ export default function AdminPage() {
                     key={f.key}
                     type="button"
                     onClick={() => setRoleFilter(f.key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition border ${
-                      roleFilter === f.key
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition border ${roleFilter === f.key
                         ? "bg-[#071626] text-white border-[#071626]"
                         : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-                    }`}
+                      }`}
                   >
                     <span>{f.label}</span>
                     <span className="ml-1.5 opacity-70 font-mono text-[11px]">
@@ -1120,11 +1115,10 @@ export default function AdminPage() {
                     key={st}
                     type="button"
                     onClick={() => setStatusFilter(st)}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition ${
-                      statusFilter === st
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition ${statusFilter === st
                         ? "bg-slate-200 text-slate-900 font-bold"
                         : "text-slate-500 hover:text-slate-800"
-                    }`}
+                      }`}
                   >
                     {st === "ALL" && "All Statuses"}
                     {st === "VERIFIED" && "Verified Only"}
