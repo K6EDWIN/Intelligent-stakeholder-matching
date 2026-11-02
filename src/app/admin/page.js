@@ -259,8 +259,8 @@ export default function AdminPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="min-h-screen bg-[#071626] text-slate-100 flex items-center justify-center p-6 font-sans">
-        <div className="text-center max-w-md space-y-4">
+      <div className="admin-loading-screen min-h-screen text-slate-100 flex items-center justify-center p-6 font-sans">
+        <div className="admin-loading-content text-center max-w-md space-y-4">
           <div className="w-14 h-14 mx-auto rounded-2xl bg-white/10 text-[#c8102e] flex items-center justify-center border border-white/15 animate-pulse">
             <Icon name="sparkles" size={28} />
           </div>
@@ -302,6 +302,7 @@ export default function AdminPage() {
   const currentBeta = benchmark?.weights?.beta ?? 10;
   const models = benchmark?.models ?? [];
   const bestModel = models.find((model) => model.isBest);
+  const contentBaseline = models.find((model) => model.name?.includes("Content-Based"));
 
   return (
     <div className="admin-console min-h-screen bg-[#f8fafc] text-slate-900 font-sans flex flex-col">
@@ -324,10 +325,7 @@ export default function AdminPage() {
               <KQLogo light />
               <div className="hidden sm:block h-7 w-px bg-slate-700/80" />
               <div>
-                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#c8102e]/20 text-[#c8102e] border border-[#c8102e]/30 text-[10px] font-extrabold uppercase tracking-widest">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#c8102e] animate-pulse" />
-                  OPERATIONS CONSOLE
-                </div>
+                <div className="admin-product-label">KQ PrideConnect · Operations</div>
                 <h1 className="text-sm sm:text-base font-extrabold text-white tracking-tight leading-none mt-0.5">
                   Flight Intelligence &amp; Governance
                 </h1>
@@ -336,17 +334,17 @@ export default function AdminPage() {
 
             {/* Right: Operational Status & User Badge */}
             <div className="admin-header-actions flex items-center gap-3">
-              <ViewModeToggle compact />
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-950/60 border border-emerald-700/40 text-emerald-400 text-xs">
-                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <div className="admin-view-toggle"><ViewModeToggle compact /></div>
+              <div className="admin-engine-status flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-950/60 border border-emerald-700/40 text-emerald-400 text-xs">
+                <span className={`w-2 h-2 rounded-full ${benchmark ? "bg-emerald-400" : "bg-slate-400"}`} />
                 <span className="font-semibold text-[11px] tracking-wide uppercase">
-                  Evaluation · {benchmark?.latencyMs ?? "—"}ms
+                  {benchmark ? `Engine OK · ${benchmark.latencyMs}ms` : "Engine status unavailable"}
                 </span>
               </div>
 
               <Link
                 href="/recommendations"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
+                className="admin-portal-link inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
                 title="Preview platform as an end-user stakeholder"
               >
                 <Icon name="sparkles" size={13} />
@@ -355,7 +353,7 @@ export default function AdminPage() {
 
               <Link
                 href="/profile"
-                className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/70 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
+                className="admin-profile-link inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/70 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
                 title="View and edit your administrator profile"
               >
                 <Avatar name={session?.user?.name || session?.user?.email} size="sm" role="ADMIN" />
@@ -365,16 +363,28 @@ export default function AdminPage() {
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: "/login" })}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition"
+                className="admin-signout inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition"
               >
                 <Icon name="close" size={13} />
                 <span className="hidden sm:inline">Sign out</span>
               </button>
+              <details className="admin-classic-menu">
+                <summary><Avatar name={session?.user?.name || session?.user?.email} size="sm" role="ADMIN" /><span>Profile</span></summary>
+                <div className="admin-classic-menu-popover">
+                  <Link href="/recommendations">Stakeholder Portal</Link>
+                  <Link href="/profile">Admin Profile</Link>
+                  <div className="admin-classic-menu-layout"><span>Layout</span><ViewModeToggle compact /></div>
+                  <button type="button" onClick={() => signOut({ callbackUrl: "/login" })}>Sign out</button>
+                </div>
+              </details>
             </div>
           </div>
+        </div>
+      </header>
 
-          {/* Tab Navigation */}
-          <div className="admin-tabs flex items-center gap-1 sm:gap-2 border-t border-slate-800/80 pt-1 -mb-px overflow-x-auto">
+      {/* Shared admin navigation: horizontal tabs in Classic, persistent rail in Modern. */}
+      <nav className="admin-tabs flex items-center gap-1 sm:gap-2 border-t border-slate-800/80 pt-1 -mb-px overflow-x-auto" aria-label="Admin workspace">
+            <div className="admin-sidebar-brand"><KQLogo light /></div>
             <button
               type="button"
               onClick={() => setActiveTab("model")}
@@ -386,9 +396,6 @@ export default function AdminPage() {
             >
               <Icon name="sparkles" size={14} className={activeTab === "model" ? "text-[#c8102e]" : ""} />
               <span>Model Analytics &amp; Evaluation</span>
-              <span className="px-1.5 py-0.2 rounded bg-emerald-900/80 text-emerald-300 text-[10px] font-bold">
-                84.2% NDCG
-              </span>
             </button>
 
             <button
@@ -432,16 +439,20 @@ export default function AdminPage() {
               <Icon name="dashboard" size={14} className={activeTab === "telemetry" ? "text-[#c8102e]" : ""} />
               <span>Platform Funnel &amp; Telemetry</span>
             </button>
-          </div>
-        </div>
-      </header>
+            <div className="admin-sidebar-footer">
+              <Link href="/recommendations" className="admin-sidebar-link"><Icon name="sparkles" size={15} /> Stakeholder Portal</Link>
+              <Link href="/profile" className="admin-sidebar-link"><Icon name="profile" size={15} /> Admin Profile</Link>
+              <div className="admin-sidebar-layout"><span>Layout</span><ViewModeToggle compact /></div>
+              <button type="button" className="admin-sidebar-link" onClick={() => signOut({ callbackUrl: "/login" })}><Icon name="close" size={15} /> Sign out</button>
+            </div>
+      </nav>
 
       {/* ============================================================== */}
       {/* 2. OPERATIONAL BRIEFING BANNER                                 */}
       {/* ============================================================== */}
       <div className="bg-white border-b border-slate-200/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="admin-page-heading flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mb-1">
                 <span className="inline-block w-2 h-2 rounded-full bg-[#c8102e]" />
@@ -452,34 +463,24 @@ export default function AdminPage() {
                 <span className="text-[#0e2740] font-semibold">Strathmore Capstone Project</span>
               </div>
               <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-                {activeTab === "model" && "Recommender Algorithm Telemetry & Benchmark Suite"}
+                {activeTab === "model" && "Recommender Benchmark Suite"}
                 {activeTab === "recommender" && "Live Recommender Simulation"}
                 {activeTab === "stakeholders" && "Stakeholder Verification & Account Directory"}
                 {activeTab === "telemetry" && "Community Interactions & Engagement Funnel"}
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                {activeTab === "model" && "Live scoring diagnostics and a rule-based ranking comparison. These prototype scores are not independent evidence of real-world quality."}
+                {activeTab === "model" && "Compare baseline ranking methods and monitor the adaptive recommender."}
                 {activeTab === "recommender" && "Search for a stakeholder, adjust the filters, and inspect the model's live recommendation scores for that member."}
                 {activeTab === "stakeholders" && "Manage privileges, audit Pride Centre credentials, and oversee account security."}
                 {activeTab === "telemetry" && "Real-time mentorship handshakes, bilateral connections, and route co-travel metrics."}
               </p>
             </div>
 
-            {/* Quick KPI summary badges */}
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-center">
-                <span className="text-[10px] uppercase font-bold text-slate-500 block">Members</span>
-                <b className="text-sm sm:text-base font-extrabold text-slate-900">{users.length}</b>
+            {activeTab === "model" && (
+              <div className="admin-info-banner" role="note">
+                <span>Prototype scores use a proxy relevance rule and are not independent evidence of real-world quality.</span>
               </div>
-              <div className="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-center">
-                <span className="text-[10px] uppercase font-bold text-slate-500 block">Verified</span>
-                <b className="text-sm sm:text-base font-extrabold text-emerald-700">{stats?.verifiedUsers || 0}</b>
-              </div>
-              <div className="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-center">
-                <span className="text-[10px] uppercase font-bold text-slate-500 block">NDCG@10</span>
-                <b className="text-sm sm:text-base font-extrabold text-indigo-700">{bestModel ? bestModel.ndcgAt10.toFixed(3) : "—"}</b>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -503,34 +504,20 @@ export default function AdminPage() {
         {activeTab === "model" && (
           <div className="space-y-8">
             {/* Executive Health Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              <div className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                    Engine Status
-                  </span>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                </div>
-                <b className="text-2xl font-extrabold text-emerald-700 block tracking-tight">
-                  Operational
-                </b>
-                <span className="text-[11px] text-slate-500 mt-1 block">
-                  Live formula-based ranking
-                </span>
-              </div>
-
+            <div className="admin-kpi-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <div className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Ranking NDCG@10
                   </span>
                 </div>
-                <b className="text-2xl font-extrabold text-indigo-700 block tracking-tight">
+                <b className="admin-kpi-value text-2xl font-extrabold block tracking-tight">
                   {bestModel ? bestModel.ndcgAt10.toFixed(3) : "—"}
                 </b>
                 <span className="text-[11px] text-slate-500 mt-1 block">
                   Normalized discounted gain
                 </span>
+                <span className="admin-kpi-baseline">Content-based: {contentBaseline ? contentBaseline.ndcgAt10.toFixed(3) : "baseline unavailable"}</span>
               </div>
 
               <div className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs">
@@ -538,16 +525,14 @@ export default function AdminPage() {
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Precision@5
                   </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
-                    Top 5
-                  </span>
                 </div>
-                <b className="text-2xl font-extrabold text-slate-900 block tracking-tight">
+                <b className="admin-kpi-value text-2xl font-extrabold block tracking-tight">
                   {bestModel ? `${(bestModel.precisionAt5 * 100).toFixed(1)}%` : "—"}
                 </b>
                 <span className="text-[11px] text-slate-500 mt-1 block">
                   Matches meeting the proxy rule
                 </span>
+                <span className="admin-kpi-baseline">Content-based: {contentBaseline ? `${(contentBaseline.precisionAt5 * 100).toFixed(1)}%` : "baseline unavailable"}</span>
               </div>
 
               <div className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs">
@@ -555,30 +540,29 @@ export default function AdminPage() {
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     Recall@5
                   </span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-[#c8102e]">
-                    Coverage
-                  </span>
                 </div>
-                <b className="text-2xl font-extrabold text-[#c8102e] block tracking-tight">
+                <b className="admin-kpi-value text-2xl font-extrabold block tracking-tight">
                   {bestModel ? `${(bestModel.recallAt5 * 100).toFixed(1)}%` : "—"}
                 </b>
                 <span className="text-[11px] text-slate-500 mt-1 block">
                   Discovery of potential peers
                 </span>
+                <span className="admin-kpi-baseline">Content-based: {contentBaseline ? `${(contentBaseline.recallAt5 * 100).toFixed(1)}%` : "baseline unavailable"}</span>
               </div>
 
-              <div className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs col-span-2 sm:col-span-1">
+              <div className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-xs">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                     MRR (Rank Speed)
                   </span>
                 </div>
-                <b className="text-2xl font-extrabold text-amber-700 block tracking-tight">
+                <b className="admin-kpi-value text-2xl font-extrabold block tracking-tight">
                   {bestModel ? bestModel.mrr.toFixed(3) : "—"}
                 </b>
                 <span className="text-[11px] text-slate-500 mt-1 block">
                   Mean reciprocal rank
                 </span>
+                <span className="admin-kpi-baseline">Content-based: {contentBaseline ? contentBaseline.mrr.toFixed(3) : "baseline unavailable"}</span>
               </div>
             </div>
 
@@ -598,8 +582,8 @@ export default function AdminPage() {
                   </p>
                 </div>
 
-                <div className="px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold">
-                  {benchmark?.evaluatedUsers ? `${benchmark.evaluatedUsers} profiles included` : "No benchmark data available"}
+                <div className="admin-included-count px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold" title="Profiles without any peers matching the benchmark's proxy relevance rule are not included.">
+                  {benchmark?.evaluatedUsers ? `${benchmark.evaluatedUsers} of ${benchmark.totalStakeholders} profiles included` : "No benchmark data available"}
                 </div>
               </div>
 
