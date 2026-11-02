@@ -49,6 +49,13 @@ export async function PATCH(request, { params }) {
         adminId: session.user.id,
         actionType: action,
         targetId: id,
+        notes: JSON.stringify({
+          version: 1,
+          actorRole: "ADMIN",
+          actorType: "ADMIN",
+          summary: `${action.replaceAll("_", " ").toLowerCase()} account ${targetUser.profile?.fullName || targetUser.email}`,
+          details: { targetEmail: targetUser.email, targetName: targetUser.profile?.fullName || null, changedField: actionDef.field, newValue: actionDef.value },
+        }),
       },
     }),
   ]);

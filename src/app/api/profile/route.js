@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/audit-log";
 
 // GET: return the logged-in user's own profile, including their
 // currently selected skills and interests.
@@ -132,6 +133,16 @@ export async function PUT(request) {
         ]
       : []),
   ]);
+
+  const updatedFields = ["fullName", "bio", "department", "isPublic"];
+  if (!isAdmin) updatedFields.push("professionalBackground", "trainingHistory", "careerGoals", "mentorshipNeeds", "mentorshipRole", "availability", "skills", "interests");
+  await logActivity({
+    actorId: session.user.id,
+    targetId: session.user.id,
+    actionType: session.user.role === "ADMIN" ? "ADMIN_PROFILE_UPDATED" : "USER_PROFILE_UPDATED",
+    summary: `${isAdmin ? "Administrator" : "Member"} updated their profile`,
+    details: { fieldsUpdated: updatedFields, skillCount: isAdmin ? 0 : skillIds.length, interestCount: isAdmin ? 0 : interestIds.length },
+  });
 
   return NextResponse.json({ message: "Profile updated" });
 }

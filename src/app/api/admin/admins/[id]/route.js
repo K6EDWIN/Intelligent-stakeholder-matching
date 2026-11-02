@@ -26,7 +26,14 @@ export async function DELETE(_request, { params }) {
 
   await prisma.$transaction([
     prisma.user.update({ where: { id }, data: { role: restoreRole } }),
-    prisma.adminAction.create({ data: { adminId: session.user.id, targetId: id, actionType: "ADMIN_ACCESS_REMOVED", notes: `Restored role ${restoreRole} for ${target.email}` } }),
+    prisma.adminAction.create({
+      data: {
+        adminId: session.user.id,
+        targetId: id,
+        actionType: "ADMIN_ACCESS_REMOVED",
+        notes: JSON.stringify({ version: 1, actorRole: "ADMIN", actorType: "ADMIN", summary: `Removed administrator access from ${target.email}`, details: { targetEmail: target.email, restoredRole: restoreRole } }),
+      },
+    }),
   ]);
   return NextResponse.json({ removed: true, restoredRole: restoreRole });
 }

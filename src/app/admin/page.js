@@ -24,6 +24,14 @@ const ROLE_COLORS = {
   ADMIN: "bg-slate-900 text-white border-slate-800",
 };
 
+function formatAuditDetail(value) {
+  if (value === null || value === undefined || value === "") return "—";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "object") return JSON.stringify(value, null, 2);
+  return String(value);
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -46,6 +54,13 @@ export default function AdminPage() {
   const [adminInviteMessage, setAdminInviteMessage] = useState("");
   const [adminInviteError, setAdminInviteError] = useState("");
   const [adminAccessActionId, setAdminAccessActionId] = useState(null);
+  const [auditLogs, setAuditLogs] = useState({ logs: [], total: 0, totalPages: 1 });
+  const [auditPage, setAuditPage] = useState(1);
+  const [auditActor, setAuditActor] = useState("ALL");
+  const [auditSearch, setAuditSearch] = useState("");
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState("");
+  const [selectedAudit, setSelectedAudit] = useState(null);
 
   // Stakeholder Registry Filters
   const [userSearch, setUserSearch] = useState("");
@@ -175,6 +190,27 @@ export default function AdminPage() {
       Promise.resolve().then(loadAdminAccess);
     }
   }, [status, session?.user?.role, activeTab, loadAdminAccess]);
+
+  useEffect(() => {
+    if (status !== "authenticated" || session?.user?.role !== "ADMIN" || activeTab !== "audit") return undefined;
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      setAuditLoading(true);
+      setAuditError("");
+      try {
+        const query = new URLSearchParams({ page: String(auditPage), pageSize: "25", actor: auditActor, q: auditSearch });
+        const response = await fetch(`/api/admin/audit-logs?${query}`, { signal: controller.signal });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Could not load the audit log");
+        setAuditLogs(data);
+      } catch (err) {
+        if (err.name !== "AbortError") setAuditError(err.message || "Could not load the audit log");
+      } finally {
+        if (!controller.signal.aborted) setAuditLoading(false);
+      }
+    }, auditSearch ? 160 : 0);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [status, session?.user?.role, activeTab, auditPage, auditActor, auditSearch]);
 
   const inviteAdministrator = useCallback(async (event) => {
     event.preventDefault();
@@ -519,6 +555,18 @@ export default function AdminPage() {
           <Icon name="shield" size={14} className={activeTab === "admins" ? "text-[#c8102e]" : ""} />
           <span>Administrator Access</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("audit")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "audit"
+              ? "border-[#c8102e] text-white bg-slate-800/50"
+              : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
+            }`}
+        >
+          <Icon name="clock" size={14} className={activeTab === "audit" ? "text-[#c8102e]" : ""} />
+          <span>Audit Log</span>
+        </button>
         <div className="admin-sidebar-footer">
           <Link href="/recommendations" className="admin-sidebar-link"><Icon name="sparkles" size={15} /> Stakeholder Portal</Link>
           <Link href="/profile" className="admin-sidebar-link"><Icon name="profile" size={15} /> Admin Profile</Link>
@@ -548,6 +596,7 @@ export default function AdminPage() {
                 {activeTab === "stakeholders" && "Stakeholder Verification & Account Directory"}
                 {activeTab === "telemetry" && "Community Interactions & Engagement Funnel"}
                 {activeTab === "admins" && "Administrator Access & Invitations"}
+                {activeTab === "audit" && "Member & Administrator Activity Log"}
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
                 {activeTab === "model" && "Compare baseline ranking methods and monitor the adaptive recommender."}
@@ -555,6 +604,7 @@ export default function AdminPage() {
                 {activeTab === "stakeholders" && "Manage privileges, audit Pride Centre credentials, and oversee account security."}
                 {activeTab === "telemetry" && "Real-time mentorship handshakes, bilateral connections, and route co-travel metrics."}
                 {activeTab === "admins" && "Invite trusted administrators by email, track setup, and manage elevated access."}
+                {activeTab === "audit" && "Review who performed each action, when it happened, and the recorded details."}
               </p>
             </div>
 
@@ -1445,6 +1495,78 @@ export default function AdminPage() {
           </div>
         )}
 
+        {activeTab === "audit" && (
+          <div className="space-y-6">
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs sm:p-8">
+              <div className="mb-6 flex flex-col gap-4 border-b border-slate-100 pb-5 xl:flex-row xl:items-end xl:justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Recent activity</h3>
+                  <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-500">Every entry identifies the person who acted. Choose an entry’s detail view to inspect the affected account and action metadata.</p>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <label className="relative min-w-64">
+                    <span className="sr-only">Search the activity log</span>
+                    <input type="search" value={auditSearch} onChange={(event) => { setAuditPage(1); setAuditSearch(event.target.value); }} placeholder="Search name, email, or action…" className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-800 outline-none focus:border-[#c8102e] focus:ring-4 focus:ring-red-50" />
+                  </label>
+                  <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1" aria-label="Filter activity by actor">
+                    {[ ["ALL", "Everyone"], ["ADMIN", "Admins"], ["MEMBER", "Members"] ].map(([value, label]) => (
+                      <button key={value} type="button" onClick={() => { setAuditPage(1); setAuditActor(value); }} className={`rounded-lg px-3 py-2 text-xs font-semibold transition ${auditActor === value ? "bg-white text-[#0e2740] shadow-sm" : "text-slate-500 hover:text-slate-800"}`}>{label}</button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-3 flex items-center justify-between gap-3 text-xs text-slate-500">
+                <span>{auditLoading ? "Refreshing activity…" : `${auditLogs.total.toLocaleString()} recorded activities`}</span>
+                <span>Newest first · 25 per page</span>
+              </div>
+              {auditError && <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{auditError}</div>}
+              {auditLoading && auditLogs.logs.length === 0 ? (
+                <div className="py-14 text-center text-sm text-slate-500">Loading member and administrator activity…</div>
+              ) : auditLogs.logs.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-12 text-center">
+                  <Icon name="clock" size={24} className="mx-auto mb-3 text-slate-400" />
+                  <p className="font-semibold text-slate-800">No activity matches this filter</p>
+                  <p className="mt-1 text-xs text-slate-500">Try another search or choose Everyone.</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+                  {auditLogs.logs.map((log) => (
+                    <article key={log.id} className="flex flex-col gap-3 p-4 transition hover:bg-slate-50/80 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <Avatar name={log.actor.name} role={log.actor.role} size="sm" />
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="text-sm font-bold text-slate-900">{log.actor.name}</span>
+                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${log.actor.actorType === "ADMIN" ? "border-violet-200 bg-violet-50 text-violet-800" : "border-sky-200 bg-sky-50 text-sky-800"}`}>{log.actor.actorType === "ADMIN" ? "Administrator" : "Member"}</span>
+                          </div>
+                          <p className="mt-1 text-sm text-slate-700">{log.summary}</p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {log.actor.email}{log.target && log.target.id !== log.actor.id ? <> <span className="mx-1">·</span> Affected: <b className="font-semibold text-slate-700">{log.target.name || log.target.id}</b>{log.target.email ? ` (${log.target.email})` : ""}</> : null}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center justify-between gap-4 sm:justify-end">
+                        <time className="text-xs text-slate-500" dateTime={log.createdAt}>{new Date(log.createdAt).toLocaleString()}</time>
+                        <button type="button" onClick={() => setSelectedAudit(log)} className="whitespace-nowrap rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-[#c8102e] hover:text-[#c8102e]">View activity</button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                <p className="text-xs text-slate-500">{auditLogs.total === 0 ? "No results" : `Showing ${(auditPage - 1) * 25 + 1}–${Math.min(auditPage * 25, auditLogs.total)} of ${auditLogs.total.toLocaleString()}`}</p>
+                <div className="flex items-center gap-2">
+                  <button type="button" disabled={auditPage <= 1 || auditLoading} onClick={() => setAuditPage((value) => Math.max(1, value - 1))} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">Previous</button>
+                  <span className="min-w-20 text-center text-xs text-slate-500">Page {auditPage} of {auditLogs.totalPages}</span>
+                  <button type="button" disabled={auditPage >= auditLogs.totalPages || auditLoading} onClick={() => setAuditPage((value) => value + 1)} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-40">Next</button>
+                </div>
+              </div>
+            </section>
+          </div>
+        )}
+
         {/* ============================================================ */}
         {/* TAB 4: PLATFORM FUNNEL & INTERACTION TELEMETRY                */}
         {/* ============================================================ */}
@@ -1562,6 +1684,67 @@ export default function AdminPage() {
           </div>
         )}
       </main>
+      {selectedAudit && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-slate-950/55 p-0 backdrop-blur-sm sm:items-center sm:p-5" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedAudit(null); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="audit-detail-title" className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl border border-slate-200 bg-white p-6 shadow-2xl sm:rounded-3xl sm:p-8">
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-5">
+              <div className="flex min-w-0 items-center gap-3">
+                <Avatar name={selectedAudit.actor.name} role={selectedAudit.actor.role} size="md" />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 id="audit-detail-title" className="text-lg font-extrabold text-slate-900">Activity details</h3>
+                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${selectedAudit.actor.actorType === "ADMIN" ? "border-violet-200 bg-violet-50 text-violet-800" : "border-sky-200 bg-sky-50 text-sky-800"}`}>{selectedAudit.actor.actorType === "ADMIN" ? "Administrator" : "Member"}</span>
+                  </div>
+                  <p className="mt-1 truncate text-xs text-slate-500">{selectedAudit.actor.name} · {selectedAudit.actor.email}</p>
+                </div>
+              </div>
+              <button type="button" aria-label="Close activity details" onClick={() => setSelectedAudit(null)} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900"><Icon name="close" size={18} /></button>
+            </div>
+
+            <div className="space-y-5 py-5">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">What happened</p>
+                <p className="mt-1 text-base font-semibold capitalize leading-relaxed text-slate-900">{selectedAudit.summary}</p>
+                <p className="mt-2 text-xs text-slate-500">{new Date(selectedAudit.createdAt).toLocaleString()} <span className="mx-1">·</span> {selectedAudit.actionType.replaceAll("_", " ")}</p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Actor</p>
+                  <p className="mt-1 text-sm font-bold text-slate-900">{selectedAudit.actor.name}</p>
+                  <p className="mt-0.5 break-all text-xs text-slate-500">{selectedAudit.actor.email}</p>
+                  <p className="mt-2 text-[11px] font-semibold text-slate-600">{selectedAudit.actor.actorType === "ADMIN" ? "Administrator" : ROLE_LABELS[selectedAudit.actor.role] || "Member"}</p>
+                </div>
+                <div className="rounded-xl border border-slate-200 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Affected account</p>
+                  {selectedAudit.target ? <>
+                    <p className="mt-1 text-sm font-bold text-slate-900">{selectedAudit.target.name || "Account record"}</p>
+                    {selectedAudit.target.email && <p className="mt-0.5 break-all text-xs text-slate-500">{selectedAudit.target.email}</p>}
+                    {selectedAudit.target.role && <p className="mt-2 text-[11px] font-semibold text-slate-600">{ROLE_LABELS[selectedAudit.target.role] || selectedAudit.target.role}</p>}
+                  </> : <p className="mt-1 text-sm text-slate-500">No separate account was affected.</p>}
+                </div>
+              </div>
+
+              {Object.keys(selectedAudit.details || {}).length > 0 && (
+                <div>
+                  <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Recorded details</h4>
+                  <dl className="divide-y divide-slate-100 rounded-xl border border-slate-200 px-4">
+                    {Object.entries(selectedAudit.details).map(([key, value]) => (
+                      <div key={key} className="grid gap-1 py-3 sm:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] sm:gap-4">
+                        <dt className="text-xs font-semibold capitalize text-slate-500">{key.replaceAll(/([A-Z])/g, " $1").replaceAll("_", " ")}</dt>
+                        <dd className="break-words text-sm text-slate-800">{typeof value === "object" && value !== null ? <pre className="whitespace-pre-wrap font-mono text-xs">{formatAuditDetail(value)}</pre> : formatAuditDetail(value)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end border-t border-slate-100 pt-4">
+              <button type="button" onClick={() => setSelectedAudit(null)} className="rounded-xl bg-[#071626] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0e2740]">Close</button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

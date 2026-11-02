@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { extractPairFeatures } from "@/lib/adaptive-recommender";
 import { buildConnectionsByUser, computeCollaborativeScore } from "@/lib/collaborative";
 import { createNotification } from "@/lib/notifications";
+import { logActivity } from "@/lib/audit-log";
 
 const COUNTERPART_SELECT = {
   id: true,
@@ -133,6 +134,14 @@ export async function POST(request) {
       title: "New mentorship request",
       message: `${senderProfile?.fullName || "A stakeholder"} sent you a mentorship request.`,
       href: "/requests",
+  });
+
+  await logActivity({
+    actorId: session.user.id,
+    targetId: receiverId,
+    actionType: "MENTORSHIP_REQUEST_SENT",
+    summary: `Sent a mentorship request to ${receiver.profile?.fullName || "another member"}`,
+    details: { requestId: mentorshipRequest.id, requestStatus: mentorshipRequest.status },
   });
 
   return NextResponse.json({ mentorshipRequest }, { status: 201 });

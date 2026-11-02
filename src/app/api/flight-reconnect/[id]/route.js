@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/audit-log";
 
 // PATCH /api/flight-reconnect/[id]
 // The owner may enable or withdraw route-matching consent at any time.
@@ -33,6 +34,14 @@ export async function PATCH(request, { params }) {
     where: { id },
     data: { consentToShare: body.consentToShare },
   });
+  const [flightNumber, origin, destination] = existing.flightRoute.startsWith("v2|") ? existing.flightRoute.slice(3).split("|") : [null, null, null];
+  await logActivity({
+    actorId: session.user.id,
+    targetId: session.user.id,
+    actionType: body.consentToShare ? "FLIGHT_MATCHING_ENABLED" : "FLIGHT_MATCHING_DISABLED",
+    summary: `${body.consentToShare ? "Enabled" : "Disabled"} matching for a logged flight`,
+    details: { flightId: id, flightNumber, origin, destination, travelDate: existing.travelDate.toISOString(), sharingEnabled: flight.consentToShare },
+  });
   return NextResponse.json({ flight });
 }
 
@@ -61,6 +70,15 @@ export async function DELETE(request, { params }) {
   }
 
   await prisma.flightReconnect.delete({ where: { id } });
+
+  const [flightNumber, origin, destination] = existing.flightRoute.startsWith("v2|") ? existing.flightRoute.slice(3).split("|") : [null, null, null];
+  await logActivity({
+    actorId: session.user.id,
+    targetId: session.user.id,
+    actionType: "FLIGHT_TRIP_REMOVED",
+    summary: "Removed a logged Flight Reconnect trip",
+    details: { flightId: id, flightNumber, origin, destination, travelDate: existing.travelDate.toISOString() },
+  });
 
   return NextResponse.json({ deleted: true });
 }

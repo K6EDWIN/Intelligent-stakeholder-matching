@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/audit-log";
 
 function nairobiToday() {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -200,6 +201,14 @@ export async function POST(request) {
       travelDate: parsedDate,
       consentToShare: body.consentToShare === true,
     },
+  });
+
+  await logActivity({
+    actorId: session.user.id,
+    targetId: session.user.id,
+    actionType: "FLIGHT_TRIP_LOGGED",
+    summary: `Logged completed flight ${canonicalFlightNumber} (${origin} → ${destination})`,
+    details: { flightId: flight.id, flightNumber: canonicalFlightNumber, origin, destination, travelDate, sharingEnabled: flight.consentToShare },
   });
 
   return NextResponse.json({ flight }, { status: 201 });

@@ -56,7 +56,15 @@ export async function POST(request) {
           adminId: invite.verification.user.id,
           actionType: "ADMIN_INVITE_ACCEPTED",
           targetId: invite.verification.user.id,
-          notes: JSON.stringify({ inviteActionId: currentAction.id, previousRole }),
+          notes: JSON.stringify({
+            version: 1,
+            actorRole: "ADMIN",
+            actorType: "ADMIN",
+            inviteActionId: currentAction.id,
+            previousRole,
+            summary: "Accepted an administrator invitation and activated admin access",
+            details: { invitedEmail: invite.verification.user.email, previousRole, newRole: "ADMIN", passwordCreated: true, googleSignInAvailable: true },
+          }),
         },
       });
     });

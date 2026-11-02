@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { resend } from "@/lib/resend";
+import { GMAIL_SENDER, sendAppEmail } from "@/lib/gmail";
+import { logActivity } from "@/lib/audit-log";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITE_SENT = "ADMIN_INVITE_SENT";
@@ -75,8 +76,8 @@ export async function GET() {
 export async function POST(request) {
   const { session, response } = await requireAdmin();
   if (response) return response;
-  if (!process.env.RESEND_API_KEY) {
-    return NextResponse.json({ error: "Email delivery is not configured. Add RESEND_API_KEY before sending administrator invitations." }, { status: 503 });
+  if (!process.env.GMAIL_APP_PASSWORD) {
+    return NextResponse.json({ error: "Email delivery is not configured. Add GMAIL_APP_PASSWORD before sending administrator invitations." }, { status: 503 });
   }
 
   const body = await request.json().catch(() => ({}));
@@ -132,21 +133,27 @@ export async function POST(request) {
   const safeInviter = escapeHtml(inviter);
 
   try {
-    const result = await resend.emails.send({
-      from: "onboarding@resend.dev",
+    await sendAppEmail({
       to: email,
       subject: "You’re invited to administer KQ PrideConnect",
       html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#10243a;line-height:1.6"><div style="background:#071626;color:#fff;padding:24px;border-radius:14px 14px 0 0"><p style="margin:0;color:#ff6b80;font-size:12px;font-weight:bold;letter-spacing:2px">KQ PRIDECONNECT</p><h1 style="margin:10px 0 0;font-size:24px">Administrator invitation</h1></div><div style="padding:26px;border:1px solid #dce5ef;border-top:0;border-radius:0 0 14px 14px"><p>${safeInviter} invited you to help administer the Kenya Airways stakeholder network.</p><p>To activate your access, confirm this invitation and create an account password. Once activated, you can also sign in with Google using <b>${escapeHtml(email)}</b>. Your Google account email must match this invitation.</p><p><a href="${inviteUrl}" style="display:inline-block;background:#c8102e;color:#fff;text-decoration:none;font-weight:bold;padding:12px 18px;border-radius:8px">Accept invitation &amp; set password</a></p><p style="font-size:13px;color:#5b6b7d">This one-time invitation expires in 24 hours. If you did not expect it, you can ignore this message.</p></div></div>`,
     });
-    if (result?.error) throw new Error(result.error.message || "Email provider rejected the message");
   } catch (error) {
     await prisma.verificationToken.deleteMany({ where: { userId: user.id, token } });
     if (pendingInvite) await prisma.adminAction.update({ where: { id: pendingInvite.id }, data: { adminId: pendingInvite.adminId, notes: pendingInvite.notes } });
     else await prisma.adminAction.delete({ where: { id: previousAction.id } });
     if (createdUser) await prisma.user.delete({ where: { id: user.id } });
     console.error("Administrator invitation email failed:", error);
-    return NextResponse.json({ error: "The invitation could not be emailed. Check the Resend sender configuration and try again." }, { status: 502 });
+    return NextResponse.json({ error: "The invitation could not be emailed. Check GMAIL_USER and GMAIL_APP_PASSWORD, then try again." }, { status: 502 });
   }
+
+  await logActivity({
+    actorId: session.user.id,
+    actionType: "ADMIN_INVITATION_SENT",
+    targetId: user.id,
+    summary: `Sent an administrator invitation to ${email}`,
+    details: { invitedEmail: email, expiresAt: expiresAt.toISOString(), delivery: `Gmail (${GMAIL_SENDER})` },
+  });
 
   return NextResponse.json({ message: `Invitation sent to ${email}.`, expiresAt }, { status: 201 });
 }

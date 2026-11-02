@@ -10,12 +10,9 @@ vi.mock("next-auth/next", () => ({
   getServerSession: vi.fn(),
 }));
 
-vi.mock("@/lib/resend", () => ({
-  resend: {
-    emails: {
-      send: vi.fn().mockResolvedValue({ id: "mock-email-id" }),
-    },
-  },
+vi.mock("@/lib/gmail", () => ({
+  GMAIL_SENDER: "strathtank@gmail.com",
+  sendAppEmail: vi.fn().mockResolvedValue({ messageId: "mock-email-id" }),
 }));
 
 vi.mock("@/lib/prisma", () => ({

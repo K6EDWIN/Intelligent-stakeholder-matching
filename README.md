@@ -201,9 +201,11 @@ docker compose up -d postgres
 
 Set `DATABASE_URL` in `.env` to your PostgreSQL connection string. Keep `.env` private and do not commit it.
 
-`NEXTAUTH_SECRET` is needed for signed sessions. `APP_URL` (or `NEXTAUTH_URL`) is used to create email links. Google OAuth and Resend are optional integrations; configure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `RESEND_API_KEY` if you want Google sign-in and email delivery. Check [`src/lib/auth.js`](src/lib/auth.js) and [`src/lib/resend.js`](src/lib/resend.js) for their behavior.
+`NEXTAUTH_SECRET` is needed for signed sessions. `APP_URL` (or `NEXTAUTH_URL`) is used to create email links. Google OAuth and Gmail SMTP are optional integrations; configure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GMAIL_USER`, and `GMAIL_APP_PASSWORD` if you want Google sign-in and email delivery. Use a Google App Password for `strathtank@gmail.com`, not the mailbox's normal password.
 
-Administrators can invite another administrator from **Admin Console → Administrator Access** using the email address on that person's Google account. The recipient must open the one-time email link and set a password before elevated access activates; after activation they can sign in with that password or Google using the same email. Invitations expire after 24 hours and can be revoked or resent from the panel. The administrator panel requires working Resend email credentials and a valid public `APP_URL` or `NEXTAUTH_URL` in the deployed environment. The final active administrator cannot remove their own access or remove the last other administrator.
+Administrators can invite another administrator from **Admin Console → Administrator Access** using the email address on that person's Google account. The recipient must open the one-time email link and set a password before elevated access activates; after activation they can sign in with that password or Google using the same email. Invitations expire after 24 hours and can be revoked or resent from the panel. Invitation and verification emails use Gmail SMTP; set `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and a valid public `APP_URL` or `NEXTAUTH_URL` in the deployed environment. The final active administrator cannot remove their own access or remove the last other administrator.
+
+The Admin Console **Audit Log** records member and administrator sign-ins and key actions across profiles, connection and mentorship requests, messages, events, opportunities, feedback, Flight Reconnect, and account governance. Each entry names the actor and, when relevant, the affected account. Audit records use the existing `AdminAction` table and need no schema migration.
 
 ### 3. Create tables and load the demonstration data
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/audit-log";
 
 // POST /api/feedback
 // Submits a rating (1-5) and qualitative comment for a mentorship or connection session.
@@ -30,6 +31,14 @@ export async function POST(request) {
         rating: Number(rating),
         comment: comment || null,
       },
+    });
+
+    await logActivity({
+      actorId: session.user.id,
+      targetId: session.user.id,
+      actionType: "FEEDBACK_SUBMITTED",
+      summary: "Submitted a connection or mentorship rating",
+      details: { rating: Number(rating), mentorshipRequestId: mentorshipRequestId || null, commentIncluded: Boolean(comment) },
     });
 
     return NextResponse.json({ feedback, message: "Feedback submitted successfully" }, { status: 201 });
