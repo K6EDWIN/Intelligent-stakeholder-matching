@@ -4408,3 +4408,211 @@ html[data-view-mode="modern"] .messages-composer textarea { color: var(--modern-
 @media (max-width: 1024px) {
   html[data-view-mode="modern"] .sidebar { background: var(--modern-rail) !important; }
 }
+
+/* Consistent Stitch system across the member workspace and operations console. */
+html[data-view-mode="modern"] {
+  --modern-canvas: #f6f8fd;
+  --modern-surface: #ffffff;
+  --modern-soft: #edf3ff;
+  --modern-ink: #0b1c30;
+  --modern-muted: #5c6f87;
+  --modern-border: #dce5f1;
+  --modern-rail: #071626;
+  --modern-accent: #c8102e;
+  --modern-shadow: 0 2px 8px rgba(7, 22, 38, .035), 0 12px 30px rgba(7, 22, 38, .035);
+  color-scheme: light;
+}
+
+html[data-view-mode="modern"] body,
+html[data-view-mode="modern"] .shell,
+html[data-view-mode="modern"] .shell-main,
+html[data-view-mode="modern"] .shell-main > main,
+html[data-view-mode="modern"] .admin-console,
+html[data-view-mode="modern"] .admin-console main {
+  color: var(--modern-ink) !important;
+  background: var(--modern-canvas) !important;
+}
+
+html[data-view-mode="modern"] .sidebar {
+  width: 264px;
+  padding: 20px 14px 14px;
+  background: var(--modern-rail) !important;
+  border-right: 1px solid #1e3a5f !important;
+  box-shadow: 8px 0 28px rgba(7, 22, 38, .07);
+}
+html[data-view-mode="modern"] .shell-main { margin-left: 264px; }
+html[data-view-mode="modern"] .sidebar .logo {
+  margin: 0 4px 17px;
+  padding: 6px 4px 18px;
+  border-bottom: 1px solid #1e3a5f;
+}
+html[data-view-mode="modern"] .sidebar .logo::after { display: none; }
+html[data-view-mode="modern"] .sidebar .logo-mark { background: var(--modern-accent) !important; box-shadow: none; }
+html[data-view-mode="modern"] .sidebar-nav-heading { padding: 15px 10px 6px; color: #91a6bd !important; font-size: 10px; letter-spacing: .12em; }
+html[data-view-mode="modern"] .sidebar-nav-item {
+  min-height: 42px;
+  height: auto;
+  margin: 2px 0;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: #d3deeb !important;
+  font-size: 13px;
+}
+html[data-view-mode="modern"] .sidebar-nav-item.active {
+  color: #fff !important;
+  background: var(--modern-accent) !important;
+  border-color: var(--modern-accent);
+  border-left: 3px solid #e11d3f;
+  box-shadow: none;
+}
+html[data-view-mode="modern"] .sidebar-nav-item.active svg { color: #ff8b9b !important; }
+html[data-view-mode="modern"] .sidebar-nav-item:hover:not(.active) { background: #102b45 !important; transform: none; }
+html[data-view-mode="modern"] .sidebar-profile { border-color: #1e3a5f !important; }
+
+html[data-view-mode="modern"] .app-header {
+  min-height: 68px;
+  height: auto;
+  padding: 10px clamp(18px, 2.5vw, 36px);
+  color: var(--modern-ink) !important;
+  background: rgba(255,255,255,.96) !important;
+  border-bottom: 1px solid var(--modern-border) !important;
+  box-shadow: 0 2px 10px rgba(7,22,38,.035);
+  backdrop-filter: blur(16px);
+}
+html[data-view-mode="modern"] .app-header .view-mode-toggle {
+  background: #edf3ff !important;
+  border: 1px solid var(--modern-border) !important;
+  border-radius: 999px;
+}
+html[data-view-mode="modern"] .app-header .view-mode-option.selected {
+  color: #fff !important;
+  background: var(--modern-accent) !important;
+  box-shadow: 0 2px 6px rgba(200,16,46,.2) !important;
+}
+html[data-view-mode="modern"] .app-header .icon-btn { color: #42566f !important; }
+
+html[data-view-mode="modern"] .app-page {
+  width: 100%;
+  max-width: 1540px;
+  padding: 30px clamp(20px, 3vw, 44px) 64px;
+  color: var(--modern-ink) !important;
+  background: transparent !important;
+  font-family: var(--font-sans);
+}
+html[data-view-mode="modern"] .app-page h1,
+html[data-view-mode="modern"] .app-page h2,
+html[data-view-mode="modern"] .app-page h3,
+html[data-view-mode="modern"] .app-page h4 {
+  color: var(--modern-ink) !important;
+  font-family: var(--font-heading);
+  letter-spacing: -.035em;
+}
+html[data-view-mode="modern"] .app-page p,
+html[data-view-mode="modern"] .app-page label,
+html[data-view-mode="modern"] .app-page .text-slate-500,
+html[data-view-mode="modern"] .app-page .text-slate-600 { color: var(--modern-muted) !important; }
+html[data-view-mode="modern"] .app-page .card,
+html[data-view-mode="modern"] .app-page .bg-white {
+  color: var(--modern-ink) !important;
+  background-color: var(--modern-surface) !important;
+  border-color: var(--modern-border) !important;
+  box-shadow: var(--modern-shadow);
+}
+html[data-view-mode="modern"] .app-page .card { border-radius: 14px; }
+html[data-view-mode="modern"] .app-page .bg-slate-50,
+html[data-view-mode="modern"] .app-page .bg-slate-100,
+html[data-view-mode="modern"] .app-page .bg-slate-200 { background-color: var(--modern-soft) !important; }
+html[data-view-mode="modern"] .app-page .border-slate-100,
+html[data-view-mode="modern"] .app-page .border-slate-200,
+html[data-view-mode="modern"] .app-page .border-slate-300 { border-color: var(--modern-border) !important; }
+html[data-view-mode="modern"] .app-page .text-slate-900,
+html[data-view-mode="modern"] .app-page .text-slate-800,
+html[data-view-mode="modern"] .app-page .text-slate-700 { color: var(--modern-ink) !important; }
+html[data-view-mode="modern"] .app-page input,
+html[data-view-mode="modern"] .app-page select,
+html[data-view-mode="modern"] .app-page textarea {
+  color: var(--modern-ink) !important;
+  background-color: #fff !important;
+  border-color: #cbd7e6 !important;
+  border-radius: 8px;
+  color-scheme: light;
+}
+html[data-view-mode="modern"] .app-page input:focus,
+html[data-view-mode="modern"] .app-page select:focus,
+html[data-view-mode="modern"] .app-page textarea:focus {
+  border-color: var(--modern-accent) !important;
+  box-shadow: 0 0 0 3px rgba(200,16,46,.11) !important;
+  outline: 0;
+}
+html[data-view-mode="modern"] .app-page .btn-primary,
+html[data-view-mode="modern"] .app-page button.bg-\[\#c8102e\],
+html[data-view-mode="modern"] .app-page a.bg-\[\#c8102e\] {
+  color: #fff !important;
+  background: var(--modern-accent) !important;
+  border-color: var(--modern-accent) !important;
+  box-shadow: none;
+}
+html[data-view-mode="modern"] .app-page .page-title {
+  padding: 22px 24px;
+  margin-bottom: 24px;
+  background: #fff;
+  border: 1px solid var(--modern-border);
+  border-radius: 14px;
+  box-shadow: var(--modern-shadow);
+}
+html[data-view-mode="modern"] .app-page .eyebrow { color: var(--modern-accent); }
+
+/* Convert the older full-bleed dark member banners into the supplied light command-card style. */
+html[data-view-mode="modern"] .app-page > section[class*="bg-[#101b2b]"],
+html[data-view-mode="modern"] .app-page > section[class*="bg-[#0e2740]"] {
+  color: var(--modern-ink) !important;
+  background: linear-gradient(115deg, #fff 0%, #f4f7ff 100%) !important;
+  border: 1px solid var(--modern-border);
+  border-radius: 14px !important;
+  box-shadow: var(--modern-shadow);
+}
+html[data-view-mode="modern"] .app-page > section[class*="bg-[#101b2b]"] h1,
+html[data-view-mode="modern"] .app-page > section[class*="bg-[#0e2740]"] h1,
+html[data-view-mode="modern"] .app-page > section[class*="bg-[#101b2b]"] p[class*="text-slate-300"],
+html[data-view-mode="modern"] .app-page > section[class*="bg-[#0e2740]"] p[class*="text-slate-300"],
+html[data-view-mode="modern"] .app-page > section[class*="bg-[#101b2b]"] [class*="text-rose-300"],
+html[data-view-mode="modern"] .app-page > section[class*="bg-[#0e2740]"] [class*="text-rose-300"],
+html[data-view-mode="modern"] .app-page > section[class*="bg-[#101b2b]"] :not(button).text-white,
+html[data-view-mode="modern"] .app-page > section[class*="bg-[#0e2740]"] :not(button).text-white { color: var(--modern-ink) !important; }
+html[data-view-mode="modern"] .app-page > section[class*="bg-[#101b2b]"] .bg-white\/10,
+html[data-view-mode="modern"] .app-page > section[class*="bg-[#0e2740]"] .bg-white\/10 { color: var(--modern-ink) !important; background: var(--modern-soft) !important; border-color: var(--modern-border) !important; }
+
+html[data-view-mode="modern"] .messages-panel { border-radius: 14px !important; }
+html[data-view-mode="modern"] .messages-thread,
+html[data-view-mode="modern"] .messages-thread-history { background: #f4f7fc !important; }
+html[data-view-mode="modern"] .messages-bubble-mine { background: #0e2740 !important; border-color: #0e2740 !important; }
+
+html[data-view-mode="modern"] .admin-console > header { background: #fff !important; border-color: var(--modern-border) !important; }
+html[data-view-mode="modern"] .admin-console .admin-tabs { background: var(--modern-rail) !important; }
+html[data-view-mode="modern"] .admin-console main .bg-slate-50,
+html[data-view-mode="modern"] .admin-console main .bg-slate-100 { background: var(--modern-soft) !important; }
+html[data-view-mode="modern"] .admin-console main .border-slate-100,
+html[data-view-mode="modern"] .admin-console main .border-slate-200,
+html[data-view-mode="modern"] .admin-console main .border-slate-300 { border-color: var(--modern-border) !important; }
+html[data-view-mode="modern"] .admin-console main .text-slate-900,
+html[data-view-mode="modern"] .admin-console main .text-slate-800,
+html[data-view-mode="modern"] .admin-console main .text-slate-700,
+html[data-view-mode="modern"] .admin-console main .text-slate-600 { color: var(--modern-ink) !important; }
+html[data-view-mode="modern"] .admin-console main .text-slate-500,
+html[data-view-mode="modern"] .admin-console main .text-slate-400 { color: var(--modern-muted) !important; }
+
+/* Classic retains its original compact, neutral presentation and clear red selection. */
+html[data-view-mode="classic"] .app-header { background: #fff; }
+html[data-view-mode="classic"] .sidebar-nav-item.active { background: rgba(200,16,46,.12); }
+html[data-view-mode="classic"] .app-page .card { box-shadow: 0 1px 2px rgba(15,23,42,.04); }
+
+@media (max-width: 1024px) {
+  html[data-view-mode="modern"] .shell-main { margin-left: 0; }
+  html[data-view-mode="modern"] .sidebar { width: 264px; }
+  html[data-view-mode="modern"] .app-page { padding: 24px 20px 52px; }
+}
+@media (max-width: 640px) {
+  html[data-view-mode="modern"] .app-page { padding: 18px 14px 40px; }
+  html[data-view-mode="modern"] .app-page .page-title { padding: 18px; }
+  html[data-view-mode="modern"] .app-header { padding-inline: 14px; }
+}
