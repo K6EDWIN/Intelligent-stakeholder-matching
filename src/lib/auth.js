@@ -82,16 +82,17 @@ export const authOptions = {
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         if (!user.email) return false;
+        const googleEmail = user.email.trim().toLowerCase();
 
         let existingUser = await prisma.user.findUnique({
-          where: { email: user.email },
+          where: { email: googleEmail },
         });
 
         if (!existingUser) {
           // Auto-provision verified user from Google OAuth
           existingUser = await prisma.user.create({
             data: {
-              email: user.email,
+              email: googleEmail,
               passwordHash: "",
               role: "STAFF",
               isVerified: true,
@@ -106,6 +107,12 @@ export const authOptions = {
               },
             },
           });
+        }
+
+        // Administrator accounts created through an invitation are staged as
+        // unverified. Do not let Google OAuth skip the invitation/password step.
+        if (existingUser.role === "ADMIN" && !existingUser.isVerified) {
+          return false;
         }
 
         if (existingUser.isSuspended) {
