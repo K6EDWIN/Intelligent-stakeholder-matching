@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/audit-log";
 
 // GET /api/events
 // Lists all events, soonest first, with participant count and whether the
@@ -66,6 +67,14 @@ export async function POST(request) {
       location: location || null,
       eventDate: parsedDate,
     },
+  });
+
+  await logActivity({
+    actorId: session.user.id,
+    targetId: session.user.id,
+    actionType: "EVENT_CREATED",
+    summary: `Created the event “${title}”`,
+    details: { eventId: event.id, title, eventDate: parsedDate.toISOString(), location: location || null },
   });
 
   return NextResponse.json({ event }, { status: 201 });

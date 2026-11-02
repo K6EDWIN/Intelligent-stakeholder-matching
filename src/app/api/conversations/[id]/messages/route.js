@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { hasAcceptedRelationship } from "@/lib/conversations";
 import { createNotification } from "@/lib/notifications";
+import { logActivity } from "@/lib/audit-log";
 
 async function getConversationForMember(id, userId) {
   const conversation = await prisma.conversation.findUnique({
@@ -74,6 +75,13 @@ export async function POST(request, { params }) {
     title: "New message",
     message: `${message.sender.profile?.fullName || "A connection"} sent you a message.`,
     href: `/messages?conversationId=${encodeURIComponent(id)}`,
+  });
+  await logActivity({
+    actorId: session.user.id,
+    targetId: access.partnerId,
+    actionType: "CHAT_MESSAGE_SENT",
+    summary: "Sent a private message to a connection",
+    details: { conversationId: id, messageLength: text.length },
   });
   return NextResponse.json({ message }, { status: 201 });
 }

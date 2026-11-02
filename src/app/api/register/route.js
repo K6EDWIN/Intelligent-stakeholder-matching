@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
-import { resend } from "@/lib/resend";
+import { sendAppEmail } from "@/lib/gmail";
+import { logActivity } from "@/lib/audit-log";
 
 const ALLOWED_REGISTRATION_ROLES = [
   "ALUMNI",
@@ -137,6 +138,14 @@ export async function POST(request) {
       include: { profile: true },
     });
 
+    await logActivity({
+      actorId: user.id,
+      actionType: "USER_REGISTERED",
+      targetId: user.id,
+      summary: "Created a stakeholder account",
+      details: { email: normalizedEmail, role, name: normalizedName },
+    });
+
     // Generate a verification token valid for 24 hours
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -149,12 +158,12 @@ export async function POST(request) {
       },
     });
 
-    const verifyUrl = `${process.env.APP_URL || ""}/api/auth/verify?token=${token}`;
+    const baseUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
+    const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
     // Security Fix: Do NOT leak sensitive verification tokens/URLs to production or server logs
 
     try {
-      await resend.emails.send({
-        from: "onboarding@resend.dev",
+      await sendAppEmail({
         to: email,
         subject: "Verify your email - Intelligent Stakeholder Matching",
         html: `

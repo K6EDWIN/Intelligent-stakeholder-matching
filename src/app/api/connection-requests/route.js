@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { extractPairFeatures } from "@/lib/adaptive-recommender";
 import { buildConnectionsByUser, computeCollaborativeScore } from "@/lib/collaborative";
 import { createNotification } from "@/lib/notifications";
+import { logActivity } from "@/lib/audit-log";
 
 const COUNTERPART_SELECT = {
   id: true,
@@ -131,6 +132,14 @@ export async function POST(request) {
       title: "New connection request",
       message: `${senderProfile?.fullName || "A stakeholder"} would like to connect with you.`,
       href: "/requests",
+  });
+
+  await logActivity({
+    actorId: session.user.id,
+    targetId: receiverId,
+    actionType: "CONNECTION_REQUEST_SENT",
+    summary: `Sent a connection request to ${receiver.profile?.fullName || "another member"}`,
+    details: { requestId: connectionRequest.id, requestStatus: connectionRequest.status },
   });
 
   return NextResponse.json({ connectionRequest }, { status: 201 });

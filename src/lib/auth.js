@@ -2,6 +2,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { logActivity } from "./audit-log";
 
 export const authOptions = {
   session: {
@@ -70,6 +71,14 @@ export const authOptions = {
           );
         }
 
+        await logActivity({
+          actorId: user.id,
+          targetId: user.id,
+          actionType: "USER_SIGNED_IN",
+          summary: `${user.role === "ADMIN" ? "Administrator" : "Member"} signed in with email and password`,
+          details: { method: "credentials", role: user.role },
+        });
+
         return {
           id: user.id,
           email: user.email,
@@ -121,6 +130,13 @@ export const authOptions = {
 
         user.id = existingUser.id;
         user.role = existingUser.role;
+        await logActivity({
+          actorId: existingUser.id,
+          targetId: existingUser.id,
+          actionType: "USER_SIGNED_IN",
+          summary: `${existingUser.role === "ADMIN" ? "Administrator" : "Member"} signed in with Google`,
+          details: { method: "google", role: existingUser.role },
+        });
         return true;
       }
       return true;
@@ -165,6 +181,18 @@ export const authOptions = {
         session.user.isSuspended = token.isSuspended || false;
       }
       return session;
+    },
+  },
+  events: {
+    async signOut({ token }) {
+      if (!token?.id) return;
+      await logActivity({
+        actorId: token.id,
+        targetId: token.id,
+        actionType: "USER_SIGNED_OUT",
+        summary: "Signed out of PrideConnect",
+        details: {},
+      });
     },
   },
   pages: {

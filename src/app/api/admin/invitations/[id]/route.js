@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/audit-log";
 
 export async function DELETE(_request, { params }) {
   const session = await getServerSession(authOptions);
@@ -27,6 +28,13 @@ export async function DELETE(_request, { params }) {
     if (inviteTokenIds.length) await tx.verificationToken.deleteMany({ where: { id: { in: inviteTokenIds } } });
     await tx.adminAction.deleteMany({ where: { id: { in: pending.map((item) => item.id) } } });
     if (user.role === "ADMIN" && !user.isVerified) await tx.user.delete({ where: { id } });
+  });
+  await logActivity({
+    actorId: session.user.id,
+    targetId: user.id,
+    actionType: "ADMIN_INVITATION_REVOKED",
+    summary: `Revoked the pending administrator invitation for ${user.email}`,
+    details: { email: user.email },
   });
   return NextResponse.json({ revoked: true });
 }
