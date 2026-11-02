@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Plus+Jakarta+Sans:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-tertiary":"#ffffff","background":"#f8f9ff","tertiary-fixed-dim":"#ffb95f","tertiary":"#6d4400","surface-container-low":"#eff4ff","error":"#ba1a1a","on-secondary-fixed-variant":"#3a485a","tertiary-fixed":"#ffddb8","on-background":"#0b1c30","surface-container-lowest":"#ffffff","surface-dim":"#cbdbf5","surface-tint":"#bf0229","tertiary-container":"#8e5900","on-error-container":"#93000a","on-primary":"#ffffff","primary-fixed":"#ffdad8","primary-fixed-dim":"#ffb3b1","on-secondary-fixed":"#0e1c2d","surface-container-highest":"#d3e4fe","secondary-fixed":"#d5e4fa","outline-variant":"#e5bdbb","inverse-primary":"#ffb3b1","primary-container":"#c8102e","inverse-surface":"#213145","secondary":"#515f72","on-tertiary-container":"#ffddb8","secondary-container":"#d2e1f7","on-secondary":"#ffffff","error-container":"#ffdad6","on-surface":"#0b1c30","on-primary-container":"#ffdad8","on-tertiary-fixed":"#2a1700","inverse-on-surface":"#eaf1ff","primary":"#9e001f","surface":"#f8f9ff","on-surface-variant":"#5c403f","surface-variant":"#d3e4fe","secondary-fixed-dim":"#b9c8de","on-error":"#ffffff","surface-container-high":"#dce9ff","on-primary-fixed-variant":"#92001c","on-primary-fixed":"#410007","on-secondary-container":"#566477","surface-bright":"#f8f9ff","surface-container":"#e5eeff","on-tertiary-fixed-variant":"#653e00","outline":"#906f6e"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-md":"1rem","space-sm":"0.5rem","space-lg":"1.5rem","margin-lg":"3rem",gutter:"1rem","gutter-md":"1.5rem","margin-md":"2rem","space-xs":"0.25rem","gutter-lg":"2rem","space-xl":"2.5rem",margin:"1rem"},fontFamily:{"body-md":["Inter"],"headline-md":["Plus Jakarta Sans"],"label-md":["Inter"],"headline-sm":["Plus Jakarta Sans"],"headline-xl":["Plus Jakarta Sans"],"body-lg":["Inter"],"headline-lg-mobile":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"metric-mono":["Inter"],"headline-xl-mobile":["Plus Jakarta Sans"],"label-sm":["Inter"],"body-sm":["Inter"]},fontSize:{"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}],"headline-md":["20px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"600"}],"label-md":["13px",{lineHeight:"18px",fontWeight:"500"}],"headline-sm":["16px",{lineHeight:"24px",fontWeight:"600"}],"headline-xl":["36px",{lineHeight:"44px",letterSpacing:"-0.02em",fontWeight:"700"}],"body-lg":["16px",{lineHeight:"24px",fontWeight:"400"}],"headline-lg-mobile":["22px",{lineHeight:"30px",letterSpacing:"-0.01em",fontWeight:"600"}],"headline-lg":["28px",{lineHeight:"36px",letterSpacing:"-0.015em",fontWeight:"600"}],"metric-mono":["14px",{lineHeight:"20px",letterSpacing:"-0.01em",fontWeight:"600"}],"headline-xl-mobile":["28px",{lineHeight:"36px",letterSpacing:"-0.015em",fontWeight:"700"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.04em",fontWeight:"600"}],"body-sm":["12px",{lineHeight:"18px",fontWeight:"400"}]}}}}</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-[#071626] z-50 flex flex-col justify-between select-none shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col h-full overflow-y-auto"><div class="p-space-lg flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center text-on-primary shadow-sm"><span class="material-symbols-outlined text-lg">flight_takeoff</span></div><div><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm text-surface-container-lowest font-bold tracking-tight">KQ PrideConnect</span></div><p class="font-label-sm text-label-sm text-secondary-fixed-dim uppercase tracking-wider">Kenya Airways Ecosystem</p></div></div><span class="px-space-xs py-0.5 rounded-full bg-[#13283f] text-secondary-fixed text-label-sm font-metric-mono">v2.4</span></div><div class="px-space-md py-space-xs"><div class="h-px w-full bg-[#1e3a5f]/40"></div></div><div class="flex-1 px-space-md py-space-sm space-y-space-lg"><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-bold shadow-sm rounded-lg"><div class="px-space-sm pb-space-xs flex items-center justify-between"><span class="font-label-sm text-label-sm text-secondary-fixed-dim tracking-wider uppercase">Matching &amp; Discovery</span><span class="material-symbols-outlined text-sm text-secondary-fixed-dim">radar</span></div><a class="group flex items-center justify-between px-space-sm py-2 rounded-lg text-secondary-fixed hover:bg-[#0e2740] hover:text-surface-container-lowest transition-all" data-path="smart-matches" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">auto_awesome</span><span class="font-label-md text-label-md">Smart Matches</span></div><span class="px-space-xs py-0.5 rounded-full bg-primary/20 text-inverse-primary border border-primary/30 font-label-sm text-label-sm">AI</span></a><a class="group flex items-center justify-between px-space-sm py-2 rounded-lg text-secondary-fixed hover:bg-[#0e2740] hover:text-surface-container-lowest transition-all" data-path="stakeholder-directory" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">badge</span><span class="font-label-md text-label-md">Stakeholder Directory</span></div></a><a class="group flex items-center justify-between px-space-sm py-2 rounded-lg text-secondary-fixed hover:bg-[#0e2740] hover:text-surface-container-lowest transition-all" data-path="mentorship-requests" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">supervisor_account</span><span class="font-label-md text-label-md">Mentorship &amp; Requests</span></div><span class="w-5 h-5 rounded-full bg-primary-container text-on-primary font-metric-mono text-label-sm flex items-center justify-center font-bold">4</span></a><a class="group flex items-center justify-between px-space-sm py-2 rounded-lg text-secondary-fixed hover:bg-[#0e2740] hover:text-surface-container-lowest transition-all" data-path="messages" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">chat</span><span class="font-label-md text-label-md">Messages</span></div></a><a class="group flex items-center justify-between px-space-sm py-2 rounded-lg text-secondary-fixed hover:bg-[#0e2740] hover:text-surface-container-lowest transition-all" data-path="notifications" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">notifications</span><span class="font-label-md text-label-md">Notifications</span></div><span class="w-2 h-2 rounded-full bg-primary-container"></span></a></nav><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-bold shadow-sm rounded-lg"><div class="px-space-sm pb-space-xs flex items-center justify-between"><span class="font-label-sm text-label-sm text-secondary-fixed-dim tracking-wider uppercase">Ecosystem &amp; Hubs</span><span class="material-symbols-outlined text-sm text-secondary-fixed-dim">public</span></div><a class="group flex items-center justify-between px-space-sm py-2 rounded-lg text-secondary-fixed hover:bg-[#0e2740] hover:text-surface-container-lowest transition-all" data-path="flight-reconnect" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">connecting_airports</span><span class="font-label-md text-label-md">Flight Reconnect</span></div><span class="px-space-xs py-0.5 rounded-full bg-[#13283f] text-secondary-fixed-dim font-metric-mono text-label-sm">35k Ft</span></a><a class="group flex items-center justify-between px-space-sm py-2 rounded-lg text-secondary-fixed hover:bg-[#0e2740] hover:text-surface-container-lowest transition-all" data-path="aviation-opportunities" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">work</span><span class="font-label-md text-label-md">Aviation Opportunities</span></div></a><a class="group flex items-center justify-between px-space-sm py-2 rounded-lg text-secondary-fixed hover:bg-[#0e2740] hover:text-surface-container-lowest transition-all" data-path="pride-centre-events" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">event</span><span class="font-label-md text-label-md">Pride Centre Events</span></div></a></nav><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-bold shadow-sm rounded-lg"><div class="px-space-sm pb-space-xs flex items-center justify-between"><span class="font-label-sm text-label-sm text-secondary-fixed-dim tracking-wider uppercase">Governance &amp; Ops</span><span class="material-symbols-outlined text-sm text-secondary-fixed-dim">shield</span></div><a class="group flex items-center justify-between px-space-sm py-2 rounded-lg text-secondary-fixed hover:bg-[#0e2740] hover:text-surface-container-lowest transition-all" data-path="ops-command-model-evaluation" href="#"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-lg">terminal</span><span class="font-label-md text-label-md">Ops Command</span></div><span class="px-space-xs py-0.5 rounded-full bg-[#143026] text-[#34d399] font-label-sm text-label-sm flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>Secured</span></a></nav></div><div class="p-space-md"><div class="p-space-sm rounded-xl bg-[#0c1f33] flex items-center justify-between hover:bg-[#112942] transition-colors cursor-pointer"><div class="flex items-center gap-space-sm overflow-hidden"><div class="relative flex-shrink-0"><div class="w-9 h-9 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-label-md ring-2 ring-[#1e3a5f]">AW</div><span class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#10b981] ring-2 ring-[#0c1f33]"></span></div><div class="min-w-0 flex-1"><p class="font-label-md text-label-md text-surface-container-lowest truncate font-semibold">Amina Waweru</p><p class="font-body-sm text-body-sm text-secondary-fixed-dim truncate">Flight &amp; Ground · IT</p></div></div><span class="material-symbols-outlined text-secondary-fixed-dim text-lg">unfold_more</span></div></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-gutter-lg"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-xs"><img alt="Kenya Airways PrideConnect Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1XAABh5DRO2prJdmXS1_2-WjXBj6xg3ttbO-UQfQmZ88qgPs4DdQ4DF2TcVREe4H_jkyJu2bca9E9_56zps6d9MjCncUFpE8qJuioCuEgymcIBR2ObxtvC9718JEfs-t6MK3KIXVbmTDp1hmPsjPJy2LuTkXXL_cFZfNwswMiCjw62BA_WEDO6Q9VXQGxapRY_oAc6W_et_0Kif0Z62l2Xm37tP26TBNtQC8Nn7FeGn"/><span class="font-headline-sm text-headline-sm text-on-surface font-bold ml-1 hidden sm:inline-block">PrideConnect</span></div><div class="h-4 w-px bg-surface-container-highest"></div><div class="flex items-center gap-space-xs"><span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#10b981]"></span></span><span class="font-label-sm text-label-sm text-secondary font-medium hidden md:inline">Pride Centre Network Live</span></div></div><div class="flex-1 max-w-md mx-space-lg"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-3 text-secondary text-lg pointer-events-none">search</span><input class="w-full pl-9 pr-space-md py-1.5 rounded-lg bg-surface-container-low text-on-surface placeholder:text-secondary font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" placeholder="Search alumni, crew, routes..." type="text"/></div></div><div class="flex items-center gap-space-md"><div class="hidden xl:flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container-low"><span class="material-symbols-outlined text-primary text-sm">flight</span><span class="font-metric-mono text-label-sm text-secondary font-semibold">ENGINE OK · 42ms</span></div><div class="hidden sm:flex items-center p-0.5 rounded-lg bg-surface-container-low text-secondary"><button class="px-space-sm py-0.5 text-label-sm font-label-md rounded bg-surface-container-lowest text-on-surface shadow-xs" type="button">Modern</button><button class="px-space-sm py-0.5 text-label-sm font-label-md hover:text-on-surface transition-colors" type="button">Classic</button></div><button class="relative p-1.5 rounded-lg text-secondary hover:text-on-surface hover:bg-surface-container-low transition-colors" type="button"><span class="material-symbols-outlined text-xl">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary-container"></span></button><div class="flex items-center gap-space-xs pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-surface-container-highest" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDddWpRt0_cv9YJwQmKIoQLAr7CqphfGPCbuKn5YR4bxRg4-SmChmIkrKPa_jPmgGd-b8R3nOqbG5V0JUcQJwxD_YgrryCS6t-RvQxGJ6BXbH-6aDHgZZizozgyl7R3HC7ZO_OXGVWeEAGy_D9U7ZZSmrnZXcDGJfSgPcr1cF-H-Z0uaFPtovO8aNSzfS0KwFPaL_mtsSQlkDNRasa6EYL9ZPrfL_ARMSc9-Z7AMHs"/></div></div></header><main class="relative pt-16 bg-background min-h-screen w-full px-gutter-lg py-gutter-md"><div class="flex flex-col w-full">
+<div class="relative w-full rounded-2xl overflow-hidden shadow-sm bg-inverse-surface mb-gutter-md">
+<div class="h-48 sm:h-56 w-full relative overflow-hidden bg-gradient-to-r from-[#071626] via-[#10273f] to-[#1e3a5f]">
+<svg class="absolute right-0 bottom-0 h-full w-auto text-primary-container/20 pointer-events-none" fill="currentColor" viewbox="0 0 600 300">
+<path d="M450 300 L550 50 L600 50 L600 300 Z" opacity="0.4"></path>
+<path d="M380 300 L490 80 L520 80 L440 300 Z" opacity="0.3"></path>
+<path d="M120 280 C260 210, 420 180, 600 240 L600 300 L120 300 Z" fill="currentColor" opacity="0.25"></path>
+<circle cx="510" cy="110" fill="#c8102e" opacity="0.8" r="14"></circle>
+</svg>
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface via-inverse-surface/40 to-transparent"></div>
+<div class="absolute top-space-md left-space-lg flex items-center gap-space-sm text-secondary-fixed text-label-sm font-metric-mono">
+<span class="flex h-2 w-2 rounded-full bg-[#10b981]"></span>
+<span>KQ PRIDECONNECT · EMB-SYS-04</span>
+<span class="text-secondary-fixed-dim">|</span>
+<span class="text-secondary-fixed-dim">EMBAKASI HQ</span>
+</div>
+<div class="absolute top-space-md right-space-lg hidden sm:flex items-center gap-space-sm">
+<span class="px-space-sm py-1 rounded-full bg-surface-container-lowest/10 backdrop-blur-md text-surface-bright font-label-sm uppercase tracking-wider">
+          Cohort 2021 Alumni
+        </span>
+</div>
+</div>
+<div class="px-gutter-lg pb-space-lg pt-0 relative bg-surface-container-lowest">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md -mt-16 sm:-mt-20 mb-space-md">
+<div class="flex flex-col sm:flex-row items-start sm:items-end gap-space-lg">
+<div class="relative">
+<div class="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-gradient-to-br from-primary-container to-primary text-on-primary font-headline-xl flex items-center justify-center font-bold shadow-md shadow-primary/20 select-none ring-4 ring-surface-container-lowest">
+              AW
+            </div>
+<span class="absolute -bottom-1 -right-1 p-1 bg-surface-container-lowest rounded-full shadow-sm">
+<span class="flex items-center justify-center w-6 h-6 rounded-full bg-[#ecfdf5] text-[#047857]" title="Verified Member">
+<span class="material-symbols-outlined text-sm font-bold">verified</span>
+</span>
+</span>
+</div>
+<div class="flex flex-col pt-2 sm:pt-0">
+<div class="flex flex-wrap items-center gap-space-sm">
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">Amina Waweru</h1>
+<span class="px-2.5 py-0.5 rounded-full bg-[#ecfdf5] text-[#047857] text-label-sm font-semibold flex items-center gap-1 shadow-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>
+                Verified Member
+              </span>
+<span class="px-2.5 py-0.5 rounded-full bg-[#f0f9ff] text-[#0369a1] text-label-sm font-semibold shadow-xs">
+                Active Ground Staff · IT
+              </span>
+</div>
+<p class="font-body-md text-body-md text-secondary mt-0.5">
+              Systems Engineer - Information Technology · Pride Centre HQ Embakasi
+            </p>
+<div class="flex flex-wrap items-center gap-space-md mt-2 text-label-sm text-secondary font-metric-mono">
+<span class="flex items-center gap-1 text-on-surface font-semibold">
+<span class="material-symbols-outlined text-sm text-primary">badge</span>
+                ID: #KQ-8492
+              </span>
+<span>•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-secondary">mail</span>
+                amina.waweru@kenya-airways.com
+              </span>
+<span>•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-secondary">location_on</span>
+                Nairobi (NBO)
+              </span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm self-start md:self-end mt-2 md:mt-0">
+<button class="px-space-md py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md transition-colors flex items-center gap-1.5 shadow-xs" type="button">
+<span class="material-symbols-outlined text-base">share</span>
+<span>Share Profile</span>
+</button>
+<button class="px-space-md py-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md transition-colors flex items-center gap-1.5 shadow-xs" type="button">
+<span class="material-symbols-outlined text-base">visibility</span>
+<span>View Public</span>
+</button>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm pt-space-md mt-space-sm bg-surface-container-low/50 rounded-xl p-space-sm">
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-xs">
+<p class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Cohort Class</p>
+<p class="font-headline-sm text-headline-sm text-on-surface font-bold mt-0.5">2021 Alpha</p>
+<span class="font-body-sm text-body-sm text-secondary">Pride Centre Tech</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-xs">
+<p class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Mentee Pairings</p>
+<p class="font-headline-sm text-headline-sm text-on-surface font-bold mt-0.5">7 Engineers</p>
+<span class="font-body-sm text-body-sm text-[#047857] font-medium">98% Satisfied</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-xs">
+<p class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Flight Telemetry</p>
+<p class="font-headline-sm text-headline-sm text-on-surface font-bold mt-0.5">34 Routes</p>
+<span class="font-body-sm text-body-sm text-secondary">787-8 &amp; 737-800</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-lowest shadow-xs">
+<p class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Security Tier</p>
+<p class="font-headline-sm text-headline-sm text-primary font-bold mt-0.5">Level 3 EFB</p>
+<span class="font-body-sm text-body-sm text-secondary">Airside Accredited</span>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs overflow-x-auto pb-space-sm mb-space-lg select-none">
+<button class="tab-btn px-space-md py-2 rounded-lg bg-primary-container text-on-primary font-label-md shadow-sm whitespace-nowrap flex items-center gap-1.5" data-tab="profile" type="button">
+<span class="material-symbols-outlined text-base">person</span>
+<span>Profile Information</span>
+</button>
+<button class="tab-btn px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container-low text-secondary hover:text-on-surface font-label-md transition-colors whitespace-nowrap flex items-center gap-1.5 shadow-xs" data-tab="mentorship" type="button">
+<span class="material-symbols-outlined text-base">groups</span>
+<span>Mentorship Preferences</span>
+</button>
+<button class="tab-btn px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container-low text-secondary hover:text-on-surface font-label-md transition-colors whitespace-nowrap flex items-center gap-1.5 shadow-xs" data-tab="skills" type="button">
+<span class="material-symbols-outlined text-base">psychology</span>
+<span>Skills &amp; Competencies</span>
+</button>
+<button class="tab-btn px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container-low text-secondary hover:text-on-surface font-label-md transition-colors whitespace-nowrap flex items-center gap-1.5 shadow-xs" data-tab="flight-privacy" type="button">
+<span class="material-symbols-outlined text-base">shield_with_heart</span>
+<span>Flight Reconnect Privacy</span>
+</button>
+<button class="tab-btn px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container-low text-secondary hover:text-on-surface font-label-md transition-colors whitespace-nowrap flex items-center gap-1.5 shadow-xs" data-tab="security" type="button">
+<span class="material-symbols-outlined text-base">lock</span>
+<span>Security &amp; KYC</span>
+</button>
+</div>
+<form class="flex flex-col gap-space-lg" id="profileForm" onsubmit="event.preventDefault();">
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+<div class="xl:col-span-8 flex flex-col gap-space-lg">
+<section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-md bg-gradient-to-r from-surface-container-lowest via-surface-container-low/40 to-surface-container-lowest">
+<div class="flex items-center gap-space-sm">
+<span class="p-2 rounded-lg bg-surface-container-low text-primary">
+<span class="material-symbols-outlined text-lg">badge</span>
+</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">1. Personal &amp; Departmental Information</h2>
+<p class="font-body-sm text-body-sm text-secondary">Core organizational identity registered with Kenya Airways People Department</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container-low px-2 py-0.5 rounded font-metric-mono">SEC-A</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="fullName">Full Name</label>
+<div class="relative">
+<input class="w-full px-space-md py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-xs transition-all" id="fullName" type="text" value="Amina Waweru"/>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="employeeId">Employee ID Number</label>
+<div class="relative">
+<input class="w-full px-space-md py-2.5 rounded-lg bg-surface-container text-secondary font-metric-mono text-body-md cursor-not-allowed shadow-xs select-none" id="employeeId" readonly="" type="text" value="#KQ-8492"/>
+<span class="material-symbols-outlined text-secondary absolute right-3 top-2.5 text-lg">lock</span>
+</div>
+</div>
+<div class="md:col-span-2">
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="aviationDept">Aviation Department / Unit</label>
+<div class="relative">
+<input class="w-full px-space-md py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-xs transition-all" id="aviationDept" type="text" value="Information Technology - Flight Ops Systems"/>
+</div>
+</div>
+<div class="md:col-span-2">
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="email">Official Corporate Email</label>
+<div class="relative">
+<input class="w-full px-space-md py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-xs transition-all" id="email" type="email" value="amina.waweru@kenya-airways.com"/>
+<span class="absolute right-3 top-2.5 flex items-center gap-1 text-[#047857] text-label-sm font-semibold">
+<span class="material-symbols-outlined text-sm">verified</span>
+                  Domain SSO
+                </span>
+</div>
+</div>
+<div class="md:col-span-2">
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="bio">Bio / Professional Overview</label>
+<textarea class="w-full px-space-md py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-xs transition-all leading-relaxed" id="bio" rows="3">Current staff member leading digital flight operations telemetry and predictive maintenance interfaces. Pride Centre class of 2021.</textarea>
+<div class="flex items-center justify-between mt-1 text-label-sm text-secondary">
+<span>Supports Markdown formatting</span>
+<span class="font-metric-mono">118 / 300 words</span>
+</div>
+</div>
+</div>
+</section>
+<section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-md bg-gradient-to-r from-surface-container-lowest via-surface-container-low/40 to-surface-container-lowest">
+<div class="flex items-center gap-space-sm">
+<span class="p-2 rounded-lg bg-surface-container-low text-tertiary">
+<span class="material-symbols-outlined text-lg">flight_takeoff</span>
+</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">2. Mentorship Participation &amp; Career Trajectory</h2>
+<p class="font-body-sm text-body-sm text-secondary">Guidance framework within the Pride Centre ecosystem</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container-low px-2 py-0.5 rounded font-metric-mono">SEC-B</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Mentorship Role</label>
+<div class="relative">
+<select class="w-full px-space-md py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-xs transition-all appearance-none cursor-pointer">
+<option selected="">Active Mentor &amp; Mentee</option>
+<option>Mentor Only</option>
+<option>Mentee Only</option>
+<option>Temporarily Inactive</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-2.5 text-secondary pointer-events-none">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Mentorship Availability Slot</label>
+<div class="relative">
+<input class="w-full px-space-md py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-xs transition-all" type="text" value="Thursdays 14:00 EAT &amp; Weekends"/>
+<span class="material-symbols-outlined absolute right-3 top-2.5 text-secondary">schedule</span>
+</div>
+</div>
+<div class="md:col-span-2">
+<label class="block font-label-md text-label-md text-on-surface mb-1">Aviation Career Milestone &amp; Objective</label>
+<div class="relative">
+<input class="w-full px-space-md py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/20 shadow-xs transition-all" type="text" value="Transitioning into Chief Flight Telemetry Architect"/>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mt-1">Visible to Pride Centre mentors and HR talent discovery algorithms.</p>
+</div>
+</div>
+</section>
+<section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-md bg-gradient-to-r from-surface-container-lowest via-surface-container-low/40 to-surface-container-lowest">
+<div class="flex items-center gap-space-sm">
+<span class="p-2 rounded-lg bg-surface-container-low text-primary-container">
+<span class="material-symbols-outlined text-lg">psychology</span>
+</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">3. Skills &amp; Competencies</h2>
+<p class="font-body-sm text-body-sm text-secondary">Click pills to activate or toggle technical proficiencies</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container-low px-2 py-0.5 rounded font-metric-mono">SEC-C</span>
+</div>
+<div class="space-y-space-md">
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Technical &amp; Operational Skills</span>
+<span class="font-label-sm text-label-sm text-secondary">7 selected</span>
+</div>
+<div class="flex flex-wrap gap-2" id="technicalPills">
+<button class="skill-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-primary-container text-on-primary transition-all flex items-center gap-1 shadow-xs" data-active="true" type="button">
+<span>Aviation Safety</span>
+<span class="material-symbols-outlined text-xs">check</span>
+</button>
+<button class="skill-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-primary-container text-on-primary transition-all flex items-center gap-1 shadow-xs" data-active="true" type="button">
+<span>Flight Operations</span>
+<span class="material-symbols-outlined text-xs">check</span>
+</button>
+<button class="skill-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-primary-container text-on-primary transition-all flex items-center gap-1 shadow-xs" data-active="true" type="button">
+<span>Data Analysis</span>
+<span class="material-symbols-outlined text-xs">check</span>
+</button>
+<button class="skill-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-primary-container text-on-primary transition-all flex items-center gap-1 shadow-xs" data-active="true" type="button">
+<span>Python</span>
+<span class="material-symbols-outlined text-xs">check</span>
+</button>
+<button class="skill-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-primary-container text-on-primary transition-all flex items-center gap-1 shadow-xs" data-active="true" type="button">
+<span>UX/UI Design</span>
+<span class="material-symbols-outlined text-xs">check</span>
+</button>
+<button class="skill-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-primary-container text-on-primary transition-all flex items-center gap-1 shadow-xs" data-active="true" type="button">
+<span>EFB Integration</span>
+<span class="material-symbols-outlined text-xs">check</span>
+</button>
+<button class="skill-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-primary-container text-on-primary transition-all flex items-center gap-1 shadow-xs" data-active="true" type="button">
+<span>Cloud Infrastructure</span>
+<span class="material-symbols-outlined text-xs">check</span>
+</button>
+<button class="skill-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-low text-secondary hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-1 shadow-xs" data-active="false" type="button">
+<span>Avionics CAN Bus</span>
+<span class="material-symbols-outlined text-xs">add</span>
+</button>
+<button class="skill-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-low text-secondary hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-1 shadow-xs" data-active="false" type="button">
+<span>SITA Mesh Systems</span>
+<span class="material-symbols-outlined text-xs">add</span>
+</button>
+</div>
+</div>
+<div>
+<div class="flex items-center justify-between mb-2">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Aviation Interests</span>
+<span class="font-label-sm text-label-sm text-secondary">4 selected</span>
+</div>
+<div class="flex flex-wrap gap-2" id="interestPills">
+<button class="interest-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-highest text-on-surface font-medium transition-all flex items-center gap-1 shadow-xs" data-active="true" type="button">
+<span>Fleet Analytics</span>
+<span class="material-symbols-outlined text-xs text-primary">done</span>
+</button>
+<button class="interest-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-highest text-on-surface font-medium transition-all flex items-center gap-1 shadow-xs" data-active="true" type="button">
+<span>Sustainability</span>
+<span class="material-symbols-outlined text-xs text-primary">done</span>
+</button>
+<button class="interest-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-highest text-on-surface font-medium transition-all flex items-center gap-1 shadow-xs" data-active="true" type="button">
+<span>Mentorship</span>
+<span class="material-symbols-outlined text-xs text-primary">done</span>
+</button>
+<button class="interest-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-highest text-on-surface font-medium transition-all flex items-center gap-1 shadow-xs" data-active="true" type="button">
+<span>High-Altitude Weather</span>
+<span class="material-symbols-outlined text-xs text-primary">done</span>
+</button>
+<button class="interest-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-low text-secondary hover:text-on-surface transition-all flex items-center gap-1 shadow-xs" data-active="false" type="button">
+<span>SAF Biofuels</span>
+<span class="material-symbols-outlined text-xs">add</span>
+</button>
+<button class="interest-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-low text-secondary hover:text-on-surface transition-all flex items-center gap-1 shadow-xs" data-active="false" type="button">
+<span>SkyTeam Alliances</span>
+<span class="material-symbols-outlined text-xs">add</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<section class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-md bg-gradient-to-r from-surface-container-lowest via-surface-container-low/40 to-surface-container-lowest">
+<div class="flex items-center gap-space-sm">
+<span class="p-2 rounded-lg bg-surface-container-low text-secondary">
+<span class="material-symbols-outlined text-lg">privacy_tip</span>
+</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">4. Discoverability &amp; Privacy</h2>
+<p class="font-body-sm text-body-sm text-secondary">Fine-grained operational visibility controls across PrideConnect</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container-low px-2 py-0.5 rounded font-metric-mono">SEC-D</span>
+</div>
+<div class="space-y-space-md">
+<div class="flex items-center justify-between p-space-md rounded-xl bg-surface-container-low/70">
+<div class="flex items-start gap-space-sm pr-space-md">
+<div class="p-1.5 rounded-md bg-surface-container-lowest text-primary mt-0.5">
+<span class="material-symbols-outlined text-lg">groups</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">Stakeholder Directory Discoverability</p>
+<p class="font-body-sm text-body-sm text-secondary">Allow peer alumni, flight ops crews, and HQ departments to view your professional record.</p>
+</div>
+</div>
+<button aria-checked="true" class="toggle-btn w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors bg-primary-container" role="switch" type="button">
+<div class="toggle-thumb bg-surface-container-lowest w-4 h-4 rounded-full shadow-md transform translate-x-6 transition-transform"></div>
+</button>
+</div>
+<div class="flex items-center justify-between p-space-md rounded-xl bg-surface-container-low/70">
+<div class="flex items-start gap-space-sm pr-space-md">
+<div class="p-1.5 rounded-md bg-surface-container-lowest text-tertiary mt-0.5">
+<span class="material-symbols-outlined text-lg">connecting_airports</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">Flight Reconnect Anonymous Matching</p>
+<p class="font-body-sm text-body-sm text-secondary">Pair passenger seat listings with registered KQ staff routes without revealing seat numbers.</p>
+</div>
+</div>
+<button aria-checked="true" class="toggle-btn w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors bg-primary-container" role="switch" type="button">
+<div class="toggle-thumb bg-surface-container-lowest w-4 h-4 rounded-full shadow-md transform translate-x-6 transition-transform"></div>
+</button>
+</div>
+<div class="flex items-center justify-between p-space-md rounded-xl bg-surface-container-low/70">
+<div class="flex items-start gap-space-sm pr-space-md">
+<div class="p-1.5 rounded-md bg-surface-container-lowest text-[#047857] mt-0.5">
+<span class="material-symbols-outlined text-lg">handshake</span>
+</div>
+<div>
+<p class="font-label-md text-label-md text-on-surface font-semibold">Bilateral Consent for Direct Contact</p>
+<p class="font-body-sm text-body-sm text-secondary">Require mutual agreement before disclosing personal phone number or private Slack channel ID.</p>
+</div>
+</div>
+<button aria-checked="true" class="toggle-btn w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors bg-primary-container" role="switch" type="button">
+<div class="toggle-thumb bg-surface-container-lowest w-4 h-4 rounded-full shadow-md transform translate-x-6 transition-transform"></div>
+</button>
+</div>
+</div>
+</section>
+</div>
+<div class="xl:col-span-4 flex flex-col gap-space-lg">
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-md">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Profile Strength</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-[#ecfdf5] text-[#047857] font-bold">92% Level 4</span>
+</div>
+<div class="flex items-center gap-space-md mb-space-md">
+<div class="relative w-20 h-20 flex-shrink-0 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+<path class="text-surface-container-high" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5"></path>
+<path class="text-primary-container" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="92, 100" stroke-linecap="round" stroke-width="3.5"></path>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">92%</span>
+</div>
+</div>
+<div class="space-y-1">
+<p class="font-label-md text-label-md text-on-surface font-medium">Almost Flight-Ready</p>
+<p class="font-body-sm text-body-sm text-secondary">Add your GitHub/Dev portfolio link to unlock the Pride Engineer Gold Badge.</p>
+</div>
+</div>
+<div class="space-y-space-xs text-body-sm text-secondary">
+<div class="flex items-center gap-2 text-on-surface font-medium">
+<span class="material-symbols-outlined text-sm text-[#047857]">check_circle</span>
+<span>Identity Verified via Pride HRIS</span>
+</div>
+<div class="flex items-center gap-2 text-on-surface font-medium">
+<span class="material-symbols-outlined text-sm text-[#047857]">check_circle</span>
+<span>EFB Data Protocols Acknowledged</span>
+</div>
+<div class="flex items-center gap-2 text-secondary">
+<span class="material-symbols-outlined text-sm text-secondary">radio_button_unchecked</span>
+<span>Upload Portfolio / Flight Logs (+8%)</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Connected Routes</h3>
+<span class="material-symbols-outlined text-secondary text-base">flight</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary mb-space-md">Primary flight corridors monitored under Amina's telemetry cluster</p>
+<div class="space-y-space-sm">
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="font-metric-mono font-bold text-on-surface">NBO</span>
+<span class="material-symbols-outlined text-xs text-secondary">arrow_forward</span>
+<span class="font-metric-mono font-bold text-on-surface">LHR</span>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-on-secondary-container">KQ 100 / 101</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="font-metric-mono font-bold text-on-surface">NBO</span>
+<span class="material-symbols-outlined text-xs text-secondary">arrow_forward</span>
+<span class="font-metric-mono font-bold text-on-surface">JNB</span>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-on-secondary-container">KQ 762 / 763</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="font-metric-mono font-bold text-on-surface">NBO</span>
+<span class="material-symbols-outlined text-xs text-secondary">arrow_forward</span>
+<span class="font-metric-mono font-bold text-on-surface">DXB</span>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-on-secondary-container">KQ 310 / 311</span>
+</div>
+</div>
+</div>
+<div class="rounded-xl overflow-hidden shadow-sm relative bg-inverse-surface text-surface-bright p-space-md">
+<div class="flex items-center gap-space-xs text-secondary-fixed-dim font-label-sm mb-1">
+<span class="material-symbols-outlined text-sm text-[#ffb95f]">verified_user</span>
+<span>AIRSIDE CYBERSECURITY NOTICE</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary-fixed leading-relaxed mb-space-sm">
+            All telemetry configurations comply with KCAA Regulations and SkyTeam operational standards. Any telemetry modifications require two-person verification.
+          </p>
+<div class="flex items-center justify-between text-label-sm text-secondary-fixed-dim font-metric-mono pt-space-xs">
+<span>AUDIT: KCAA-2024-SYS</span>
+<span class="text-[#34d399]">ACTIVE ENCLAVE</span>
+</div>
+</div>
+</div>
+</div>
+<div class="sticky bottom-0 z-30 -mx-gutter-lg px-gutter-lg py-space-md bg-surface-container-lowest/95 backdrop-blur-md shadow-md mt-space-md">
+<div class="flex flex-col sm:flex-row items-center justify-between gap-space-md max-w-full">
+<div class="flex items-center gap-space-sm text-secondary text-body-sm">
+<span class="material-symbols-outlined text-base text-primary">info</span>
+<span>Changes will sync immediately to Pride Centre alumni and Flight Ops registers.</span>
+</div>
+<div class="flex items-center gap-space-sm w-full sm:w-auto">
+<button class="flex-1 sm:flex-initial px-space-lg py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md transition-colors shadow-xs" id="discardBtn" type="button">
+            Discard Changes
+          </button>
+<button class="flex-1 sm:flex-initial px-space-xl py-2.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-md font-semibold transition-all shadow-sm flex items-center justify-center gap-2" id="saveBtn" type="submit">
+<span class="material-symbols-outlined text-base">cloud_done</span>
+<span>Save Changes</span>
+</button>
+</div>
+</div>
+</div>
+</form>
+<div class="fixed bottom-20 right-8 z-50 transform translate-y-10 opacity-0 pointer-events-none transition-all duration-300 ease-out" id="saveToast">
+<div class="px-space-lg py-3 rounded-xl bg-[#071626] text-surface-container-lowest shadow-xl flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[#10b981]">check_circle</span>
+<span class="font-label-md text-label-md">Member settings successfully updated for Amina Waweru!</span>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabButtons.forEach(b => {
+          b.className = 'tab-btn px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container-low text-secondary hover:text-on-surface font-label-md transition-colors whitespace-nowrap flex items-center gap-1.5 shadow-xs';
+        });
+        btn.className = 'tab-btn px-space-md py-2 rounded-lg bg-primary-container text-on-primary font-label-md shadow-sm whitespace-nowrap flex items-center gap-1.5';
+      });
+    });
+
+    const togglePill = (btn, isPrimary) => {
+      const active = btn.getAttribute('data-active') === 'true';
+      if (active) {
+        btn.setAttribute('data-active', 'false');
+        btn.className = isPrimary 
+          ? 'skill-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-low text-secondary hover:text-on-surface hover:bg-surface-container transition-all flex items-center gap-1 shadow-xs'
+          : 'interest-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-low text-secondary hover:text-on-surface transition-all flex items-center gap-1 shadow-xs';
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) {
+          icon.textContent = 'add';
+          icon.className = 'material-symbols-outlined text-xs';
+        }
+      } else {
+        btn.setAttribute('data-active', 'true');
+        btn.className = isPrimary 
+          ? 'skill-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-primary-container text-on-primary transition-all flex items-center gap-1 shadow-xs'
+          : 'interest-pill px-3 py-1.5 rounded-full font-label-md text-label-md bg-surface-container-highest text-on-surface font-medium transition-all flex items-center gap-1 shadow-xs';
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (icon) {
+          icon.textContent = isPrimary ? 'check' : 'done';
+          icon.className = isPrimary ? 'material-symbols-outlined text-xs' : 'material-symbols-outlined text-xs text-primary';
+        }
+      }
+    };
+
+    document.querySelectorAll('#technicalPills .skill-pill').forEach(btn => {
+      btn.addEventListener('click', () => togglePill(btn, true));
+    });
+
+    document.querySelectorAll('#interestPills .interest-pill').forEach(btn => {
+      btn.addEventListener('click', () => togglePill(btn, false));
+    });
+
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const isChecked = btn.getAttribute('aria-checked') === 'true';
+        const thumb = btn.querySelector('.toggle-thumb');
+        if (isChecked) {
+          btn.setAttribute('aria-checked', 'false');
+          btn.classList.remove('bg-primary-container');
+          btn.classList.add('bg-surface-container-high');
+          thumb.classList.remove('translate-x-6');
+          thumb.classList.add('translate-x-0');
+        } else {
+          btn.setAttribute('aria-checked', 'true');
+          btn.classList.add('bg-primary-container');
+          btn.classList.remove('bg-surface-container-high');
+          thumb.classList.add('translate-x-6');
+          thumb.classList.remove('translate-x-0');
+        }
+      });
+    });
+
+    const form = document.getElementById('profileForm');
+    const toast = document.getElementById('saveToast');
+    const discardBtn = document.getElementById('discardBtn');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      toast.classList.remove('translate-y-10', 'opacity-0', 'pointer-events-none');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-10', 'opacity-0', 'pointer-events-none');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3500);
+    });
+
+    discardBtn.addEventListener('click', () => {
+      document.getElementById('fullName').value = 'Amina Waweru';
+      document.getElementById('aviationDept').value = 'Information Technology - Flight Ops Systems';
+      document.getElementById('email').value = 'amina.waweru@kenya-airways.com';
+      document.getElementById('bio').value = 'Current staff member leading digital flight operations telemetry and predictive maintenance interfaces. Pride Centre class of 2021.';
+    });
+  })();
+</script></main></div></body></html>
