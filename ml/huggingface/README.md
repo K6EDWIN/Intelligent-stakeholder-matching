@@ -9,7 +9,7 @@ app_port: 7860
 
 # PrideConnect Adaptive Recommender API
 
-This API hosts the model service used by the PrideConnect web application. The app sends numeric compatibility features and accepted/declined labels for newly captured requests. The service fits regularized logistic regression and returns candidate acceptance estimates. Names, profile text, messages, email addresses, and user IDs are not sent to this service. It can run as a Docker Space on Hugging Face or as a Python web service on Render.
+This API hosts the model service used by the PrideConnect web application. The app sends numeric compatibility features for new requests and member ratings. The service fits separate regularized logistic-regression models for request acceptance and recommendation relevance. Names, profile text, messages, email addresses, and user IDs are not sent to this service. It can run as a Docker Space on Hugging Face or as a Python web service on Render.
 
 The API is protected by a bearer token. For Hugging Face, make the Space public so the web server can reach it, then add a Space secret named `ML_SERVICE_TOKEN`. For Render, add the same name in its environment settings. Add the same random secret to the web application's server environment as `ML_SERVICE_TOKEN`, and set `ML_SERVICE_URL` to the hosted service URL. Never place the token in browser code or commit it to Git.
 
@@ -17,9 +17,9 @@ The API is protected by a bearer token. For Hugging Face, make the Space public 
 
 - `GET /health` checks that the service is running.
 - `GET /docs` shows the interactive API documentation.
-- `POST /predict` accepts numeric training examples and candidate feature arrays. It returns estimated acceptance scores, learned feature weights, training counts, and the gradual ML influence level.
+- `POST /predict` accepts numeric request-outcome examples, optional match-rating examples, and candidate feature arrays. It returns acceptance and relevance estimates, learned feature weights, training counts, and influence confidence for both models.
 
-The web application remains the source of truth for request outcomes. The model is fit from those examples on each inference request, so Space restarts do not erase learning history. Until the app has at least 12 labeled examples and at least four examples of both outcomes, the service reports predictions as unavailable and the website uses its cold-start score. This prototype has not been validated on held-out real-world data.
+The web application remains the source of truth for request outcomes and match ratings. Both models are fit from those examples on each inference request, so Space restarts do not erase learning history. The acceptance model needs at least 12 labeled requests and four examples of both outcomes. The relevance model needs at least eight ratings and three examples of both classes (useful and not useful). Until those thresholds are met, the website relies on the transparent profile/network score. These prototype models are not validated evidence of real-world quality.
 
 ## Local run
 

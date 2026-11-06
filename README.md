@@ -10,11 +10,19 @@ This repository contains the web application, a live adaptive machine-learning r
 
 | Part | What it does | Is it used by the live website? |
 |---|---|---|
-| Live adaptive recommender | Learns from real request accept/decline outcomes and adjusts match rankings over time. It uses profile/network signals while evidence is limited. | Yes. |
+| Live adaptive recommender | Learns from resolved request outcomes, optional NCF member embeddings, and explicit usefulness feedback. It uses profile/network signals while evidence is limited. | Yes, when each model passes its evidence checks. |
 | Neural Collaborative Filtering (NCF) experiment | Trains a small neural network on fabricated request examples. It did not beat a simple baseline. | No. It remains a separate research notebook. |
 | Admin evaluation | Compares live ranking formulas against a rule-based definition of a “relevant” profile. | Admin-only diagnostic; it is not an independent user study or held-out validation. |
 
-In simple terms, the live recommender learns how request outcomes relate to profile compatibility, mentorship fit, and past network patterns. A small cold-start formula supports it until enough real outcomes exist. The NCF notebook is a separate experiment; its result was not strong enough to use in the live product. Read [How matching works](#how-matching-works), [Machine-learning experiment](#machine-learning-experiment), and [Evaluation and limitations](#evaluation-and-limitations) for the details.
+In simple terms, the live recommender learns how request outcomes relate to profile compatibility, mentorship fit, and past network patterns. A small cold-start formula supports it until enough real outcomes exist. You can also train versioned acceptance and match-feedback models in Google Colab, keep their numeric weights in Google Drive, and publish those weights to the app; the app then performs predictions without depending on a running Colab session. The NCF notebook is a separate experiment; its result was not strong enough to use in the live product. Read [How matching works](#how-matching-works), [Colab model training](#train-and-publish-models-with-google-colab), [Machine-learning experiment](#machine-learning-experiment), and [Evaluation and limitations](#evaluation-and-limitations) for the details.
+
+## Train and publish models with Google Colab
+
+`ml/colab_live_recommender.ipynb` is the offline trainer for the live app. It downloads numeric compatibility features, binary labels, timestamps, and HMAC-keyed member pseudonyms from `/api/ml/training-data`; it does not download account IDs, names, email addresses, profile text, or message contents. It trains the acceptance and recommendation-feedback logistic models, plus the same embedding based Neural Collaborative Filtering (NCF) architecture used in `ml/train_recommender.ipynb`. Each model has a time ordered evaluation; NCF is published only when it has enough known members and its holdout AUC is above the configured quality threshold. The notebook saves weights and metrics (not raw examples) to Google Drive and publishes the weights to `/api/ml/artifacts`.
+
+The website runs inference with the published weights stored in its database. For NCF, members not present in that trained artifact continue to receive the profile based score; NCF's ranking contribution is capped at 20% and is zero for an unseen member. Colab can disconnect after publishing; it is not acting as a continuously running API. Before using this on Vercel Preview, apply `prisma/migrations/20261103090000_add_ml_model_artifacts/migration.sql` to the Preview test database (for example through the provider's SQL editor), add strong random `ML_COLAB_SYNC_TOKEN` and `ML_COLAB_USER_SALT` values in Vercel Preview settings, and redeploy. Keep the pseudonym salt stable between model refreshes. In Colab, add Secrets named `PRIDECONNECT_APP_URL` (the Preview URL) and `ML_COLAB_SYNC_TOKEN` (the same sync secret; the salt stays on the app server), open `ml/colab_live_recommender.ipynb`, and run the cells. Never point this experiment at the production database while evaluating it.
+
+Acceptance training requires at least 12 resolved requests with at least four acceptances and four declines. Relevance training requires at least eight explicit ratings with at least three positive and three negative examples. NCF requires at least 80 resolved requests, 12 distinct members, at least 20 eligible later holdout examples from both classes, at least 40% known-member coverage, and holdout AUC of at least 0.52. Below those thresholds NCF is not activated and the profile based recommender remains available. Small sample counts and synthetic demo data are for workflow demonstrations, not proof of recommendation quality.
 
 ## What members can do
 
@@ -30,7 +38,7 @@ Features are subject to role, verification, privacy, and authentication rules in
 
 ## How matching works
 
-The live application builds a ranked list for the signed-in member. When a mentorship or connection request is sent, the application stores a small snapshot of compatibility features. Once the recipient accepts or declines, that outcome becomes a labeled example for the live model. When recommendations are requested, the application retrains a compact logistic-regression model from those resolved examples and uses its acceptance estimate to influence rankings. Pending requests are not training labels.
+The live application builds a ranked list for the signed-in member. When a mentorship or connection request is sent, the application stores a small snapshot of compatibility features. Once the recipient accepts or declines, that outcome becomes a labeled example for the live model. Members can also mark a suggested match useful or not useful; those ratings train a separate relevance model. The final list combines profile and network signals, both learned models when they have enough examples, and a diversity pass that reduces repetitive departments and roles. Pending requests are not training labels.
 
 ### 1. Profile similarity (content-based filtering)
 
@@ -42,13 +50,13 @@ Jaccard(A, B) = number of shared items / number of distinct items in either set
 
 For example, if one person lists `{Python, data analysis}` and another lists `{Python, engineering}`, they share one skill and have three distinct skills between them. Their skill similarity is `1 / 3`.
 
-The content score gives skills 60% of the score and interests 40%:
+The exact-match content score gives skills 60% of the score and interests 40%:
 
 ```text
 content score = 0.60 × skill similarity + 0.40 × interest similarity
 ```
 
-This score is between 0 and 1. A higher score means the profiles overlap more on those fields. Skills and interests are the only profile fields used by this live score today; department, bio, career goals, and mentorship role are not included in this formula.
+This score is between 0 and 1. The final profile score also includes a 22% domain-aware text-vector signal from profile skills, interests, department, and professional background/goals. A small aviation vocabulary map links common equivalent phrases (for example, “flight ops” and “flight operations”). Sparse text vectors are computed locally; they are not a pretrained language model, and no profile text is sent to the separate Python service. This helps with known domain wording but does not understand every synonym or sentence meaning.
 
 ### 2. Shared connection patterns (collaborative filtering)
 
@@ -60,7 +68,7 @@ Pending and declined requests are not included in this live collaborative score.
 
 ### 3. Learn from request outcomes
 
-For each request, the model records six numeric signals from the time the request was sent: skill overlap, interest overlap, same department, mentorship-role fit, shared-network score, and request type. It learns weights for these signals from accepted and declined requests using regularized logistic regression. The output is an estimated probability of acceptance for a similar request.
+For each request, the model records seven numeric signals from the time the request was sent: skill overlap, interest overlap, same department, mentorship-role fit, shared-network score, request type, and domain-aware profile text alignment. It learns weights for these signals from accepted and declined requests using regularized logistic regression. The output is an estimated probability of acceptance for a similar request.
 
 The fallback score gives content overlap 90% and the accepted-network signal 10% initially. It shifts toward 50% / 50% as accepted requests grow to 50. The ML model begins influencing ranks after at least 12 feature-snapshotted outcomes, including at least four accepted and four declined requests. Its influence then increases gradually, reaching full influence at 50 labeled examples. Until then, the fallback remains part of the ranking. These are conservative engineering schedules, not proof of accuracy.
 
@@ -69,7 +77,15 @@ final ranking score = (1 − learning confidence) × cold-start score
                     + learning confidence × predicted acceptance probability
 ```
 
-Eligible candidates are public, verified, non-suspended profiles other than the current member. The endpoint stores current score components and returns up to 12 candidates ordered by the final score. The interface shows the predicted acceptance estimate and the current number of training examples. The model is retrained from stored examples when recommendations are requested; no separate ML server or Python runtime is required.
+Eligible candidates are public, verified, non-suspended profiles other than the current member. A second logistic-regression model learns from explicit match ratings (ratings 4–5 mean useful; 1–2 mean not useful; 3 is neutral). It needs at least eight ratings, including three in each class, before it can influence the rank. Up to 12 candidates are then re-ranked with small penalties for over-representing the same department or role. The endpoint stores current score components, feature snapshot, and displayed rank. Both models are refit from stored examples when recommendations are requested; the hosted Python API remains optional.
+
+### 4. Feedback, ranking variety, and evaluation
+
+The match cards let a member rate a recommendation. The rating is saved with the numeric feature snapshot from the time the recommendation was displayed, so later feedback cannot silently change the training inputs. Each member's feedback informs that member's own relevance ranker; administrator diagnostics summarize feedback across accounts. A member can change their rating later.
+
+The final list uses a greedy diversity re-ranker after scoring. It keeps strong scores while gently reducing repeated departments and roles near the top. The adjustment and profile text alignment are visible in the admin simulation. Diversity is a ranking preference, not an employment or eligibility decision.
+
+The admin page also evaluates both learned models on chronological holdouts: the newest 20% of resolved request outcomes or match ratings are scored by a model fit only on older examples. It reports holdout ROC-AUC and Brier score when both periods contain both classes. These internal checks are distinct from the profile-overlap proxy benchmark and are not proof of real-world quality.
 
 ### A worked example
 
@@ -112,7 +128,7 @@ The web app sends only numeric feature examples and candidate features to that s
 
 ## Evaluation and limitations
 
-The admin evaluation endpoint calculates Precision@5, Recall@5, NDCG@10, and Mean Reciprocal Rank (MRR) for content-only, collaborative-only, and fallback hybrid rankings. It also displays the live adaptive model's labeled example count and ranking influence. In plain language:
+The admin evaluation endpoint calculates Precision@5, Recall@5, NDCG@10, and Mean Reciprocal Rank (MRR) for content-only, collaborative-only, and fallback hybrid rankings. It also displays model example counts, member relevance ratings, and a time-separated holdout check for request acceptance. In plain language:
 
 - **Precision@5:** of the first five profiles shown, what fraction meet the evaluation's relevance rule?
 - **Recall@5:** of all profiles that meet that rule, what fraction appear in the first five?
@@ -121,7 +137,7 @@ The admin evaluation endpoint calculates Precision@5, Recall@5, NDCG@10, and Mea
 
 For this prototype, a profile is marked “relevant” if it shares at least two skills with the member **or** has an accepted connection with them. Metrics are averaged across evaluated members who have at least one profile meeting that rule. This is a designed proxy label, not a real person's judgment. It also reuses skills, which are inputs to content scoring. Therefore these dashboard metrics are useful for checking how ranking methods behave against the rule, but they are not independent proof that recommendations are useful, fair, or accurate in practice. There is no user acceptance study included in the repository.
 
-The live adaptive model does not yet have an independent held-out evaluation report. Its training count and influence describe operation, not accuracy. The NCF notebook is evaluated separately on a held-out split of labeled synthetic request rows. Its classification metrics and the admin endpoint's proxy ranking metrics answer different questions; do not compare them as if they measured the same task.
+The live model's time-based holdout is an internal diagnostic on available request data. The NCF notebook is evaluated separately on a held-out split of labeled synthetic request rows. The admin endpoint's proxy ranking metrics, live model time holdout, and NCF classification metrics answer different questions; do not compare them as if they measured the same task.
 
 Key limitations to keep in mind:
 
@@ -129,7 +145,7 @@ Key limitations to keep in mind:
 2. **Sparse collaboration signal:** the NCF input contains 372 accepted/declined examples, and every sender-recipient pair occurs only once. That leaves the model with little repeated pair history from which to learn preferences.
 3. **Prototype relevance labels:** the admin benchmark defines relevance from shared skills and existing accepted links rather than independent human judgments.
 4. **Cold-start settings:** the live model's minimum sample counts and gradual transition are hand-set prototype values, not optimized or validated on a large real dataset.
-5. **Unvalidated live model:** the adaptive model learns from new outcomes, but the repository does not yet report a time-based test showing that it improves recommendation quality.
+5. **Limited evaluation evidence:** a chronological holdout is now reported when enough examples exist, but it is small, internal, and does not replace an independent user study or consented production validation.
 6. **Separate NCF experiment:** the Colab neural model and exported embeddings remain research artifacts. `/api/recommendations` uses the live logistic-regression model described above.
 
 To evaluate real recommendation quality, the project needs consented real usage data, a time-aware or otherwise leakage-resistant evaluation split, relevance judgments from members, baseline comparisons, and a user study. Until then, present the current metrics as prototype diagnostics.
@@ -214,7 +230,7 @@ npm run db:push
 npm run seed
 ```
 
-`db:push` applies the Prisma schema to the configured database. `seed` creates the fabricated stakeholder accounts, profiles, skills, interests, requests, and feedback, and saves synthetic numeric feature snapshots on the requests. This gives a fresh demo database resolved examples for the adaptive recommender. The dataset is fabricated and its model scores are for demonstrating the workflow, not evidence of real-world accuracy. Seed demo accounts use the shared password `Test1234!`; use them only in a separate demo database and never reuse that password for a real service. Do not point these commands at the production database.
+`db:push` applies the Prisma schema to the configured database. The updated recommender adds saved recommendation feature snapshots and profile text scores, so run `npm run db:push` against the Preview/demo database before deploying this change there. Apply schema changes to Production only when you intentionally deploy the same feature to Production. `seed` creates fabricated stakeholder accounts, profiles, skills, interests, requests, and feedback with synthetic request feature snapshots. This is demo data, not evidence of real-world accuracy. Seed demo accounts use the shared password `Test1234!`; use them only in a separate demo database and never reuse that password for a real service.
 
 For a hosted demo, create a **new, empty PostgreSQL database/project** (do not clone production data). In PowerShell, apply the schema and load the fabricated dataset into that database:
 
@@ -248,7 +264,7 @@ npm run start      # Serve a previously built app
 
 ## Data model and privacy
 
-The database separates accounts from stakeholder profiles. Profiles link to skills and interests through join tables. Mentorship and connection requests store six numeric compatibility features captured at send time; once resolved, those features and the accept/decline outcome provide examples for the adaptive recommender. Members should be told clearly that request outcomes help improve recommendations. Opportunities, events, event participation, and flight reconnect records support the other modules. The complete schema is [`prisma/schema.prisma`](prisma/schema.prisma).
+The database separates accounts from stakeholder profiles. Profiles link to skills and interests through join tables. Mentorship and connection requests store seven numeric compatibility features captured at send time; once resolved, those features and the accept/decline outcome provide examples for the adaptive recommender. Recommendation feedback stores its own numeric feature snapshot for the member relevance model. Members should be told clearly that outcomes and match ratings help improve recommendations. Opportunities, events, event participation, and flight reconnect records support the other modules. The complete schema is [`prisma/schema.prisma`](prisma/schema.prisma).
 
 Registration and sign-in are authenticated flows. Public profile visibility, verification, and suspension affect eligibility. Flight Reconnect requires consent from both people before a match is exposed. This is a research prototype, so it should not be used to store real passenger itineraries or other sensitive operational data without an appropriate privacy and security review.
 

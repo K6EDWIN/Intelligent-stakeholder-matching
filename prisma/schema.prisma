@@ -31,6 +31,12 @@ enum MentorshipRole {
   BOTH
 }
 
+enum MLModelType {
+  ACCEPTANCE
+  RELEVANCE
+  NCF
+}
+
 // ---------- CORE USER & PROFILE ----------
 
 model User {
@@ -171,6 +177,8 @@ model Recommendation {
   contentScore       Float
   collaborativeScore Float
   hybridScore        Float
+  semanticScore      Float    @default(0)
+  modelFeatures      Json?
 
   rank               Int?
   createdAt          DateTime @default(now())
@@ -192,12 +200,31 @@ model Feedback {
 
   rating           Int
   comment          String?
+  modelFeatures    Json?
   createdAt        DateTime @default(now())
 
   user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   recommendation   Recommendation?  @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
   mentorshipRequest MentorshipRequest? @relation(fields: [mentorshipRequestId], references: [id], onDelete: Cascade)
   connectionRequest ConnectionRequest? @relation(fields: [connectionRequestId], references: [id], onDelete: Cascade)
+}
+
+model MLModelArtifact {
+  id             String      @id @default(cuid())
+  type           MLModelType
+  version        String
+  featureNames   Json
+  weights        Json
+  bias           Float
+  sampleCount    Int
+  positiveCount  Int
+  negativeCount  Int
+  confidence     Float       @default(0)
+  metrics        Json?
+  active         Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+
+  @@index([type, active, createdAt])
 }
 
 // ---------- OPPORTUNITIES & EVENTS ----------

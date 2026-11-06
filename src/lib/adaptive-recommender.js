@@ -1,6 +1,7 @@
 import { computeContentScore } from "./recommendation";
 import { computeCollaborativeScore } from "./collaborative";
 import { computeHybridScore, computeHybridWeights } from "./hybrid";
+import { profileSemanticSimilarity } from "./profile-vectors";
 
 const FEATURE_NAMES = [
   "skillOverlap",
@@ -9,9 +10,11 @@ const FEATURE_NAMES = [
   "mentorshipRoleFit",
   "sharedNetwork",
   "isMentorshipRequest",
+  "semanticProfileOverlap",
 ];
 const MIN_TRAINING_ROWS = 12;
 const MIN_PER_CLASS = 4;
+const FULL_INFLUENCE_ROWS = 50;
 
 function overlap(idsA, idsB) {
   const a = new Set(idsA || []);
@@ -47,6 +50,7 @@ export function extractPairFeatures(sender, recipient, requestType, sharedNetwor
     mentorshipRoleFit: requestType === "MENTORSHIP" ? mentorshipRoleFit : 0,
     sharedNetwork: Math.max(0, Math.min(1, sharedNetwork)),
     isMentorshipRequest: requestType === "MENTORSHIP" ? 1 : 0,
+    semanticProfileOverlap: profileSemanticSimilarity(sender, recipient),
   };
 }
 
@@ -57,13 +61,13 @@ function sigmoid(value) {
 }
 
 /** Small L2-regularized logistic regression trained on resolved live requests. */
-export function trainAcceptanceModel(examples) {
+function trainBinaryModel(examples, { minimumRows = MIN_TRAINING_ROWS, minimumPerClass = MIN_PER_CLASS } = {}) {
   const accepted = examples.filter((example) => example.label === 1).length;
   const declined = examples.length - accepted;
   if (
-    examples.length < MIN_TRAINING_ROWS ||
-    accepted < MIN_PER_CLASS ||
-    declined < MIN_PER_CLASS
+    examples.length < minimumRows ||
+    accepted < minimumPerClass ||
+    declined < minimumPerClass
   ) {
     return {
       active: false,
@@ -103,7 +107,7 @@ export function trainAcceptanceModel(examples) {
     }
   }
 
-  const confidence = Math.max(0, Math.min(1, (examples.length - MIN_TRAINING_ROWS) / 38));
+  const confidence = Math.max(0, Math.min(1, (examples.length - minimumRows) / (FULL_INFLUENCE_ROWS - minimumRows)));
   return {
     active: true,
     sampleCount: examples.length,
@@ -119,6 +123,109 @@ export function trainAcceptanceModel(examples) {
         )
       );
     },
+  };
+}
+
+export function trainAcceptanceModel(examples) {
+  return trainBinaryModel(examples);
+}
+
+/** Learns a separate relevance signal from members' explicit match ratings. */
+export function trainRelevanceModel(feedbackRows) {
+  const examples = feedbackRows
+    .filter((row) => row.modelFeatures && (row.rating >= 4 || row.rating <= 2))
+    .map((row) => ({ features: row.modelFeatures, label: row.rating >= 4 ? 1 : 0 }));
+  const model = trainBinaryModel(examples, { minimumRows: 8, minimumPerClass: 3 });
+  return { ...model, sampleCount: examples.length };
+}
+
+/** Time-ordered holdout metrics; the newest examples are never used to fit. */
+export function evaluateTemporalModel(rows, { holdoutFraction = 0.2 } = {}) {
+  const eligible = rows
+    .filter((row) => row.modelFeatures && ["ACCEPTED", "DECLINED"].includes(row.status))
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  const holdoutSize = Math.max(1, Math.ceil(eligible.length * holdoutFraction));
+  const splitAt = eligible.length - holdoutSize;
+  const training = eligible.slice(0, splitAt).map((row) => ({
+    features: row.modelFeatures,
+    label: row.status === "ACCEPTED" ? 1 : 0,
+  }));
+  const holdout = eligible.slice(splitAt);
+  const model = trainAcceptanceModel(training);
+  if (!model.active || holdout.length < 2 || new Set(holdout.map((row) => row.status)).size < 2) {
+    return {
+      available: false,
+      reason: "More historical outcomes from both classes are needed for a time-separated evaluation.",
+      trainingExamples: training.length,
+      holdoutExamples: holdout.length,
+    };
+  }
+
+  const scored = holdout.map((row) => ({
+    label: row.status === "ACCEPTED" ? 1 : 0,
+    probability: model.predict(row.modelFeatures),
+  }));
+  const brierScore = scored.reduce((sum, row) => sum + (row.probability - row.label) ** 2, 0) / scored.length;
+  let concordant = 0;
+  let positiveNegativePairs = 0;
+  for (const positive of scored.filter((row) => row.label === 1)) {
+    for (const negative of scored.filter((row) => row.label === 0)) {
+      positiveNegativePairs++;
+      concordant += positive.probability > negative.probability ? 1 : positive.probability === negative.probability ? 0.5 : 0;
+    }
+  }
+  return {
+    available: true,
+    trainingExamples: training.length,
+    holdoutExamples: holdout.length,
+    acceptedHoldout: scored.filter((row) => row.label === 1).length,
+    declinedHoldout: scored.filter((row) => row.label === 0).length,
+    brierScore: +brierScore.toFixed(4),
+    rocAuc: positiveNegativePairs ? +(concordant / positiveNegativePairs).toFixed(4) : null,
+    note: "Newest 20% of resolved requests held out by time; this is an internal diagnostic, not an independent user study.",
+  };
+}
+
+export function evaluateTemporalRelevance(feedbackRows, { holdoutFraction = 0.2 } = {}) {
+  const eligible = feedbackRows
+    .filter((row) => row.modelFeatures && (row.rating >= 4 || row.rating <= 2))
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  const holdoutSize = Math.max(1, Math.ceil(eligible.length * holdoutFraction));
+  const splitAt = eligible.length - holdoutSize;
+  const training = eligible.slice(0, splitAt);
+  const holdout = eligible.slice(splitAt);
+  const model = trainRelevanceModel(training);
+  if (!model.active || holdout.length < 2 || new Set(holdout.map((row) => row.rating >= 4)).size < 2) {
+    return {
+      available: false,
+      reason: "More dated useful and not-useful ratings are needed for a time-separated relevance evaluation.",
+      trainingExamples: model.sampleCount,
+      holdoutExamples: holdout.length,
+    };
+  }
+
+  const scored = holdout.map((row) => ({
+    label: row.rating >= 4 ? 1 : 0,
+    probability: model.predict(row.modelFeatures),
+  }));
+  const brierScore = scored.reduce((sum, row) => sum + (row.probability - row.label) ** 2, 0) / scored.length;
+  let concordant = 0;
+  let positiveNegativePairs = 0;
+  for (const positive of scored.filter((row) => row.label === 1)) {
+    for (const negative of scored.filter((row) => row.label === 0)) {
+      positiveNegativePairs++;
+      concordant += positive.probability > negative.probability ? 1 : positive.probability === negative.probability ? 0.5 : 0;
+    }
+  }
+  return {
+    available: true,
+    trainingExamples: training.length,
+    holdoutExamples: holdout.length,
+    usefulHoldout: scored.filter((row) => row.label === 1).length,
+    notUsefulHoldout: scored.filter((row) => row.label === 0).length,
+    brierScore: +brierScore.toFixed(4),
+    rocAuc: positiveNegativePairs ? +(concordant / positiveNegativePairs).toFixed(4) : null,
+    note: "Newest 20% of member match ratings held out by time; this is an internal diagnostic, not an independent user study.",
   };
 }
 
@@ -147,7 +254,9 @@ export function scoreCandidate({
     candidate.user.id
   );
   const baselineWeights = computeHybridWeights(totalAcceptedInteractions);
-  const baselineScore = computeHybridScore(contentScore, collaborativeScore, baselineWeights);
+  const semanticScore = profileSemanticSimilarity(owner, candidate);
+  const profileScore = contentScore * 0.78 + semanticScore * 0.22;
+  const baselineScore = computeHybridScore(profileScore, collaborativeScore, baselineWeights);
   const modelFeatures = extractPairFeatures(owner, candidate, "MENTORSHIP", collaborativeScore);
   const mlAcceptanceProbability = model.active ? model.predict(modelFeatures) : null;
   const matchScore = model.active
@@ -156,6 +265,7 @@ export function scoreCandidate({
 
   return {
     contentScore,
+    semanticScore,
     collaborativeScore,
     baselineScore,
     modelFeatures,

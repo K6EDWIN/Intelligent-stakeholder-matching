@@ -14,31 +14,50 @@ export async function POST(request) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { mentorshipRequestId, rating, comment } = await request.json();
+  const { mentorshipRequestId, connectionRequestId, recommendationId, rating, comment } = await request.json();
 
-  if (!rating || rating < 1 || rating > 5) {
+  const numericRating = Number(rating);
+  if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) {
     return NextResponse.json(
       { error: "Rating must be an integer between 1 and 5" },
       { status: 400 }
     );
   }
 
+  let recommendation = null;
+  if (recommendationId) {
+    recommendation = await prisma.recommendation.findFirst({
+      where: { id: recommendationId, ownerId: session.user.id },
+      select: { id: true, modelFeatures: true },
+    });
+    if (!recommendation) {
+      return NextResponse.json({ error: "Recommendation not found for this account" }, { status: 404 });
+    }
+  }
+
   try {
-    const feedback = await prisma.feedback.create({
-      data: {
+    const existing = recommendation
+      ? await prisma.feedback.findFirst({ where: { userId: session.user.id, recommendationId: recommendation.id } })
+      : null;
+    const feedbackData = {
         userId: session.user.id,
         mentorshipRequestId: mentorshipRequestId || null,
-        rating: Number(rating),
+        connectionRequestId: connectionRequestId || null,
+        recommendationId: recommendation?.id || null,
+        modelFeatures: recommendation?.modelFeatures || undefined,
+        rating: numericRating,
         comment: comment || null,
-      },
-    });
+    };
+    const feedback = existing
+      ? await prisma.feedback.update({ where: { id: existing.id }, data: feedbackData })
+      : await prisma.feedback.create({ data: feedbackData });
 
     await logActivity({
       actorId: session.user.id,
       targetId: session.user.id,
       actionType: "FEEDBACK_SUBMITTED",
       summary: "Submitted a connection or mentorship rating",
-      details: { rating: Number(rating), mentorshipRequestId: mentorshipRequestId || null, commentIncluded: Boolean(comment) },
+      details: { rating: numericRating, mentorshipRequestId: mentorshipRequestId || null, connectionRequestId: connectionRequestId || null, recommendationId: recommendation?.id || null, commentIncluded: Boolean(comment) },
     });
 
     return NextResponse.json({ feedback, message: "Feedback submitted successfully" }, { status: 201 });

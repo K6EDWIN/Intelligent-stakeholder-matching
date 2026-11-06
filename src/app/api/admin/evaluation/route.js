@@ -5,8 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { computeContentScore } from "@/lib/recommendation";
 import { buildConnectionsByUser, computeCollaborativeScore } from "@/lib/collaborative";
 import { computeHybridWeights, computeHybridScore } from "@/lib/hybrid";
-import { buildTrainingExamples, scoreCandidate, trainAcceptanceModel } from "@/lib/adaptive-recommender";
+import { buildTrainingExamples, evaluateTemporalModel, evaluateTemporalRelevance, scoreCandidate, trainAcceptanceModel, trainRelevanceModel } from "@/lib/adaptive-recommender";
 import { getAdaptivePredictions } from "@/lib/hosted-ml";
+import { diversifyRankedCandidates } from "@/lib/profile-vectors";
+import { getMlUserKey } from "@/lib/ml-sync-auth";
 
 // Helper: Discounted Cumulative Gain
 function computeDCG(relevanceList) {
@@ -36,13 +38,13 @@ export async function GET(req) {
     const url = new URL(req.url);
     const simulateUserId = url.searchParams.get("simulateUserId");
 
-    const [profiles, acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections] = await Promise.all([
+    const [profiles, acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections, relevanceFeedback, modelArtifacts] = await Promise.all([
       prisma.profile.findMany({
         where: { user: { isVerified: true, isSuspended: false } },
         include: {
           user: { select: { id: true, role: true } },
-          skills: true,
-          interests: true,
+          skills: { include: { skill: true } },
+          interests: { include: { interest: true } },
         },
       }),
       prisma.mentorshipRequest.findMany({
@@ -55,11 +57,20 @@ export async function GET(req) {
       }),
       prisma.mentorshipRequest.findMany({
         where: { status: { in: ["ACCEPTED", "DECLINED"] } },
-        select: { status: true, modelFeatures: true },
+        select: { status: true, modelFeatures: true, createdAt: true },
       }),
       prisma.connectionRequest.findMany({
         where: { status: { in: ["ACCEPTED", "DECLINED"] } },
-        select: { status: true, modelFeatures: true },
+        select: { status: true, modelFeatures: true, createdAt: true },
+      }),
+      prisma.feedback.findMany({
+        where: { recommendationId: { not: null } },
+        select: { rating: true, modelFeatures: true, createdAt: true },
+      }),
+      prisma.mLModelArtifact.findMany({
+        where: { OR: [{ active: true }, { type: "NCF" }] },
+        orderBy: { createdAt: "desc" },
+        take: 100,
       }),
     ]);
 
@@ -73,11 +84,23 @@ export async function GET(req) {
       ...resolvedConnections,
     ]);
     const model = trainAcceptanceModel(trainingExamples);
+    const relevanceModel = trainRelevanceModel(relevanceFeedback);
+    const latestNcfArtifact = modelArtifacts.find((artifact) => artifact.type === "NCF") || null;
+    const temporalEvaluation = evaluateTemporalModel([
+      ...resolvedMentorships,
+      ...resolvedConnections,
+    ]);
+    const relevanceEvaluation = evaluateTemporalRelevance(relevanceFeedback);
     const hybridWeights = computeHybridWeights(totalInteractions);
     const modelState = await getAdaptivePredictions({
       examples: trainingExamples,
+      relevanceExamples: relevanceFeedback
+        .filter((row) => row.modelFeatures && (row.rating >= 4 || row.rating <= 2))
+        .map((row) => ({ features: row.modelFeatures, label: row.rating >= 4 ? 1 : 0 })),
       candidates: [],
       localModel: model,
+      relevanceModel,
+      artifacts: modelArtifacts,
     });
 
     // Live recommendation simulation for a selected stakeholder
@@ -126,6 +149,7 @@ export async function GET(req) {
             department: cand.department || "Operations",
             role: cand.user.role,
             contentScore: +(cbf * 100).toFixed(1),
+            semanticScore: +(adaptive.semanticScore * 100).toFixed(1),
             collaborativeScore: +(cf * 100).toFixed(1),
             mlAcceptanceProbability: adaptive.mlAcceptanceProbability,
             baselineScore: adaptive.baselineScore,
@@ -137,19 +161,42 @@ export async function GET(req) {
 
       const hostedPredictions = await getAdaptivePredictions({
         examples: trainingExamples,
+        relevanceExamples: relevanceFeedback
+          .filter((row) => row.modelFeatures && (row.rating >= 4 || row.rating <= 2))
+          .map((row) => ({ features: row.modelFeatures, label: row.rating >= 4 ? 1 : 0 })),
         candidates: simResults.map((item) => ({ features: item.modelFeatures })),
+        ncfCandidates: simResults.map((item) => ({
+          senderKey: getMlUserKey(targetProfile.user.id),
+          recipientKey: getMlUserKey(item.id),
+        })),
         localModel: model,
+        relevanceModel,
+        artifacts: modelArtifacts,
       });
+      const simulationNcfModel = hostedPredictions.ncfModel || { active: false, sampleCount: 0, confidence: 0 };
+      const simulationNcfPredictions = hostedPredictions.ncfPredictions || simResults.map(() => null);
+      const simulationRelevanceModel = hostedPredictions.relevanceModel || relevanceModel;
+      const simulationRelevancePredictions = hostedPredictions.relevancePredictions || simResults.map(() => null);
       simResults.forEach((item, index) => {
         item.mlAcceptanceProbability = hostedPredictions.predictions[index];
-        item.matchScore = item.mlAcceptanceProbability === null
+        const acceptanceScore = item.mlAcceptanceProbability === null
           ? item.baselineScore
           : item.baselineScore * (1 - hostedPredictions.model.confidence) +
             item.mlAcceptanceProbability * hostedPredictions.model.confidence;
+        item.ncfProbability = simulationNcfPredictions[index];
+        item.ncfInfluence = item.ncfProbability === null
+          ? 0
+          : Math.min(0.2, simulationNcfModel.confidence * 0.2);
+        const ncfAdjustedScore = item.ncfProbability === null
+          ? acceptanceScore
+          : acceptanceScore * (1 - item.ncfInfluence) + item.ncfProbability * item.ncfInfluence;
+        item.relevanceProbability = simulationRelevancePredictions[index];
+        const relevanceInfluence = item.relevanceProbability === null ? 0 : simulationRelevanceModel.confidence * 0.35;
+        item.matchScore = item.relevanceProbability === null
+          ? ncfAdjustedScore
+          : ncfAdjustedScore * (1 - relevanceInfluence) + item.relevanceProbability * relevanceInfluence;
       });
-      const rankedSimResults = simResults
-        .sort((a, b) => b.matchScore - a.matchScore)
-        .slice(0, 5);
+      const rankedSimResults = diversifyRankedCandidates(simResults.sort((a, b) => b.matchScore - a.matchScore), 5);
 
       return NextResponse.json({
         simulation: {
@@ -165,6 +212,10 @@ export async function GET(req) {
               ? null
               : +(item.mlAcceptanceProbability * 100).toFixed(1),
             matchScore: +(item.matchScore * 100).toFixed(1),
+            relevanceProbability: item.relevanceProbability === null ? null : +(item.relevanceProbability * 100).toFixed(1),
+            ncfAcceptanceProbability: item.ncfProbability === null ? null : +(item.ncfProbability * 100).toFixed(1),
+            ncfInfluence: +(item.ncfInfluence * 100).toFixed(1),
+            diversityAdjustment: +(item.diversityAdjustment * 100).toFixed(1),
           })),
           model: {
             active: hostedPredictions.model.active,
@@ -174,6 +225,25 @@ export async function GET(req) {
             confidence: Math.round(hostedPredictions.model.confidence * 100),
             featureWeights: hostedPredictions.model.weights,
             provider: hostedPredictions.provider,
+            versions: {
+              acceptance: hostedPredictions.model.version || null,
+              relevance: simulationRelevanceModel.version || null,
+            },
+            trainedAt: hostedPredictions.model.createdAt || simulationRelevanceModel.createdAt || null,
+            relevance: {
+              active: simulationRelevanceModel.active,
+              trainingExamples: simulationRelevanceModel.sampleCount,
+              confidence: Math.round(simulationRelevanceModel.confidence * 100),
+            },
+            ncf: {
+              active: simulationNcfModel.active,
+              trainingExamples: simulationNcfModel.sampleCount,
+              confidence: Math.round(simulationNcfModel.confidence * 100),
+              version: simulationNcfModel.version || latestNcfArtifact?.version || null,
+              evaluated: Boolean(latestNcfArtifact),
+              latestEvaluationActive: latestNcfArtifact?.active ?? null,
+              holdoutRocAuc: simulationNcfModel.metrics?.holdoutRocAuc ?? latestNcfArtifact?.metrics?.holdoutRocAuc ?? null,
+            },
           },
           latencyMs: Date.now() - startTime,
         },
@@ -294,6 +364,31 @@ export async function GET(req) {
         declinedExamples: modelState.model.declinedCount,
         confidence: Math.round(modelState.model.confidence * 100),
         featureWeights: modelState.model.weights,
+        version: modelState.model.version || modelState.relevanceModel.version || null,
+        trainedAt: modelState.model.createdAt || modelState.relevanceModel.createdAt || null,
+        relevance: {
+          active: modelState.relevanceModel.active,
+          trainingExamples: modelState.relevanceModel.sampleCount,
+          positiveExamples: modelState.relevanceModel.acceptedCount,
+          negativeExamples: modelState.relevanceModel.declinedCount,
+          confidence: Math.round(modelState.relevanceModel.confidence * 100),
+        },
+        ncf: {
+          active: modelState.ncfModel.active,
+          trainingExamples: modelState.ncfModel.active ? modelState.ncfModel.sampleCount : latestNcfArtifact?.sampleCount || 0,
+          confidence: Math.round(modelState.ncfModel.confidence * 100),
+          version: modelState.ncfModel.version || latestNcfArtifact?.version || null,
+          evaluated: Boolean(latestNcfArtifact),
+          latestEvaluationActive: latestNcfArtifact?.active ?? null,
+          holdoutRocAuc: modelState.ncfModel.metrics?.holdoutRocAuc ?? latestNcfArtifact?.metrics?.holdoutRocAuc ?? null,
+        },
+      },
+      temporalEvaluation,
+      relevanceEvaluation,
+      memberFeedback: {
+        total: relevanceFeedback.length,
+        useful: relevanceFeedback.filter((row) => row.rating >= 4).length,
+        notUseful: relevanceFeedback.filter((row) => row.rating <= 2).length,
       },
       weights: {
         alpha: Math.round(hybridWeights.alpha * 100),
