@@ -834,6 +834,10 @@ export default function AdminPage() {
                       sharedNetwork: "Shared network patterns",
                       isMentorshipRequest: "Mentorship request type",
                       semanticProfileOverlap: "Related profile language",
+                      availabilityDayOverlap: "Shared available days",
+                      availabilityTimeOverlap: "Shared time windows",
+                      availabilityFrequencyFit: "Meeting frequency fit",
+                      availabilityPairKnown: "Both schedules understood",
                     };
                     return (
                       <div key={name} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 text-xs">

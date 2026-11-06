@@ -34,7 +34,7 @@ The checked-in `precision_at_5` field is a historical value from an earlier note
 
 ## Host the live recommender separately
 
-The live adaptive recommendation service is prepared in [`huggingface/`](huggingface/). It is a Docker API that fits an acceptance model from resolved request outcomes and a separate relevance model from explicit member ratings. The app sends only numeric feature vectors and labels; profile text is vectorized locally in the web app. This is separate from the NCF notebook above. Redeploy the Python service when changing its request or response contract. Follow the deployment steps in the main [README](../README.md#host-the-live-recommender-separately) and the Space-specific [`README`](huggingface/README.md).
+The live adaptive recommendation service is prepared in [`huggingface/`](huggingface/). It is a Docker API that fits an acceptance model from resolved request outcomes and a separate relevance model from explicit member ratings. The app sends only numeric feature vectors and labels; profile and availability text are parsed locally in the web app. Availability is represented by day-overlap, time-overlap, frequency-fit, and parseability signals, and the live Colab NCF also trains on those numeric signals. This is separate from the older research notebook above. Redeploy the Python service when changing its request or response contract. Follow the deployment steps in the main [README](../README.md#host-the-live-recommender-separately) and the Space-specific [`README`](huggingface/README.md).
 
 ## Why the fabricated-data experiment stays separate
 

@@ -2,8 +2,9 @@ import { computeContentScore } from "./recommendation";
 import { computeCollaborativeScore } from "./collaborative";
 import { computeHybridScore, computeHybridWeights } from "./hybrid";
 import { profileSemanticSimilarity } from "./profile-vectors";
+import { availabilityPairFeatures } from "./availability";
 
-const FEATURE_NAMES = [
+export const FEATURE_NAMES = [
   "skillOverlap",
   "interestOverlap",
   "sameDepartment",
@@ -11,6 +12,10 @@ const FEATURE_NAMES = [
   "sharedNetwork",
   "isMentorshipRequest",
   "semanticProfileOverlap",
+  "availabilityDayOverlap",
+  "availabilityTimeOverlap",
+  "availabilityFrequencyFit",
+  "availabilityPairKnown",
 ];
 const MIN_TRAINING_ROWS = 12;
 const MIN_PER_CLASS = 4;
@@ -51,6 +56,7 @@ export function extractPairFeatures(sender, recipient, requestType, sharedNetwor
     sharedNetwork: Math.max(0, Math.min(1, sharedNetwork)),
     isMentorshipRequest: requestType === "MENTORSHIP" ? 1 : 0,
     semanticProfileOverlap: profileSemanticSimilarity(sender, recipient),
+    ...availabilityPairFeatures(sender.availability, recipient.availability),
   };
 }
 

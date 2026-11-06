@@ -135,6 +135,7 @@ export async function GET() {
     ncfCandidates: scored.map((item) => ({
       senderKey: getMlUserKey(session.user.id),
       recipientKey: getMlUserKey(item.candidate.user.id),
+      features: item.modelFeatures,
     })),
     localModel: model,
     relevanceModel,

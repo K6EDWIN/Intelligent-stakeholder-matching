@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isAuthorizedMlSyncRequest } from "@/lib/ml-sync-auth";
+import { FEATURE_NAMES } from "@/lib/adaptive-recommender";
 
-const FEATURE_NAMES = ["skillOverlap", "interestOverlap", "sameDepartment", "mentorshipRoleFit", "sharedNetwork", "isMentorshipRequest", "semanticProfileOverlap"];
 const MODEL_TYPES = new Set(["ACCEPTANCE", "RELEVANCE", "NCF"]);
 const isFiniteNumber = (value) => typeof value === "number" && Number.isFinite(value);
-const NCF_FEATURE_NAMES = ["senderKey", "recipientKey", "requestTypeOneHot"];
+const NCF_FEATURE_NAMES = [
+  "senderKey",
+  "recipientKey",
+  "requestTypeOneHot",
+  "availabilityDayOverlap",
+  "availabilityTimeOverlap",
+  "availabilityFrequencyFit",
+  "availabilityPairKnown",
+];
 
 function validateNcfArtifact(artifact) {
   if (JSON.stringify(artifact.featureNames) !== JSON.stringify(NCF_FEATURE_NAMES)) throw new Error("NCF feature schema is invalid");
@@ -13,7 +21,7 @@ function validateNcfArtifact(artifact) {
   if (!payload?.userEmbeddings || !payload?.layer1 || !payload?.layer2) throw new Error("NCF embedding or network weights are missing");
   const embeddings = Object.entries(payload.userEmbeddings);
   if (embeddings.length < 12 || embeddings.length > 12000 || embeddings.some(([key, vector]) => !/^[a-f0-9]{64}$/.test(key) || !Array.isArray(vector) || vector.length !== 8 || vector.some((value) => !isFiniteNumber(value)))) throw new Error("NCF user embeddings are invalid");
-  if (!Array.isArray(payload.layer1.weights) || payload.layer1.weights.length !== 16 || payload.layer1.weights.some((row) => !Array.isArray(row) || row.length !== 18 || row.some((value) => !isFiniteNumber(value))) || !Array.isArray(payload.layer1.bias) || payload.layer1.bias.length !== 16 || payload.layer1.bias.some((value) => !isFiniteNumber(value))) throw new Error("NCF hidden layer weights are invalid");
+  if (!Array.isArray(payload.layer1.weights) || payload.layer1.weights.length !== 16 || payload.layer1.weights.some((row) => !Array.isArray(row) || row.length !== 22 || row.some((value) => !isFiniteNumber(value))) || !Array.isArray(payload.layer1.bias) || payload.layer1.bias.length !== 16 || payload.layer1.bias.some((value) => !isFiniteNumber(value))) throw new Error("NCF hidden layer weights are invalid");
   if (!Array.isArray(payload.layer2.weights) || payload.layer2.weights.length !== 1 || payload.layer2.weights[0].length !== 16 || payload.layer2.weights[0].some((value) => !isFiniteNumber(value)) || !Array.isArray(payload.layer2.bias) || payload.layer2.bias.length !== 1 || !isFiniteNumber(payload.layer2.bias[0])) throw new Error("NCF output layer weights are invalid");
   const qualityPassed = artifact.sampleCount >= 80 && isFiniteNumber(artifact.metrics?.holdoutRocAuc) && artifact.metrics.holdoutRocAuc >= 0.52 && isFiniteNumber(artifact.metrics?.holdoutCoverage) && artifact.metrics.holdoutCoverage >= 0.4;
   if (artifact.active !== false && !qualityPassed) throw new Error("NCF must beat the minimum holdout quality and user-coverage checks before it can be activated");

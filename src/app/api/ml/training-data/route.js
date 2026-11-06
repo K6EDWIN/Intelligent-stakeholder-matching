@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getMlUserKey, isAuthorizedMlSyncRequest } from "@/lib/ml-sync-auth";
+import { FEATURE_NAMES } from "@/lib/adaptive-recommender";
 
 export const dynamic = "force-dynamic";
 
@@ -52,12 +53,13 @@ export async function GET(request) {
       .map(({ row, isMentorship }) => ({
         senderKey: getMlUserKey(row.senderId),
         recipientKey: getMlUserKey(row.receiverId),
+        features: row.modelFeatures || {},
         isMentorship,
         label: row.status === "ACCEPTED" ? 1 : 0,
         timestamp: row.updatedAt,
       }));
 
-    return NextResponse.json({ dataSource: "LIVE_DATABASE", featureNames: ["skillOverlap", "interestOverlap", "sameDepartment", "mentorshipRoleFit", "sharedNetwork", "isMentorshipRequest", "semanticProfileOverlap"], acceptance, relevance, ncf: ncfExamples }, {
+    return NextResponse.json({ dataSource: "LIVE_DATABASE", featureNames: FEATURE_NAMES, acceptance, relevance, ncf: ncfExamples }, {
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {

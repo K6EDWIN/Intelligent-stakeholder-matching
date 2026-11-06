@@ -16,6 +16,10 @@ FEATURE_NAMES = [
     "sharedNetwork",
     "isMentorshipRequest",
     "semanticProfileOverlap",
+    "availabilityDayOverlap",
+    "availabilityTimeOverlap",
+    "availabilityFrequencyFit",
+    "availabilityPairKnown",
 ]
 MIN_TRAINING_ROWS = 12
 MIN_PER_CLASS = 4

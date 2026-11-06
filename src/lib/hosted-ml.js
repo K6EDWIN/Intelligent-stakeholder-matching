@@ -48,7 +48,19 @@ export async function getAdaptivePredictions({ examples, relevanceExamples = [],
       const sender = payload?.userEmbeddings?.[candidate?.senderKey];
       const recipient = payload?.userEmbeddings?.[candidate?.recipientKey];
       if (!sender || !recipient) return null;
-      const input = [...sender, ...recipient, isMentorship ? 1 : 0, isMentorship ? 0 : 1];
+      const baseInput = [...sender, ...recipient, isMentorship ? 1 : 0, isMentorship ? 0 : 1];
+      const inputWidth = payload.layer1.weights?.[0]?.length || baseInput.length;
+      const availabilityInput = [
+        "availabilityDayOverlap",
+        "availabilityTimeOverlap",
+        "availabilityFrequencyFit",
+        "availabilityPairKnown",
+      ].map((name) => Number(candidate?.features?.[name]) || 0);
+      // Older Colab artifacts have 18 inputs. They remain usable until the
+      // availability-aware NCF artifact is retrained and published.
+      const input = inputWidth > baseInput.length
+        ? [...baseInput, ...availabilityInput].slice(0, inputWidth)
+        : baseInput;
       const hidden = payload.layer1.weights.map((weights, index) => Math.max(0,
         weights.reduce((sum, weight, featureIndex) => sum + weight * input[featureIndex], payload.layer1.bias[index])
       ));

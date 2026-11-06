@@ -172,6 +172,7 @@ export async function GET(req) {
         ncfCandidates: simResults.map((item) => ({
           senderKey: getMlUserKey(targetProfile.user.id),
           recipientKey: getMlUserKey(item.id),
+          features: item.modelFeatures,
         })),
         localModel: model,
         relevanceModel,

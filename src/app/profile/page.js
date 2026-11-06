@@ -6,6 +6,12 @@ import { useRouter } from "next/navigation";
 import KQAppShell from "@/components/KQAppShell";
 import { Button, Avatar } from "@/components/KQBrand";
 import { Icon, GoogleIcon } from "@/components/KQIcons";
+import {
+  AVAILABILITY_DAYS,
+  buildAvailabilityText,
+  createAvailabilityDraft,
+  describeAvailability,
+} from "@/lib/availability";
 
 const ROLE_OPTIONS = [
   { value: "", label: "Not participating in mentorship" },
@@ -34,12 +40,14 @@ export default function ProfilePage() {
     skillIds: [],
     interestIds: [],
   });
+  const [availabilityDraft, setAvailabilityDraft] = useState(() => createAvailabilityDraft(""));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [avatarSrc, setAvatarSrc] = useState(null);
   const avatarStorageKey = session?.user?.id ? `kq_user_avatar:${session.user.id}` : null;
+  const interpretedAvailability = describeAvailability(form.availability);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -138,6 +146,7 @@ export default function ProfilePage() {
 
         if (profileRes.ok) {
           const { profile } = await profileRes.json();
+          setAvailabilityDraft(createAvailabilityDraft(profile.availability || ""));
           setForm((f) => ({
             ...f,
             fullName: profile.fullName || "",
@@ -170,6 +179,18 @@ export default function ProfilePage() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
+  const updateAvailabilityDraft = (nextDraft) => {
+    setAvailabilityDraft(nextDraft);
+    setForm((current) => ({ ...current, availability: buildAvailabilityText(nextDraft) }));
+  };
+
+  const toggleAvailabilityDay = (day) => {
+    const days = availabilityDraft.days.includes(day)
+      ? availabilityDraft.days.filter((value) => value !== day)
+      : [...availabilityDraft.days, day];
+    updateAvailabilityDraft({ ...availabilityDraft, days });
+  };
+
   const toggleId = (key, id) => {
     setForm((f) => {
       const current = f[key];
@@ -185,6 +206,17 @@ export default function ProfilePage() {
     setSaving(true);
     setMessage("");
     setError("");
+
+    if (!availabilityDraft.fullDay && Boolean(availabilityDraft.startTime) !== Boolean(availabilityDraft.endTime)) {
+      setError("Choose both a start time and an end time, or select full-day availability.");
+      setSaving(false);
+      return;
+    }
+    if (availabilityDraft.startTime && availabilityDraft.startTime === availabilityDraft.endTime) {
+      setError("Start and end time must be different.");
+      setSaving(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/profile", {
@@ -429,15 +461,110 @@ export default function ProfilePage() {
 
               <div>
                 <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Mentorship Availability
+                  Available Days
                 </label>
-                <input
-                  name="availability"
-                  placeholder="e.g. 2 hours/month, Flexible, Weekday mornings"
-                  value={form.availability}
-                  onChange={handleChange}
-                  className="w-full bg-white border border-slate-300 rounded-lg px-3.5 py-2 text-sm outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e] transition"
-                />
+                <div className="flex flex-wrap gap-2">
+                  {AVAILABILITY_DAYS.map(({ value, label }) => {
+                    const selected = availabilityDraft.days.includes(value);
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => toggleAvailabilityDay(value)}
+                        className={`min-w-11 rounded-lg border px-3 py-2 text-sm font-semibold transition ${selected ? "border-[#c8102e] bg-rose-50 text-[#a30d25]" : "border-slate-300 bg-white text-slate-600 hover:border-slate-400"}`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Time Window
+                </label>
+                <label className="mb-2 flex items-center gap-2 text-sm text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={availabilityDraft.fullDay}
+                    onChange={(event) => updateAvailabilityDraft({ ...availabilityDraft, fullDay: event.target.checked })}
+                    className="accent-[#c8102e]"
+                  />
+                  Available for the full day
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    aria-label="Availability start time"
+                    type="time"
+                    value={availabilityDraft.fullDay ? "" : availabilityDraft.startTime}
+                    disabled={availabilityDraft.fullDay}
+                    onChange={(event) => updateAvailabilityDraft({ ...availabilityDraft, startTime: event.target.value })}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm outline-none transition focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e] disabled:bg-slate-100"
+                  />
+                  <input
+                    aria-label="Availability end time"
+                    type="time"
+                    value={availabilityDraft.fullDay ? "" : availabilityDraft.endTime}
+                    disabled={availabilityDraft.fullDay}
+                    onChange={(event) => updateAvailabilityDraft({ ...availabilityDraft, endTime: event.target.value })}
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm outline-none transition focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e] disabled:bg-slate-100"
+                  />
+                </div>
+                <p className="mt-1.5 text-xs text-slate-500">Choose a start and end time, or mark the whole day available.</p>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Meeting Frequency
+                </label>
+                <select
+                  value={availabilityDraft.cadence}
+                  onChange={(event) => updateAvailabilityDraft({ ...availabilityDraft, cadence: event.target.value })}
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm outline-none transition focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e]"
+                >
+                  <option value="">Not specified</option>
+                  <option value="WEEKLY">Weekly</option>
+                  <option value="BIWEEKLY">Every two weeks</option>
+                  <option value="MONTHLY">Monthly</option>
+                  <option value="OCCASIONAL">Occasionally</option>
+                  <option value="FLEXIBLE">Flexible frequency</option>
+                </select>
+                {["WEEKLY", "BIWEEKLY", "MONTHLY"].includes(availabilityDraft.cadence) && (
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <label className="block text-xs font-semibold text-slate-600">
+                      Measure availability in
+                      <select
+                        value={availabilityDraft.frequencyUnit}
+                        onChange={(event) => updateAvailabilityDraft({ ...availabilityDraft, frequencyUnit: event.target.value })}
+                        className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e]"
+                      >
+                        <option value="MEETINGS">Meetings</option>
+                        <option value="HOURS">Hours</option>
+                      </select>
+                    </label>
+                    <label className="block text-xs font-semibold text-slate-600">
+                      {availabilityDraft.frequencyUnit === "HOURS" ? "Hours per period" : "Meetings per period"}
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={availabilityDraft.sessions}
+                        onChange={(event) => updateAvailabilityDraft({ ...availabilityDraft, sessions: event.target.value })}
+                        className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e]"
+                      />
+                    </label>
+                  </div>
+                )}
+                <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                  These selections are converted into day overlap, time-window overlap, and frequency-fit signals for matching.
+                </p>
+                {form.availability.trim() && (
+                  <p className="mt-1.5 text-xs font-medium text-slate-700" aria-live="polite">
+                    Matching reads this as: {interpretedAvailability.length ? interpretedAvailability.join(" · ") : "availability details not recognized"}
+                  </p>
+                )}
               </div>
 
               <div className="sm:col-span-2">
