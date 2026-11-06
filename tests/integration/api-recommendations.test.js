@@ -19,6 +19,12 @@ vi.mock("@/lib/prisma", () => ({
     connectionRequest: {
       findMany: vi.fn(),
     },
+    feedback: {
+      findMany: vi.fn(),
+    },
+    mLModelArtifact: {
+      findMany: vi.fn(),
+    },
     recommendation: {
       upsert: vi.fn(),
     },
@@ -46,6 +52,8 @@ vi.mock("@/lib/hosted-ml", () => ({
 describe("GET /api/recommendations API Endpoint", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    prisma.feedback.findMany.mockResolvedValue([]);
+    prisma.mLModelArtifact.findMany.mockResolvedValue([]);
   });
 
   it("returns 401 if the user is unauthenticated", async () => {
