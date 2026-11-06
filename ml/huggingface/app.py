@@ -15,6 +15,7 @@ FEATURE_NAMES = [
     "mentorshipRoleFit",
     "sharedNetwork",
     "isMentorshipRequest",
+    "semanticProfileOverlap",
 ]
 MIN_TRAINING_ROWS = 12
 MIN_PER_CLASS = 4
@@ -24,11 +25,11 @@ bearer = HTTPBearer(auto_error=False)
 app = FastAPI(
     title="PrideConnect Adaptive Recommender",
     description=(
-        "Fits a small logistic-regression recommender from resolved request "
-        "outcomes and scores candidate compatibility features. It receives "
+        "Fits logistic-regression models from resolved request outcomes and "
+        "explicit match ratings, then scores numeric candidate features. It receives "
         "numeric features only; profile text and member identities stay in the app."
     ),
-    version="1.0.0",
+    version="2.0.0",
 )
 
 
@@ -43,6 +44,7 @@ class Candidate(BaseModel):
 
 class PredictRequest(BaseModel):
     training_examples: list[TrainingExample] = Field(max_length=50000)
+    relevance_examples: list[TrainingExample] = Field(default_factory=list, max_length=50000)
     candidates: list[Candidate] = Field(max_length=1000)
 
 
@@ -63,17 +65,17 @@ def authorize(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)
         raise HTTPException(status_code=401, detail="Invalid service token")
 
 
-def fit(examples: list[TrainingExample]):
+def fit(examples: list[TrainingExample], minimum_rows: int = MIN_TRAINING_ROWS, minimum_per_class: int = MIN_PER_CLASS):
     accepted = sum(example.label == 1 for example in examples)
     declined = len(examples) - accepted
     active = (
-        len(examples) >= MIN_TRAINING_ROWS
-        and accepted >= MIN_PER_CLASS
-        and declined >= MIN_PER_CLASS
+        len(examples) >= minimum_rows
+        and accepted >= minimum_per_class
+        and declined >= minimum_per_class
     )
     confidence = max(
         0.0,
-        min(1.0, (len(examples) - MIN_TRAINING_ROWS) / (FULL_INFLUENCE_ROWS - MIN_TRAINING_ROWS)),
+        min(1.0, (len(examples) - minimum_rows) / (FULL_INFLUENCE_ROWS - minimum_rows)),
     ) if active else 0.0
 
     result = {
@@ -119,7 +121,7 @@ def fit(examples: list[TrainingExample]):
 def home():
     return {
         "service": "PrideConnect Adaptive Recommender",
-        "purpose": "Learn request acceptance patterns and score candidate matches.",
+        "purpose": "Learn request acceptance and match relevance from numeric feedback.",
         "interactive_docs": "/docs",
         "health": "/health",
     }
@@ -133,16 +135,22 @@ def health():
 @app.post("/predict", dependencies=[Depends(authorize)])
 def predict(request: PredictRequest):
     model_info, parameters = fit(request.training_examples)
-    if parameters is None:
-        probabilities = [None] * len(request.candidates)
-    else:
+    relevance_info, relevance_parameters = fit(request.relevance_examples, minimum_rows=8, minimum_per_class=3)
+
+    def predict_candidates(parameters):
+        if parameters is None:
+            return [None] * len(request.candidates)
         weights, bias = parameters
         probabilities = []
         for candidate in request.candidates:
             features = [float(candidate.features.get(name, 0.0)) for name in FEATURE_NAMES]
-            probability = sigmoid(
-                bias + sum(value * weights[index] for index, value in enumerate(features))
-            )
+            probability = sigmoid(bias + sum(value * weights[index] for index, value in enumerate(features)))
             probabilities.append(round(probability, 8))
+        return probabilities
 
-    return {**model_info, "predictions": probabilities}
+    return {
+        **model_info,
+        "predictions": predict_candidates(parameters),
+        "relevanceModel": relevance_info,
+        "relevancePredictions": predict_candidates(relevance_parameters),
+    }

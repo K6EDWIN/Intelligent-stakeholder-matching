@@ -58,7 +58,7 @@ export async function GET() {
           _count: true,
           _avg: { rating: true },
         })
-      : Promise.resolve({ _count: 0, _avg: { rating: 4.8 } }),
+      : Promise.resolve({ _count: 0, _avg: { rating: 0 } }),
     typeof prisma.flightReconnect?.count === "function"
       ? prisma.flightReconnect.count()
       : Promise.resolve(0),

@@ -793,10 +793,11 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                   <span className="block text-[10px] uppercase tracking-wider font-bold text-slate-400">Live ML model</span>
-                  <b className="text-sm text-slate-900">{benchmark?.adaptiveModel?.provider === "HOSTED_API" ? "Hosted ML API" : benchmark?.adaptiveModel?.provider === "LOCAL_FALLBACK" ? "Local fallback (host unavailable)" : benchmark?.adaptiveModel?.active ? "Local model learning from outcomes" : "Gathering labeled outcomes"}</b>
+                  <b className="text-sm text-slate-900">{benchmark?.adaptiveModel?.provider === "COLAB_DRIVE_ARTIFACT" ? "Colab + Google Drive model" : benchmark?.adaptiveModel?.provider === "HOSTED_API" ? "Hosted ML API" : benchmark?.adaptiveModel?.provider === "LOCAL_FALLBACK" ? "Local fallback (host unavailable)" : benchmark?.adaptiveModel?.active ? "Local model learning from outcomes" : "Gathering labeled outcomes"}</b>
+                  {benchmark?.adaptiveModel?.version && <span className="block text-xs text-slate-500 mt-1">Version {benchmark.adaptiveModel.version}</span>}
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                   <span className="block text-[10px] uppercase tracking-wider font-bold text-slate-400">Training examples</span>
@@ -805,6 +806,11 @@ export default function AdminPage() {
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                   <span className="block text-[10px] uppercase tracking-wider font-bold text-slate-400">ML ranking influence</span>
                   <b className="text-sm text-slate-900">{benchmark?.adaptiveModel?.confidence ?? 0}%</b>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="block text-[10px] uppercase tracking-wider font-bold text-slate-400">NCF interaction model</span>
+                  <b className="text-sm text-slate-900">{benchmark?.adaptiveModel?.ncf?.active ? `Active · ${benchmark.adaptiveModel.ncf.trainingExamples} outcomes` : benchmark?.adaptiveModel?.ncf?.evaluated ? "Evaluated · held back by quality check" : "Waiting for enough interaction history"}</b>
+                  <span className="block text-xs text-slate-500 mt-1">{benchmark?.adaptiveModel?.ncf?.holdoutRocAuc != null ? `${benchmark.adaptiveModel.ncf.latestEvaluationActive ? "Latest time holdout" : "Latest run held back"} · AUC ${(benchmark.adaptiveModel.ncf.holdoutRocAuc * 100).toFixed(1)}%` : "Requires 80 outcomes and a valid time holdout"}</span>
                 </div>
               </div>
 
@@ -827,6 +833,7 @@ export default function AdminPage() {
                       mentorshipRoleFit: "Mentor and mentee fit",
                       sharedNetwork: "Shared network patterns",
                       isMentorshipRequest: "Mentorship request type",
+                      semanticProfileOverlap: "Related profile language",
                     };
                     return (
                       <div key={name} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 text-xs">
@@ -906,24 +913,62 @@ export default function AdminPage() {
               </div>
             </section>
 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <section className="rounded-xl border border-slate-200 bg-white p-5 space-y-2">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Member feedback learning</div>
+                <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                  <b className="text-lg text-slate-900">{benchmark?.adaptiveModel?.relevance?.trainingExamples ?? 0} labeled matches</b>
+                  <span className="text-xs text-emerald-700">{benchmark?.adaptiveModel?.relevance?.positiveExamples ?? 0} useful</span>
+                  <span className="text-xs text-rose-700">{benchmark?.adaptiveModel?.relevance?.negativeExamples ?? 0} not useful</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-slate-600">Members can rate a suggested match. Once there are enough positive and negative ratings, a separate relevance model learns from the saved profile signals and can influence ranking.</p>
+                <p className="text-[11px] font-semibold text-slate-700">
+                  {benchmark?.adaptiveModel?.relevance?.active ? `Learning model active · ${benchmark.adaptiveModel.relevance.confidence}% influence` : "Collecting balanced member ratings before enabling this model"}
+                </p>
+              </section>
+              <section className="rounded-xl border border-slate-200 bg-white p-5 space-y-2">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Time-separated outcome check</div>
+                {benchmark?.temporalEvaluation?.available ? (
+                  <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+                    <span><b className="text-slate-900">{benchmark.temporalEvaluation.rocAuc?.toFixed(3) ?? "—"}</b> <span className="text-slate-500">holdout ROC-AUC</span></span>
+                    <span><b className="text-slate-900">{benchmark.temporalEvaluation.brierScore.toFixed(3)}</b> <span className="text-slate-500">Brier score</span></span>
+                    <span className="text-xs text-slate-500">{benchmark.temporalEvaluation.trainingExamples} train · {benchmark.temporalEvaluation.holdoutExamples} held out</span>
+                  </div>
+                ) : <p className="text-xs text-slate-600">{benchmark?.temporalEvaluation?.reason || "Evaluation is not available yet."}</p>}
+                <p className="text-[11px] leading-relaxed text-slate-600">The newest request outcomes are held out from training for this diagnostic. Proxy relevance scores above are a separate measure and are not evidence of member-judged quality.</p>
+                <div className="border-t border-slate-200 pt-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Member-rating holdout</span>
+                  {benchmark?.relevanceEvaluation?.available ? (
+                    <p className="mt-1 text-xs text-slate-700">ROC-AUC <b>{benchmark.relevanceEvaluation.rocAuc?.toFixed(3) ?? "—"}</b> · Brier <b>{benchmark.relevanceEvaluation.brierScore.toFixed(3)}</b> · {benchmark.relevanceEvaluation.trainingExamples} train / {benchmark.relevanceEvaluation.holdoutExamples} held out</p>
+                  ) : <p className="mt-1 text-[11px] text-slate-600">{benchmark?.relevanceEvaluation?.reason || "Collect chronological member ratings before evaluating this ranker."}</p>}
+                </div>
+              </section>
+            </div>
+
             {/* Feature Weight Signals */}
             <section className="p-6 sm:p-8 bg-white border border-slate-200/80 rounded-2xl shadow-xs space-y-6">
               <h3 className="text-lg font-bold text-slate-900 pb-3 border-b border-slate-100">
                 What the live recommendation score uses
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
                   <div className="flex justify-between items-center text-xs font-bold text-slate-800">
-                    <span>Shared skills</span><span className="text-[#c8102e]">60% of content</span>
+                    <span>Shared skills</span><span className="text-[#c8102e]">60% of exact match</span>
                   </div>
                   <p className="text-[11px] text-slate-500">Jaccard overlap: shared skills divided by all distinct skills in the two profiles.</p>
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
                   <div className="flex justify-between items-center text-xs font-bold text-slate-800">
-                    <span>Shared interests</span><span className="text-[#0e2740]">40% of content</span>
+                    <span>Shared interests</span><span className="text-[#0e2740]">40% of exact match</span>
                   </div>
-                  <p className="text-[11px] text-slate-500">Jaccard overlap of interest sets. Skills and interests together make the content score.</p>
+                  <p className="text-[11px] text-slate-500">Jaccard overlap of interest sets. Skills and interests form the exact-match portion of the profile score.</p>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                  <div className="flex justify-between items-center text-xs font-bold text-slate-800">
+                    <span>Profile text alignment</span><span className="text-indigo-700">22% of profile score</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500">A local domain vocabulary vector compares skills, interests, department, and professional goals, including known aviation phrase equivalents.</p>
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
                   <div className="flex justify-between items-center text-xs font-bold text-slate-800">
@@ -1076,8 +1121,11 @@ export default function AdminPage() {
 
                     <div className="text-left sm:text-right font-mono text-[11px] text-slate-600 space-y-0.5">
                       <div>Inference Latency: <b className="text-slate-900">{simulationData.latencyMs}ms</b></div>
-                      <div>ML provider: <b className="text-slate-900">{simulationData.model.provider === "HOSTED_API" ? "Hosted ML API" : simulationData.model.provider}</b></div>
+                      <div>ML provider: <b className="text-slate-900">{simulationData.model.provider === "COLAB_DRIVE_ARTIFACT" ? "Colab + Google Drive model" : simulationData.model.provider === "HOSTED_API" ? "Hosted ML API" : simulationData.model.provider}</b></div>
+                      {simulationData.model.versions?.acceptance && <div>Model version: <b className="text-slate-900">{simulationData.model.versions.acceptance}</b></div>}
+                      {simulationData.model.ncf?.version && <div>NCF version: <b className="text-slate-900">{simulationData.model.ncf.version}</b></div>}
                       <div>Adaptive ML influence: <b className="text-slate-900">{simulationData.model.confidence}%</b></div>
+                      <div>NCF influence cap: <b className="text-slate-900">20%</b></div>
                     </div>
                   </div>
 
@@ -1114,6 +1162,11 @@ export default function AdminPage() {
                               <span className="text-[11px] text-slate-500 block mt-1">
                                 Predicted acceptance: <b className="text-slate-800">{cand.mlAcceptanceProbability == null ? "Gathering examples" : `${cand.mlAcceptanceProbability}%`}</b> · Final match score: <b className="text-slate-800">{cand.matchScore}%</b>
                               </span>
+                              <span className="text-[11px] text-slate-500 block mt-1">
+                                Profile text alignment: <b className="text-slate-800">{cand.semanticScore}%</b> · Member relevance: <b className="text-slate-800">{cand.relevanceProbability == null ? "Gathering ratings" : `${cand.relevanceProbability}%`}</b>
+                                {cand.diversityAdjustment > 0 && <span className="ml-1 text-emerald-700">· Rank adjusted for variety (-{cand.diversityAdjustment}%)</span>}
+                              </span>
+                              {cand.ncfAcceptanceProbability != null && <span className="text-[11px] text-slate-500 block mt-1">NCF interaction estimate: <b className="text-slate-800">{cand.ncfAcceptanceProbability}%</b> · Blended into score: <b className="text-slate-800">{cand.ncfInfluence}%</b></span>}
 
                               {cand.sharedSkills.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2">
@@ -1615,7 +1668,7 @@ export default function AdminPage() {
                   Stakeholder Satisfaction
                 </span>
                 <b className="text-3xl font-extrabold text-amber-700 block tracking-tight">
-                  {stats.feedbackStats?.avgRating || "4.8"}/5.0
+                  {(stats.feedbackStats?.avgRating ?? 0).toFixed(1)}/5.0
                 </b>
                 <span className="text-xs text-slate-500 mt-1 block">
                   {stats.feedbackStats?.total || 0} peer rating evaluations

@@ -53,6 +53,7 @@ export default function RecommendationsPage() {
   const [requestMessage, setRequestMessage] = useState("");
   const [sendingRequest, setSendingRequest] = useState(false);
   const [feedbackSuccess, setFeedbackSuccess] = useState("");
+  const [recommendationFeedback, setRecommendationFeedback] = useState({});
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -77,6 +78,11 @@ export default function RecommendationsPage() {
         }
 
         setRecommendations(data.recommendations || []);
+        setRecommendationFeedback(Object.fromEntries(
+          (data.recommendations || [])
+            .filter((item) => item.recommendationId && item.feedbackRating != null)
+            .map((item) => [item.recommendationId, { rating: item.feedbackRating, saving: false, error: "" }])
+        ));
         if (data.meta) {
           setMeta(data.meta);
         }
@@ -141,6 +147,32 @@ export default function RecommendationsPage() {
     } catch (err) {
       alert("Failed to send request: " + err.message);
       setSendingRequest(false);
+    }
+  }
+
+  async function handleRecommendationFeedback(item, rating) {
+    if (!item.recommendationId || recommendationFeedback[item.recommendationId]?.saving) return;
+    setRecommendationFeedback((current) => ({
+      ...current,
+      [item.recommendationId]: { ...current[item.recommendationId], saving: true, error: "" },
+    }));
+    try {
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recommendationId: item.recommendationId, rating }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Feedback could not be saved");
+      setRecommendationFeedback((current) => ({
+        ...current,
+        [item.recommendationId]: { rating, saving: false, error: "" },
+      }));
+    } catch (error) {
+      setRecommendationFeedback((current) => ({
+        ...current,
+        [item.recommendationId]: { ...current[item.recommendationId], saving: false, error: error.message },
+      }));
     }
   }
 
@@ -451,6 +483,14 @@ export default function RecommendationsPage() {
                           style={{ width: `${item.mlAcceptanceProbability ?? 0}%` }}
                         />
                       </div>
+                      <div className="flex items-center justify-between text-slate-600 pt-1">
+                        <span className="font-medium">Learned relevance estimate:</span>
+                        <b className="font-mono text-slate-900">{item.relevanceProbability == null ? "Gathering ratings" : `${item.relevanceProbability}%`}</b>
+                      </div>
+                      <div className="flex items-center justify-between text-slate-600 pt-1">
+                        <span className="font-medium">NCF interaction estimate:</span>
+                        <b className="font-mono text-slate-900">{item.ncfAcceptanceProbability == null ? "Not enough reliable history" : `${item.ncfAcceptanceProbability}%`}</b>
+                      </div>
 
                       <div className="flex items-center justify-between text-slate-600 pt-1">
                         <span className="font-medium">Profile &amp; competency overlap:</span>
@@ -466,14 +506,16 @@ export default function RecommendationsPage() {
                       {/* Signals Chips */}
                       <div className="pt-2 border-t border-slate-200/70">
                         <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                          Model Signals · {item.mlInfluence ?? 0}% Influence
+                          Model Signals · Acceptance {item.mlInfluence ?? 0}% · NCF {item.ncfInfluence ?? 0}% · Feedback {item.relevanceInfluence ?? 0}%
                         </div>
                         <div className="flex flex-wrap gap-1.5 text-[11px]">
                           {[
                             `Skills ${item.signals?.skillOverlap ?? 0}%`,
                             `Interests ${item.signals?.interestOverlap ?? 0}%`,
+                            `Profile text alignment ${item.semanticScore ?? 0}%`,
                             item.signals?.sameDepartment ? "Department Match" : "Inter-Department",
                             item.signals?.requestType || "Mentorship",
+                            ...(item.diversityAdjustment > 0 ? [`Rank adjusted for variety −${item.diversityAdjustment}%`] : []),
                           ].map((sig) => (
                             <span key={sig} className="px-2.5 py-0.5 rounded-full bg-white border border-slate-200/90 text-slate-600 font-medium">
                               {sig}
@@ -481,6 +523,35 @@ export default function RecommendationsPage() {
                           ))}
                         </div>
                       </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-xs font-semibold text-slate-800">Is this a useful match?</p>
+                          <p className="text-[11px] text-slate-500">Your rating helps improve future recommendations.</p>
+                        </div>
+                        <div className="flex gap-2">
+                          {[{ rating: 5, label: "Useful" }, { rating: 1, label: "Not useful" }].map((choice) => {
+                            const saved = recommendationFeedback[item.recommendationId];
+                            const selected = saved?.rating === choice.rating;
+                            return (
+                              <button
+                                key={choice.rating}
+                                type="button"
+                                disabled={saved?.saving}
+                                onClick={() => handleRecommendationFeedback(item, choice.rating)}
+                                className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-60 ${selected ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"}`}
+                              >
+                                {saved?.saving ? "Saving…" : selected ? `✓ ${choice.label}` : choice.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      {recommendationFeedback[item.recommendationId]?.error && (
+                        <p role="alert" className="mt-2 text-[11px] text-red-700">{recommendationFeedback[item.recommendationId].error}</p>
+                      )}
                     </div>
 
                     {/* Shared Skills Chips */}

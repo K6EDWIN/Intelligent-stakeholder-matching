@@ -74,13 +74,13 @@ export async function POST(request) {
       where: { id: receiverId },
       include: {
         profile: {
-          include: { skills: true, interests: true },
+          include: { skills: { include: { skill: true } }, interests: { include: { interest: true } } },
         },
       },
     }),
     prisma.profile.findUnique({
       where: { userId: session.user.id },
-      include: { skills: true, interests: true },
+      include: { skills: { include: { skill: true } }, interests: { include: { interest: true } } },
     }),
     prisma.mentorshipRequest.findMany({
       where: { status: "ACCEPTED" },
