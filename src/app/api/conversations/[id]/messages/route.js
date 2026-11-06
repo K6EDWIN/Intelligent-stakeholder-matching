@@ -10,11 +10,14 @@ async function getConversationForMember(id, userId) {
   const conversation = await prisma.conversation.findUnique({
     where: { id },
     include: {
-      participantOne: { select: { id: true, profile: { select: { fullName: true } } } },
-      participantTwo: { select: { id: true, profile: { select: { fullName: true } } } },
+      participantOne: { select: { id: true, isDemo: true, profile: { select: { fullName: true } } } },
+      participantTwo: { select: { id: true, isDemo: true, profile: { select: { fullName: true } } } },
     },
   });
   if (!conversation) return { error: "Conversation not found", status: 404 };
+  if (conversation.participantOne.isDemo || conversation.participantTwo.isDemo) {
+    return { error: "Demo accounts are not part of the live member network", status: 404 };
+  }
   if (conversation.participantOneId !== userId && conversation.participantTwoId !== userId) {
     return { error: "You do not have access to this conversation", status: 403 };
   }

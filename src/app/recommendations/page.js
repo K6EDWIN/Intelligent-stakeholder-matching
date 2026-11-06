@@ -451,7 +451,7 @@ export default function RecommendationsPage() {
                           {item.fullName}
                         </h2>
                         <p className="text-xs text-slate-500 truncate mt-0.5">
-                          {item.department || "Kenya Airways Aviation Specialist"}
+                          {item.department || "Department not provided"}
                         </p>
                         <div className="flex items-center gap-2 pt-1 text-slate-500 text-xs">
                           <span className="flex items-center gap-1 font-mono text-[11px]">
@@ -565,9 +565,6 @@ export default function RecommendationsPage() {
                             {skill}
                           </Tag>
                         ))}
-                        {(!item.sharedSkills || item.sharedSkills.length === 0) && item.matchPercent > 0 && (
-                          <Tag>Aviation Specialist</Tag>
-                        )}
                         {(!item.sharedSkills || item.sharedSkills.length === 0) && item.matchPercent === 0 && (
                           <span className="text-xs text-slate-400">No shared skills recorded yet</span>
                         )}
@@ -634,7 +631,7 @@ export default function RecommendationsPage() {
                     {selectedMatch.fullName}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    {selectedMatch.department || "Kenya Airways Aviation Specialist"}
+                    {selectedMatch.department || "Department not provided"}
                   </p>
                 </div>
               </div>

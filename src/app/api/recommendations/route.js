@@ -42,7 +42,7 @@ export async function GET() {
     where: {
       isPublic: true,
       userId: { not: session.user.id },
-      user: { isVerified: true, isSuspended: false },
+      user: { isVerified: true, isSuspended: false, isDemo: false },
     },
     include: {
       user: { select: { id: true, role: true } },
@@ -53,19 +53,19 @@ export async function GET() {
 
   const [acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections] = await Promise.all([
     prisma.mentorshipRequest.findMany({
-      where: { status: "ACCEPTED" },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
       select: { senderId: true, receiverId: true },
     }),
     prisma.connectionRequest.findMany({
-      where: { status: "ACCEPTED" },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
       select: { senderId: true, receiverId: true },
     }),
     prisma.mentorshipRequest.findMany({
-      where: { status: { in: ["ACCEPTED", "DECLINED"] } },
+      where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
       select: { status: true, modelFeatures: true },
     }),
     prisma.connectionRequest.findMany({
-      where: { status: { in: ["ACCEPTED", "DECLINED"] } },
+      where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
       select: { status: true, modelFeatures: true },
     }),
   ]);
@@ -80,7 +80,12 @@ export async function GET() {
   ]);
   const model = trainAcceptanceModel(examples);
   const feedbackRows = await prisma.feedback.findMany({
-    where: { userId: session.user.id, recommendationId: { not: null } },
+    where: {
+      userId: session.user.id,
+      recommendationId: { not: null },
+      user: { isDemo: false },
+      recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } },
+    },
     select: { rating: true, modelFeatures: true, recommendation: { select: { matchedUserId: true } } },
   });
   const relevanceModel = trainRelevanceModel(feedbackRows);

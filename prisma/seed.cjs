@@ -1,6 +1,12 @@
 require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
+
+if (process.env.NODE_ENV === "production") {
+  console.error("The synthetic seed dataset is disabled in production. Use live account registration and member activity instead.");
+  process.exit(1);
+}
+
 const { PrismaClient } = require("@prisma/client");
 const { PrismaPg } = require("@prisma/adapter-pg");
 const { PrismaNeon } = require("@prisma/adapter-neon");
@@ -126,12 +132,13 @@ async function main() {
   for (const row of stakeholderRows) {
     const user = await prisma.user.upsert({
       where: { email: row.email },
-      update: {},
+      update: { isDemo: true },
       create: {
         email: row.email,
         passwordHash,
         role: row.role,
         isVerified: row.is_verified === "True",
+        isDemo: true,
         profile: {
           create: {
             fullName: row.full_name,
@@ -195,12 +202,13 @@ async function main() {
   // without this there'd be no way to log in and test the admin dashboard.
   await prisma.user.upsert({
     where: { email: "admin@example.com" },
-    update: {},
+    update: { isDemo: true },
     create: {
       email: "admin@example.com",
       passwordHash,
       role: "ADMIN",
       isVerified: true,
+      isDemo: true,
       profile: {
         create: {
           fullName: "Platform Admin",

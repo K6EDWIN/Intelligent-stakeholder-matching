@@ -31,6 +31,7 @@ export async function POST(request) {
       return NextResponse.json({ error: "Provide one to three trained model artifacts" }, { status: 400 });
     }
     const validated = body.artifacts.map((artifact) => {
+      if (artifact.dataSource !== "LIVE_DATABASE") throw new Error("Model artifacts must be trained from the live database export");
       if (!MODEL_TYPES.has(artifact.type) || typeof artifact.version !== "string" || artifact.version.length > 80) throw new Error("Invalid model type or version");
       const isNcf = artifact.type === "NCF";
       if (!isNcf && JSON.stringify(artifact.featureNames) !== JSON.stringify(FEATURE_NAMES)) throw new Error("Feature names do not match this app version");
@@ -49,7 +50,7 @@ export async function POST(request) {
         negativeCount: artifact.negativeCount,
         confidence: artifact.confidence,
         active: isNcf ? artifact.active !== false && ncfQualityPassed : true,
-        metrics: artifact.metrics && typeof artifact.metrics === "object" ? artifact.metrics : undefined,
+        metrics: { ...(artifact.metrics && typeof artifact.metrics === "object" ? artifact.metrics : {}), dataSource: artifact.dataSource },
       };
     });
     if (new Set(validated.map((artifact) => artifact.type)).size !== validated.length) {
@@ -64,7 +65,7 @@ export async function POST(request) {
         await tx.mLModelArtifact.create({ data: artifact });
       }
     });
-    return NextResponse.json({ published: validated.map(({ type, version, sampleCount, active }) => ({ type, version, sampleCount, active })) });
+    return NextResponse.json({ published: validated.map(({ type, version, sampleCount, active, metrics }) => ({ type, version, sampleCount, active, dataSource: metrics.dataSource })) });
   } catch (error) {
     if (error instanceof SyntaxError) return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     if (error.message?.includes("Invalid") || error.message?.includes("Feature") || error.message?.includes("Model") || error.message?.includes("NCF") || error.message?.includes("Only one")) {

@@ -50,6 +50,10 @@ export const authOptions = {
           throw new Error("No account found with that email");
         }
 
+        if (process.env.NODE_ENV === "production" && user.isDemo) {
+          throw new Error("Demonstration accounts cannot sign in to the live service.");
+        }
+
         const isValid = await bcrypt.compare(
           credentials.password,
           user.passwordHash
@@ -108,10 +112,8 @@ export const authOptions = {
               isSuspended: false,
               profile: {
                 create: {
-                  fullName: user.name || "Kenya Airways Member",
-                  department: "Flight Operations",
-                  mentorshipRole: "BOTH",
-                  isPublic: true,
+                  fullName: user.name || googleEmail.split("@")[0],
+                  isPublic: false,
                 },
               },
             },
@@ -121,6 +123,10 @@ export const authOptions = {
         // Administrator accounts created through an invitation are staged as
         // unverified. Do not let Google OAuth skip the invitation/password step.
         if (existingUser.role === "ADMIN" && !existingUser.isVerified) {
+          return false;
+        }
+
+        if (process.env.NODE_ENV === "production" && existingUser.isDemo) {
           return false;
         }
 
@@ -153,11 +159,12 @@ export const authOptions = {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.id },
-            select: { isSuspended: true, role: true },
+            select: { isSuspended: true, isDemo: true, role: true },
           });
 
           if (dbUser) {
             token.isSuspended = dbUser.isSuspended;
+            token.isDemo = dbUser.isDemo;
             token.role = dbUser.role;
           } else {
             token.isSuspended = true;
@@ -171,7 +178,7 @@ export const authOptions = {
     },
     async session({ session, token }) {
       // Immediately invalidate session if the account has been suspended by an admin
-      if (token?.isSuspended) {
+      if (token?.isSuspended || (process.env.NODE_ENV === "production" && token?.isDemo)) {
         return null;
       }
 

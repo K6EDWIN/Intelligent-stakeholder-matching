@@ -2,7 +2,7 @@
 
 PrideConnect is a student-built web application that helps members of the Kenya Airways community discover mentors and professional peers. A member creates a profile with their skills and interests. The application compares that profile with other eligible profiles, uses accepted connections as an additional signal, and presents a ranked list of possible matches.
 
-> **Project status:** Academic prototype for the Strathmore University capstone. It is not an official Kenya Airways service. The included people and interaction history are fabricated demonstration data, not real Kenya Airways records.
+> **Project status:** Live database-backed application built for the Strathmore University capstone. It is an independent project, not an official Kenya Airways service. Production discovery and learning use records from the configured PostgreSQL database; bundled fabricated records are marked as demo data and excluded from production use.
 
 ## Start here
 
@@ -11,16 +11,16 @@ This repository contains the web application, a live adaptive machine-learning r
 | Part | What it does | Is it used by the live website? |
 |---|---|---|
 | Live adaptive recommender | Learns from resolved request outcomes, optional NCF member embeddings, and explicit usefulness feedback. It uses profile/network signals while evidence is limited. | Yes, when each model passes its evidence checks. |
-| Neural Collaborative Filtering (NCF) experiment | Trains a small neural network on fabricated request examples. It did not beat a simple baseline. | No. It remains a separate research notebook. |
+| Neural Collaborative Filtering (NCF) | Trains from eligible, resolved database interactions in the Colab workflow. It is activated only when live-data coverage and time-based quality checks pass. | Yes, as a capped signal when a qualified artifact is published. |
 | Admin evaluation | Compares live ranking formulas against a rule-based definition of a “relevant” profile. | Admin-only diagnostic; it is not an independent user study or held-out validation. |
 
-In simple terms, the live recommender learns how request outcomes relate to profile compatibility, mentorship fit, and past network patterns. A small cold-start formula supports it until enough real outcomes exist. You can also train versioned acceptance and match-feedback models in Google Colab, keep their numeric weights in Google Drive, and publish those weights to the app; the app then performs predictions without depending on a running Colab session. The NCF notebook is a separate experiment; its result was not strong enough to use in the live product. Read [How matching works](#how-matching-works), [Colab model training](#train-and-publish-models-with-google-colab), [Machine-learning experiment](#machine-learning-experiment), and [Evaluation and limitations](#evaluation-and-limitations) for the details.
+In simple terms, the live recommender reads profiles and interactions from PostgreSQL. It learns from real request outcomes and member ratings; synthetic demo accounts are excluded. A profile/network score supports cold start until enough live outcomes exist. Colab can train versioned acceptance, usefulness, and NCF models from the protected training export and publish weights to PostgreSQL; the app performs inference without a running Colab session. Models remain inactive when evidence or time-based quality checks are insufficient. Read [How matching works](#how-matching-works), [Colab model training](#train-and-publish-models-with-google-colab), and [Evaluation and limitations](#evaluation-and-limitations) for details.
 
 ## Train and publish models with Google Colab
 
-`ml/colab_live_recommender.ipynb` is the offline trainer for the live app. It downloads numeric compatibility features, binary labels, timestamps, and HMAC-keyed member pseudonyms from `/api/ml/training-data`; it does not download account IDs, names, email addresses, profile text, or message contents. It trains the acceptance and recommendation-feedback logistic models, plus the same embedding based Neural Collaborative Filtering (NCF) architecture used in `ml/train_recommender.ipynb`. Each model has a time ordered evaluation; NCF is published only when it has enough known members and its holdout AUC is above the configured quality threshold. The notebook saves weights and metrics (not raw examples) to Google Drive and publishes the weights to `/api/ml/artifacts`.
+`ml/colab_live_recommender.ipynb` is the offline trainer for the live app. It downloads eligible database outcomes as numeric compatibility features, labels, timestamps, and HMAC-keyed member pseudonyms from `/api/ml/training-data`; demo accounts are excluded, and names, email addresses, profile text, and message contents are never exported. It trains acceptance, recommendation-feedback, and embedding-based NCF models. Each model is checked using a time-ordered holdout; NCF is activated only when live-data coverage and quality thresholds pass. The endpoint marks the export as live-database data, and the artifact endpoint rejects uploads without that provenance marker. The notebook saves weights and metrics (not raw examples) to Google Drive and publishes weights to `/api/ml/artifacts`.
 
-The website runs inference with the published weights stored in its database. For NCF, members not present in that trained artifact continue to receive the profile based score; NCF's ranking contribution is capped at 20% and is zero for an unseen member. Colab can disconnect after publishing; it is not acting as a continuously running API. Before using this on Vercel Preview, apply `prisma/migrations/20261103090000_add_ml_model_artifacts/migration.sql` to the Preview test database (for example through the provider's SQL editor), add strong random `ML_COLAB_SYNC_TOKEN` and `ML_COLAB_USER_SALT` values in Vercel Preview settings, and redeploy. Keep the pseudonym salt stable between model refreshes. In Colab, add Secrets named `PRIDECONNECT_APP_URL` (the Preview URL) and `ML_COLAB_SYNC_TOKEN` (the same sync secret; the salt stays on the app server), open `ml/colab_live_recommender.ipynb`, and run the cells. Never point this experiment at the production database while evaluating it.
+The website runs inference with the published weights stored in its database. For NCF, members not present in that trained artifact continue to receive the profile based score; NCF's ranking contribution is capped at 20% and is zero for an unseen member. Colab can disconnect after publishing; it is not acting as a continuously running API. Apply all pending migrations to the target database before deployment. The new live-data migration marks existing `example.com` demo accounts and deactivates old model artifacts that lack training-data provenance; retrain and publish from the filtered export before expecting those models to be active. Add strong random `ML_COLAB_SYNC_TOKEN` and `ML_COLAB_USER_SALT` values to the server environment and keep the pseudonym salt stable between refreshes. In Colab, add Secrets named `PRIDECONNECT_APP_URL` (the site URL) and `ML_COLAB_SYNC_TOKEN` (the same sync secret; the salt stays on the app server), open `ml/colab_live_recommender.ipynb`, and run the cells. Use a separate Preview database while evaluating changes; do not use demo seed data in Production.
 
 Acceptance training requires at least 12 resolved requests with at least four acceptances and four declines. Relevance training requires at least eight explicit ratings with at least three positive and three negative examples. NCF requires at least 80 resolved requests, 12 distinct members, at least 20 eligible later holdout examples from both classes, at least 40% known-member coverage, and holdout AUC of at least 0.52. Below those thresholds NCF is not activated and the profile based recommender remains available. Small sample counts and synthetic demo data are for workflow demonstrations, not proof of recommendation quality.
 
@@ -102,11 +102,11 @@ The live learning and feature extraction are in [`src/lib/adaptive-recommender.j
 
 ## Machine-learning experiment
 
-The project also includes a separately trained Neural Collaborative Filtering (NCF) model in [`ml/train_recommender.ipynb`](ml/train_recommender.ipynb). It asks whether a neural network can predict acceptance from user IDs and request type. Its synthetic-data result was around chance, so it is not the model used in the live site. The live logistic-regression model is described above and learns only from new requests whose compatibility features were saved by the application.
+The project also includes an older research notebook in [`ml/train_recommender.ipynb`](ml/train_recommender.ipynb), evaluated on fabricated data. Its results are not used by the live site. The live NCF model is trained separately by `ml/colab_live_recommender.ipynb` from eligible PostgreSQL outcomes and is activated only after its holdout checks pass.
 
 It uses the sender, recipient, and request type (mentorship or connection) as inputs. Learned user embeddings represent each stakeholder as a short list of numbers; a small neural network combines the two people’s embeddings and request type and outputs a predicted acceptance score. The experiment uses a train/validation/test split, binary cross-entropy loss, Adam optimization, regularization, and early stopping. This notebook's trained NCF model is separate from the JavaScript logistic-regression model used by the live recommender.
 
-The NCF test ROC-AUC is approximately `0.498`, close to random ranking (`0.5`). Test accuracy is `0.52`, below the majority-class baseline of approximately `0.532`. This experiment does not show that the NCF model generalizes to unseen interactions. The live model will also need future-outcome evaluation on consented real use before its effectiveness can be claimed.
+The older experiment's ROC-AUC is approximately `0.498`, close to random ranking (`0.5`). Test accuracy is `0.52`, below the majority-class baseline of approximately `0.532`. These figures apply only to the fabricated research dataset. Live-model quality must be judged from the live-data holdout metrics shown in the Admin Console; passing a threshold is not a guarantee of real-world benefit.
 
 The notebook, its limitations, the exported artifacts, and instructions to rerun it in Google Colab are explained in [`docs/ML_MODEL.md`](docs/ML_MODEL.md) and [`ml/README.md`](ml/README.md).
 
@@ -137,16 +137,16 @@ The admin evaluation endpoint calculates Precision@5, Recall@5, NDCG@10, and Mea
 
 For this prototype, a profile is marked “relevant” if it shares at least two skills with the member **or** has an accepted connection with them. Metrics are averaged across evaluated members who have at least one profile meeting that rule. This is a designed proxy label, not a real person's judgment. It also reuses skills, which are inputs to content scoring. Therefore these dashboard metrics are useful for checking how ranking methods behave against the rule, but they are not independent proof that recommendations are useful, fair, or accurate in practice. There is no user acceptance study included in the repository.
 
-The live model's time-based holdout is an internal diagnostic on available request data. The NCF notebook is evaluated separately on a held-out split of labeled synthetic request rows. The admin endpoint's proxy ranking metrics, live model time holdout, and NCF classification metrics answer different questions; do not compare them as if they measured the same task.
+The live models' time-based holdouts are internal diagnostics on eligible database records. The older NCF experiment is evaluated separately on fabricated rows. The admin endpoint's proxy ranking metrics and the models' holdout metrics answer different questions; do not compare them as if they measured the same task.
 
 Key limitations to keep in mind:
 
-1. **Fabricated data:** the included names, profiles, and interactions are synthetic demonstration records. They are not evidence of performance on Kenya Airways stakeholders.
-2. **Sparse collaboration signal:** the NCF input contains 372 accepted/declined examples, and every sender-recipient pair occurs only once. That leaves the model with little repeated pair history from which to learn preferences.
+1. **Development seed data:** the repository includes fabricated accounts and interactions for local demos. They are marked as demo records, excluded from live member discovery and model training, and must not be loaded into Production.
+2. **Sparse collaboration signal:** real systems need repeated, consented interaction outcomes to learn member preferences. NCF remains inactive until its live-data coverage and time-holdout quality gates pass.
 3. **Prototype relevance labels:** the admin benchmark defines relevance from shared skills and existing accepted links rather than independent human judgments.
 4. **Cold-start settings:** the live model's minimum sample counts and gradual transition are hand-set prototype values, not optimized or validated on a large real dataset.
 5. **Limited evaluation evidence:** a chronological holdout is now reported when enough examples exist, but it is small, internal, and does not replace an independent user study or consented production validation.
-6. **Separate NCF experiment:** the Colab neural model and exported embeddings remain research artifacts. `/api/recommendations` uses the live logistic-regression model described above.
+6. **Model evidence:** the live logistic and NCF models are learned from database outcomes, but a passed internal threshold does not establish fairness or usefulness. Continue monitoring holdout results and collect member feedback before making strong performance claims.
 
 To evaluate real recommendation quality, the project needs consented real usage data, a time-aware or otherwise leakage-resistant evaluation split, relevance judgments from members, baseline comparisons, and a user study. Until then, present the current metrics as prototype diagnostics.
 
@@ -223,16 +223,16 @@ Administrators can invite another administrator from **Admin Console → Adminis
 
 The Admin Console **Audit Log** records member and administrator sign-ins and key actions across profiles, connection and mentorship requests, messages, events, opportunities, feedback, Flight Reconnect, and account governance. Each entry names the actor and, when relevant, the affected account. Audit records use the existing `AdminAction` table and need no schema migration.
 
-### 3. Create tables and load the demonstration data
+### 3. Create tables and (optionally) load local demonstration data
 
 ```bash
 npm run db:push
 npm run seed
 ```
 
-`db:push` applies the Prisma schema to the configured database. The updated recommender adds saved recommendation feature snapshots and profile text scores, so run `npm run db:push` against the Preview/demo database before deploying this change there. Apply schema changes to Production only when you intentionally deploy the same feature to Production. `seed` creates fabricated stakeholder accounts, profiles, skills, interests, requests, and feedback with synthetic request feature snapshots. This is demo data, not evidence of real-world accuracy. Seed demo accounts use the shared password `Test1234!`; use them only in a separate demo database and never reuse that password for a real service.
+`db:push` applies the Prisma schema to the configured database. Apply all pending schema changes, including `isDemo`, before deploying. The `seed` command is for local development/demo databases only and refuses to run when `NODE_ENV=production`. It creates fabricated users and interactions marked as demo records; live directory results, admin metrics, and model training exclude them. Do not run the seed against a live database.
 
-For a hosted demo, create a **new, empty PostgreSQL database/project** (do not clone production data). In PowerShell, apply the schema and load the fabricated dataset into that database:
+For a hosted demo, create a **separate, empty PostgreSQL database/project** (do not clone production data). Apply the schema and load the fabricated dataset into that database only:
 
 ```powershell
 $env:DATABASE_URL = "<new-demo-database-connection-string>"
@@ -241,7 +241,7 @@ npm run seed
 Remove-Item Env:DATABASE_URL
 ```
 
-Then add that same `DATABASE_URL` in Vercel with the **Preview** environment selected, leaving Production unchanged. Also make the preview's `NEXTAUTH_SECRET`, `ML_SERVICE_URL`, and `ML_SERVICE_TOKEN` available in the Preview environment if you want to sign in and test the hosted recommender there. Push or redeploy a non-production branch to create a Preview deployment using the demo database. For local setup, use the same PowerShell commands and start the app with `npm run dev`; neither setup changes Vercel Production.
+Then add that same `DATABASE_URL` in Vercel with the **Preview** environment selected, leaving Production unchanged. Ensure Preview has its own authentication and ML secrets. For the live service, point Production to its live PostgreSQL database and do not run the demo seed. For local setup, use the same PowerShell commands and start the app with `npm run dev`.
 
 For current sample data counts and how it is generated, see [`docs/DATA.md`](docs/DATA.md).
 

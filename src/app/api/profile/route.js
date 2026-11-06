@@ -26,8 +26,8 @@ export async function GET() {
       data: {
         userId: session.user.id,
         fullName: session.user.name || session.user.email?.split("@")[0] || "PrideConnect Member",
-        department: session.user.role === "ADMIN" ? "Administration" : "Flight Operations",
-        isPublic: session.user.role !== "ADMIN",
+        department: session.user.role === "ADMIN" ? "Administration" : null,
+        isPublic: false,
       },
       include: { skills: true, interests: true },
     });

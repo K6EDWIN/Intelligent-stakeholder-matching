@@ -80,45 +80,20 @@ export async function POST(request) {
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const personaDefaults = {
-      ALUMNI: {
-        department: "Pride Centre Academy",
-        bio: "Pride Centre Alumni · Graduates & current aviation trainees",
-        mentorshipRole: "MENTEE",
-      },
-      STAFF: {
-        department: "Flight Operations",
-        bio: "Active Flight & Ground Staff · Pilots, cabin crew, engineers, operations",
-        mentorshipRole: "MENTOR",
-      },
-      FORMER_STAFF: {
-        department: "Executive & Flight Operations Advisory",
-        bio: "Former Staff / Retiree · Alumni network & institutional advisors",
-        mentorshipRole: "MENTOR",
-      },
-      FREQUENT_FLYER: {
-        department: "Commercial Aviation & Asante Rewards",
-        bio: "Frequent Flyer · Asante Rewards & executive passengers",
-        mentorshipRole: "BOTH",
-      },
-    }[role] || {
-      department: "Flight Operations",
-      bio: "Kenya Airways Stakeholder Member",
-      mentorshipRole: "BOTH",
-    };
-
     const assignedDepartment =
       typeof body.department === "string" && body.department.trim()
         ? body.department.trim()
-        : personaDefaults.department;
+        : null;
 
     const assignedBio =
       typeof body.bio === "string" && body.bio.trim()
         ? body.bio.trim()
-        : personaDefaults.bio;
+        : null;
 
     const assignedMentorshipRole =
-      body.mentorshipRole || personaDefaults.mentorshipRole;
+      ["MENTOR", "MENTEE", "BOTH"].includes(body.mentorshipRole)
+        ? body.mentorshipRole
+        : null;
 
     const user = await prisma.user.create({
       data: {
@@ -131,7 +106,7 @@ export async function POST(request) {
             department: assignedDepartment,
             bio: assignedBio,
             mentorshipRole: assignedMentorshipRole,
-            isPublic: true,
+            isPublic: false,
           },
         },
       },

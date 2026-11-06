@@ -24,12 +24,12 @@ export async function GET() {
 
   const [sent, received] = await Promise.all([
     prisma.mentorshipRequest.findMany({
-      where: { senderId: session.user.id },
+      where: { senderId: session.user.id, receiver: { is: { isDemo: false } } },
       include: { receiver: { select: COUNTERPART_SELECT } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.mentorshipRequest.findMany({
-      where: { receiverId: session.user.id },
+      where: { receiverId: session.user.id, sender: { is: { isDemo: false } } },
       include: { sender: { select: COUNTERPART_SELECT } },
       orderBy: { createdAt: "desc" },
     }),
@@ -83,18 +83,18 @@ export async function POST(request) {
       include: { skills: { include: { skill: true } }, interests: { include: { interest: true } } },
     }),
     prisma.mentorshipRequest.findMany({
-      where: { status: "ACCEPTED" },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
       select: { senderId: true, receiverId: true },
     }),
     prisma.connectionRequest.findMany({
-      where: { status: "ACCEPTED" },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
       select: { senderId: true, receiverId: true },
     }),
   ]);
   if (!receiver) {
     return NextResponse.json({ error: "Recipient not found" }, { status: 404 });
   }
-  if (receiver.role === "ADMIN") {
+  if (receiver.isDemo || receiver.role === "ADMIN") {
     return NextResponse.json({ error: "Administrator accounts are not available for mentorship matching" }, { status: 403 });
   }
 

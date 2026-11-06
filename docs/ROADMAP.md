@@ -22,7 +22,7 @@ Verified against the code, not just against what issues say:
 | Opportunity board, Events + RSVP | ✅ Done | `/api/opportunities`, `/api/events` — closes #9, #20 |
 | Flight Reconnect | ✅ Done | `/api/flight-reconnect`, mutual opt-in matching — closes #10 |
 | Admin & moderation dashboard | ✅ Done | `/admin`, `User.isSuspended` migration — closes #21. Manually verified against a live DB before merging |
-| Trained NCF model (accept/decline prediction) | ✅ Done | `ml/train_recommender.ipynb`, [`ML_MODEL.md`](ML_MODEL.md) — closes #46. Standalone research artifact, not wired into live ranking |
+| Trained NCF model (accept/decline prediction) | ✅ Done | `ml/colab_live_recommender.ipynb`, [`ML_MODEL.md`](ML_MODEL.md) — live artifact is trained from filtered database outcomes and activated only after holdout checks pass; the older fabricated-data notebook remains research-only |
 | Admin ranking diagnostics | ✅ Implemented, proxy labels only | `/api/admin/evaluation`; not an independent measure of recommendation relevance |
 | Independent evaluation, UAT, deployment | ⬜ Not started | #11 (real or human-judged validation), #12, #22 |
 

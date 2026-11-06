@@ -26,6 +26,7 @@ export async function GET(request) {
       user: {
         isVerified: true,
         isSuspended: false,
+        isDemo: false,
         ...(role ? { role } : {}),
       },
       ...(skillId ? { skills: { some: { skillId } } } : {}),

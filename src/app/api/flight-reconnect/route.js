@@ -52,7 +52,7 @@ export async function GET() {
         travelDate: flight.travelDate,
         consentToShare: true,
         userId: { not: session.user.id },
-        user: { isVerified: true, isSuspended: false, role: { not: "ADMIN" } },
+        user: { isVerified: true, isSuspended: false, isDemo: false, role: { not: "ADMIN" } },
       },
       include: {
         user: {
@@ -72,8 +72,8 @@ export async function GET() {
         travelDate: flight.travelDate,
         userId: other.user.id,
         role: other.user.role,
-        fullName: other.user.profile?.fullName || "Kenya Airways Member",
-        department: other.user.profile?.department || "Flight Operations",
+        fullName: other.user.profile?.fullName || "Member",
+        department: other.user.profile?.department || null,
       });
     }
   }

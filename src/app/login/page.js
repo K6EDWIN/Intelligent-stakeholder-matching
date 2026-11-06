@@ -17,11 +17,20 @@ function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [selectedPersona, setSelectedPersona] = useState("STAFF");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [liveStats, setLiveStats] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/public-stats", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((stats) => { if (isMounted && stats) setLiveStats(stats); })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   // If already authenticated, redirect to appropriate destination immediately
   useEffect(() => {
@@ -116,21 +125,21 @@ function LoginForm() {
             {/* Metrics */}
             <div className="grid grid-cols-3 gap-3 pt-4 border-t border-slate-800">
               <div className="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
-                <b className="block text-2xl font-bold text-white tracking-tight">150+</b>
+                <b className="block text-2xl font-bold text-white tracking-tight">{liveStats?.members ?? "—"}</b>
                 <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
-                  Stakeholders
+                  Public members
                 </span>
               </div>
               <div className="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
-                <b className="block text-2xl font-bold text-[#c59b27] tracking-tight">440+</b>
+                <b className="block text-2xl font-bold text-[#c59b27] tracking-tight">{liveStats?.acceptedRelationships ?? "—"}</b>
                 <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
-                  Handshakes
+                  Accepted connections
                 </span>
               </div>
               <div className="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
-                <b className="block text-2xl font-bold text-emerald-400 tracking-tight">Hybrid</b>
+                <b className="block text-2xl font-bold text-emerald-400 tracking-tight">Live</b>
                 <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
-                  CBF + CF
+                  Database-backed
                 </span>
               </div>
             </div>

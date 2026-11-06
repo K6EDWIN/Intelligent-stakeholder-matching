@@ -4,7 +4,7 @@ This folder contains a small Neural Collaborative Filtering (NCF) experiment. In
 
 For the live-app training workflow, see [`colab_live_recommender.ipynb`](colab_live_recommender.ipynb). It trains both the numeric outcome models and the NCF embedding model from app-collected resolved interactions, saves model weights to Google Drive, and publishes quality-checked weights to the app for inference. It is adapted from the NCF architecture below, but trains on the app's own history rather than only the checked-in fabricated CSV files.
 
-**This NCF notebook is not the live recommendation engine.** The website now learns from newly resolved mentorship and connection requests with a separate lightweight logistic-regression model in `src/lib/adaptive-recommender.js`. The NCF model and its embeddings remain notebook research artifacts because its synthetic-data results were near chance. The live model and both sets of limitations are detailed in [`docs/ML_MODEL.md`](../docs/ML_MODEL.md).
+**The older `train_recommender.ipynb` notebook is not the live recommendation engine.** Its fabricated-data result was near chance. The separate `colab_live_recommender.ipynb` trains the live acceptance, usefulness, and NCF artifacts from eligible PostgreSQL outcomes; the app activates them only after source and quality checks. The live models and limitations are detailed in [`docs/ML_MODEL.md`](../docs/ML_MODEL.md).
 
 ## Files
 
@@ -36,6 +36,6 @@ The checked-in `precision_at_5` field is a historical value from an earlier note
 
 The live adaptive recommendation service is prepared in [`huggingface/`](huggingface/). It is a Docker API that fits an acceptance model from resolved request outcomes and a separate relevance model from explicit member ratings. The app sends only numeric feature vectors and labels; profile text is vectorized locally in the web app. This is separate from the NCF notebook above. Redeploy the Python service when changing its request or response contract. Follow the deployment steps in the main [README](../README.md#host-the-live-recommender-separately) and the Space-specific [`README`](huggingface/README.md).
 
-## Why this NCF model stays separate
+## Why the fabricated-data experiment stays separate
 
-The NCF model did not show reliable predictive value on this dataset. The live website uses a different model that learns from request outcomes captured by the running application. The live `/api/recommendations` route does not load this notebook's checkpoint or embeddings. Running the website does not require Python, Colab, or files from this folder.
+The old NCF model did not show reliable predictive value on this fabricated dataset. The live app does not load this notebook's checkpoint or embeddings. Instead, its separate live Colab workflow can publish a newly trained NCF artifact only from the filtered database export and only when the holdout gates pass. Running the website does not require Python or an active Colab session.

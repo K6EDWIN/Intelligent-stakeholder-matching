@@ -40,7 +40,7 @@ export async function GET(req) {
 
     const [profiles, acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections, relevanceFeedback, modelArtifacts] = await Promise.all([
       prisma.profile.findMany({
-        where: { user: { isVerified: true, isSuspended: false } },
+        where: { user: { isVerified: true, isSuspended: false, isDemo: false } },
         include: {
           user: { select: { id: true, role: true } },
           skills: { include: { skill: true } },
@@ -48,23 +48,27 @@ export async function GET(req) {
         },
       }),
       prisma.mentorshipRequest.findMany({
-        where: { status: "ACCEPTED" },
+        where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
         select: { senderId: true, receiverId: true },
       }),
       prisma.connectionRequest.findMany({
-        where: { status: "ACCEPTED" },
+        where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
         select: { senderId: true, receiverId: true },
       }),
       prisma.mentorshipRequest.findMany({
-        where: { status: { in: ["ACCEPTED", "DECLINED"] } },
+        where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
         select: { status: true, modelFeatures: true, createdAt: true },
       }),
       prisma.connectionRequest.findMany({
-        where: { status: { in: ["ACCEPTED", "DECLINED"] } },
+        where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
         select: { status: true, modelFeatures: true, createdAt: true },
       }),
       prisma.feedback.findMany({
-        where: { recommendationId: { not: null } },
+        where: {
+          recommendationId: { not: null },
+          user: { isDemo: false },
+          recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } },
+        },
         select: { rating: true, modelFeatures: true, createdAt: true },
       }),
       prisma.mLModelArtifact.findMany({

@@ -14,9 +14,6 @@ const PERSONAS = [
     tag: "Graduates",
     subtitle: "Graduates & current aviation trainees",
     icon: "academic",
-    department: "Pride Centre Academy",
-    bio: "Pride Centre Alumni · Graduates & current aviation trainees",
-    mentorshipTrack: "Mentee (Cadet workshops, career transitions, and skills growth)",
   },
   {
     id: "STAFF",
@@ -24,9 +21,6 @@ const PERSONAS = [
     tag: "Active Crew",
     subtitle: "Pilots, cabin crew, engineers, operations",
     icon: "flight",
-    department: "Flight Operations",
-    bio: "Active Flight & Ground Staff · Pilots, cabin crew, engineers, operations",
-    mentorshipTrack: "Mentor (Fleet operations, technical peer matching, and cross-station sharing)",
   },
   {
     id: "FORMER_STAFF",
@@ -34,9 +28,6 @@ const PERSONAS = [
     tag: "Advisory",
     subtitle: "Alumni network & institutional advisors",
     icon: "star",
-    department: "Executive & Flight Operations Advisory",
-    bio: "Former Staff / Retiree · Alumni network & institutional advisors",
-    mentorshipTrack: "Mentor (Institutional wisdom, executive advisory, and alumni leadership)",
   },
   {
     id: "FREQUENT_FLYER",
@@ -44,9 +35,6 @@ const PERSONAS = [
     tag: "Asante Elite",
     subtitle: "Asante Rewards & executive passengers",
     icon: "shield",
-    department: "Commercial Aviation & Asante Rewards",
-    bio: "Frequent Flyer · Asante Rewards & executive passengers",
-    mentorshipTrack: "Both (Executive networking, route connections, and loyalty synergy)",
   },
 ];
 
@@ -55,18 +43,19 @@ export default function RegisterPage() {
     email: "",
     password: "",
     fullName: "",
-    role: "ALUMNI",
-    department: PERSONAS[0].department,
-    bio: PERSONAS[0].bio,
+    role: "",
+    department: "",
+    bio: "",
+    mentorshipRole: "",
     identifier: "",
   });
-  const [consent, setConsent] = useState(true);
+  const [consent, setConsent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const selectedPersona = PERSONAS.find((p) => p.id === form.role) || PERSONAS[0];
+  const selectedPersona = PERSONAS.find((p) => p.id === form.role) || null;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,17 +63,15 @@ export default function RegisterPage() {
   };
 
   const handleRoleSelect = (roleId) => {
-    const target = PERSONAS.find((p) => p.id === roleId);
-    setForm((prev) => ({
-      ...prev,
-      role: roleId,
-      department: target?.department || prev.department,
-      bio: target?.bio || prev.bio,
-    }));
+    setForm((prev) => ({ ...prev, role: roleId }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.role) {
+      setError("Choose your stakeholder type to continue.");
+      return;
+    }
     if (!consent) {
       setError("Please accept the privacy and stakeholder consent agreement.");
       return;
@@ -104,6 +91,7 @@ export default function RegisterPage() {
           role: form.role,
           department: form.department,
           bio: form.bio,
+          mentorshipRole: form.mentorshipRole,
         }),
       });
 
@@ -279,7 +267,7 @@ export default function RegisterPage() {
                           Step 1: Choose Your Stakeholder Persona
                         </label>
                         <span className="text-[11px] text-slate-500 font-medium">
-                          Sets matching baseline & profile tags
+                          Used for account access and directory filters
                         </span>
                       </div>
 
@@ -334,29 +322,25 @@ export default function RegisterPage() {
                         })}
                       </div>
 
-                      {/* Prominent Persona Pre-filled Metadata Info Box */}
+                      {/* Member-entered profile details */}
                       <div className="mt-3.5 p-3.5 bg-slate-50 border border-slate-200/90 rounded-xl space-y-3">
                         <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
                           <div className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                             <span className="text-xs font-bold text-slate-800">
-                              Pre-filled Stakeholder Details for:{" "}
-                              <span className="text-[#c8102e]">{selectedPersona.title}</span>
+                              Profile details {selectedPersona ? `for ${selectedPersona.title}` : ""}
                             </span>
                           </div>
-                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                            Tag: {selectedPersona.tag}
-                          </span>
                         </div>
 
                         <p className="text-[11px] text-slate-600 italic">
-                          &ldquo;{selectedPersona.subtitle}&rdquo;
+                          {selectedPersona?.subtitle || "Choose your stakeholder type above. Your profile details are entered by you."}
                         </p>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
                           <div>
                             <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                              Assigned Department / Unit
+                              Department / Unit
                             </label>
                             <input
                               name="department"
@@ -368,18 +352,19 @@ export default function RegisterPage() {
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                              Mentorship Alignment Track
-                            </label>
-                            <div className="w-full bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-medium truncate">
-                              {selectedPersona.mentorshipTrack}
-                            </div>
+                            <label className="block text-[11px] font-semibold text-slate-700 mb-1">Mentorship preference</label>
+                            <select name="mentorshipRole" value={form.mentorshipRole} onChange={handleChange} className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e]/20 transition">
+                              <option value="">Choose later</option>
+                              <option value="MENTOR">I can mentor</option>
+                              <option value="MENTEE">I am seeking mentorship</option>
+                              <option value="BOTH">Open to both</option>
+                            </select>
                           </div>
                         </div>
 
                         <div>
                           <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                            Default Profile Bio / Stakeholder Focus
+                              Profile bio (optional)
                           </label>
                           <input
                             name="bio"
@@ -393,7 +378,7 @@ export default function RegisterPage() {
                         <div className="text-[10px] text-slate-500 flex items-center gap-1.5 pt-0.5">
                           <Icon name="sparkles" size={12} className="text-[#c59b27] shrink-0" />
                           <span>
-                            These descriptions will be saved to your verified profile upon email sign-up and used for intelligent matching.
+                            Only the details you provide are saved. Your profile stays private until you choose to make it visible.
                           </span>
                         </div>
                       </div>

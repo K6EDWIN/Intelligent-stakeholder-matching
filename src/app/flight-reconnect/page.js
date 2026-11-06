@@ -552,7 +552,7 @@ export default function FlightReconnectPage() {
                           {m.fullName}
                         </h3>
                         <p className="text-xs text-slate-500 truncate">
-                          {m.department || "Kenya Airways Aviation Specialist"}
+                          {m.department || "Department not provided"}
                         </p>
                       </div>
                     </div>

@@ -17,7 +17,7 @@ export async function GET(request) {
   const requestedPage = Number.parseInt(searchParams.get("page") || "1", 10);
   const page = Number.isFinite(requestedPage) ? Math.max(1, requestedPage) : 1;
   const validRoles = ["ALUMNI", "STAFF", "FORMER_STAFF", "FREQUENT_FLYER"];
-  const filters = [{ role: { not: "ADMIN" } }];
+  const filters = [{ role: { not: "ADMIN" } }, { isDemo: false }];
   if (validRoles.includes(role)) filters.push({ role });
   if (department !== "ALL") {
     filters.push({ profile: { is: { department: { equals: department } } } });
@@ -48,7 +48,7 @@ export async function GET(request) {
     prisma.user.count({ where }),
     includeDepartments
       ? prisma.profile.findMany({
-          where: { department: { not: null }, user: { role: { not: "ADMIN" } } },
+          where: { department: { not: null }, user: { role: { not: "ADMIN" }, isDemo: false } },
           select: { department: true },
           distinct: ["department"],
           orderBy: { department: "asc" },

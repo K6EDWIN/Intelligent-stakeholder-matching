@@ -14,19 +14,24 @@ export async function GET(request) {
   try {
     const [mentorship, connections, feedback] = await Promise.all([
       prisma.mentorshipRequest.findMany({
-        where: { status: { in: ["ACCEPTED", "DECLINED"] } },
+        where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
         select: { status: true, modelFeatures: true, senderId: true, receiverId: true, updatedAt: true },
         orderBy: { updatedAt: "desc" },
         take: 10000,
       }),
       prisma.connectionRequest.findMany({
-        where: { status: { in: ["ACCEPTED", "DECLINED"] } },
+        where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
         select: { status: true, modelFeatures: true, senderId: true, receiverId: true, updatedAt: true },
         orderBy: { updatedAt: "desc" },
         take: 10000,
       }),
       prisma.feedback.findMany({
-        where: { recommendationId: { not: null }, OR: [{ rating: { gte: 4 } }, { rating: { lte: 2 } }] },
+        where: {
+          recommendationId: { not: null },
+          user: { isDemo: false },
+          recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } },
+          OR: [{ rating: { gte: 4 } }, { rating: { lte: 2 } }],
+        },
         select: { rating: true, modelFeatures: true, createdAt: true },
         orderBy: { createdAt: "desc" },
         take: 10000,
@@ -52,7 +57,7 @@ export async function GET(request) {
         timestamp: row.updatedAt,
       }));
 
-    return NextResponse.json({ featureNames: ["skillOverlap", "interestOverlap", "sameDepartment", "mentorshipRoleFit", "sharedNetwork", "isMentorshipRequest", "semanticProfileOverlap"], acceptance, relevance, ncf: ncfExamples }, {
+    return NextResponse.json({ dataSource: "LIVE_DATABASE", featureNames: ["skillOverlap", "interestOverlap", "sameDepartment", "mentorshipRoleFit", "sharedNetwork", "isMentorshipRequest", "semanticProfileOverlap"], acceptance, relevance, ncf: ncfExamples }, {
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {

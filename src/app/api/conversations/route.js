@@ -17,11 +17,11 @@ export async function GET() {
   const userId = session.user.id;
   const [connections, mentorships] = await Promise.all([
     prisma.connectionRequest.findMany({
-      where: { status: "ACCEPTED", OR: [{ senderId: userId }, { receiverId: userId }] },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } }, OR: [{ senderId: userId }, { receiverId: userId }] },
       select: { senderId: true, receiverId: true },
     }),
     prisma.mentorshipRequest.findMany({
-      where: { status: "ACCEPTED", OR: [{ senderId: userId }, { receiverId: userId }] },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } }, OR: [{ senderId: userId }, { receiverId: userId }] },
       select: { senderId: true, receiverId: true },
     }),
   ]);
@@ -34,7 +34,12 @@ export async function GET() {
   await Promise.all(counterpartIds.map((counterpartId) => ensureConversation(userId, counterpartId)));
 
   const conversations = await prisma.conversation.findMany({
-    where: { OR: [{ participantOneId: userId }, { participantTwoId: userId }] },
+    where: {
+      OR: [
+        { participantOneId: userId, participantTwo: { is: { isDemo: false } } },
+        { participantTwoId: userId, participantOne: { is: { isDemo: false } } },
+      ],
+    },
     include: {
       participantOne: participantInclude,
       participantTwo: participantInclude,
