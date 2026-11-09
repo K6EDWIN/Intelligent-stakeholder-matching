@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendAppEmail } from "@/lib/gmail";
 import { logActivity } from "@/lib/audit-log";
+import { buildAppUrl, escapeHtml } from "@/lib/app-url";
 
 const ALLOWED_REGISTRATION_ROLES = [
   "ALUMNI",
@@ -70,6 +71,17 @@ export async function POST(request) {
       );
     }
 
+    let verificationBaseUrl;
+    try {
+      verificationBaseUrl = buildAppUrl("/");
+    } catch (error) {
+      console.error("Email verification URL is not configured:", error);
+      return NextResponse.json(
+        { error: "Email links are not configured. Set APP_URL to the public site address and redeploy." },
+        { status: 503 }
+      );
+    }
+
     const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
       return NextResponse.json(
@@ -133,8 +145,8 @@ export async function POST(request) {
       },
     });
 
-    const baseUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "");
-    const verifyUrl = `${baseUrl}/api/auth/verify?token=${token}`;
+    const verifyUrl = new URL("/api/auth/verify", verificationBaseUrl);
+    verifyUrl.searchParams.set("token", token);
     // Security Fix: Do NOT leak sensitive verification tokens/URLs to production or server logs
 
     try {
@@ -143,15 +155,15 @@ export async function POST(request) {
         subject: "Verify your email - Intelligent Stakeholder Matching",
         html: `
           <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-            <h2>Welcome, ${fullName}!</h2>
+            <h2>Welcome, ${escapeHtml(fullName)}!</h2>
             <p>Thanks for registering. Please confirm your email address to activate your account.</p>
             <p>
-              <a href="${verifyUrl}" style="background:#000;color:#fff;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;">
+              <a href="${escapeHtml(verifyUrl.toString())}" style="background:#000;color:#fff;padding:10px 20px;text-decoration:none;border-radius:6px;display:inline-block;">
                 Verify my email
               </a>
             </p>
             <p>Or copy this link into your browser:</p>
-            <p style="word-break:break-all;color:#555;">${verifyUrl}</p>
+            <p style="word-break:break-all;color:#555;">${escapeHtml(verifyUrl.toString())}</p>
             <p>This link expires in 24 hours.</p>
           </div>
         `,
