@@ -21,12 +21,18 @@ vi.mock("@/lib/prisma", () => ({
     },
     feedback: {
       findMany: vi.fn(),
+      count: vi.fn(),
     },
     mLModelArtifact: {
       findMany: vi.fn(),
     },
     recommendation: {
       upsert: vi.fn(),
+    },
+    recommendationEvent: {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      createMany: vi.fn(),
     },
     $transaction: vi.fn(),
   },
@@ -53,7 +59,11 @@ describe("GET /api/recommendations API Endpoint", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     prisma.feedback.findMany.mockResolvedValue([]);
+    prisma.feedback.count.mockResolvedValue(0);
     prisma.mLModelArtifact.findMany.mockResolvedValue([]);
+    prisma.recommendationEvent.findMany.mockResolvedValue([]);
+    prisma.recommendationEvent.count.mockResolvedValue(0);
+    prisma.recommendationEvent.createMany.mockResolvedValue({ count: 0 });
   });
 
   it("returns 401 if the user is unauthenticated", async () => {
