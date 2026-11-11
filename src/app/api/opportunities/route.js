@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/audit-log";
 
 // GET /api/opportunities
 // Lists all opportunities, most recent first.
@@ -43,6 +44,14 @@ export async function POST(request) {
 
   const opportunity = await prisma.opportunity.create({
     data: { postedById: session.user.id, title, description, type },
+  });
+
+  await logActivity({
+    actorId: session.user.id,
+    targetId: session.user.id,
+    actionType: "OPPORTUNITY_CREATED",
+    summary: `Posted the opportunity “${title}”`,
+    details: { opportunityId: opportunity.id, title, category: type },
   });
 
   return NextResponse.json({ opportunity }, { status: 201 });

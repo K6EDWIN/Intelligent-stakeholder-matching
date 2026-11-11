@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { extractPairFeatures } from "@/lib/adaptive-recommender";
+import { buildConnectionsByUser, computeCollaborativeScore } from "@/lib/collaborative";
+import { createNotification } from "@/lib/notifications";
+import { logActivity } from "@/lib/audit-log";
 
 const COUNTERPART_SELECT = {
   id: true,
@@ -20,12 +24,12 @@ export async function GET() {
 
   const [sent, received] = await Promise.all([
     prisma.mentorshipRequest.findMany({
-      where: { senderId: session.user.id },
+      where: { senderId: session.user.id, receiver: { is: { isDemo: false } } },
       include: { receiver: { select: COUNTERPART_SELECT } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.mentorshipRequest.findMany({
-      where: { receiverId: session.user.id },
+      where: { receiverId: session.user.id, sender: { is: { isDemo: false } } },
       include: { sender: { select: COUNTERPART_SELECT } },
       orderBy: { createdAt: "desc" },
     }),
@@ -45,7 +49,9 @@ export async function POST(request) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { receiverId, message } = await request.json();
+  const body = await request.json().catch(() => ({}));
+  const receiverId = body.receiverId || body.userId || body.targetUserId;
+  const message = body.message;
 
   if (!receiverId) {
     return NextResponse.json(
@@ -59,12 +65,37 @@ export async function POST(request) {
       { status: 400 }
     );
   }
+  if (session.user.role === "ADMIN") {
+    return NextResponse.json({ error: "Administrator accounts do not join the mentorship network" }, { status: 403 });
+  }
 
-  const receiver = await prisma.user.findUnique({
-    where: { id: receiverId },
-  });
+  const [receiver, senderProfile, acceptedMentorships, acceptedConnections] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: receiverId },
+      include: {
+        profile: {
+          include: { skills: { include: { skill: true } }, interests: { include: { interest: true } } },
+        },
+      },
+    }),
+    prisma.profile.findUnique({
+      where: { userId: session.user.id },
+      include: { skills: { include: { skill: true } }, interests: { include: { interest: true } } },
+    }),
+    prisma.mentorshipRequest.findMany({
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+      select: { senderId: true, receiverId: true },
+    }),
+    prisma.connectionRequest.findMany({
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+      select: { senderId: true, receiverId: true },
+    }),
+  ]);
   if (!receiver) {
     return NextResponse.json({ error: "Recipient not found" }, { status: 404 });
+  }
+  if (receiver.isDemo || receiver.role === "ADMIN") {
+    return NextResponse.json({ error: "Administrator accounts are not available for mentorship matching" }, { status: 403 });
   }
 
   const existing = await prisma.mentorshipRequest.findFirst({
@@ -82,7 +113,35 @@ export async function POST(request) {
       senderId: session.user.id,
       receiverId,
       message: message || null,
+      modelFeatures: senderProfile && receiver.profile
+        ? extractPairFeatures(
+            senderProfile,
+            receiver.profile,
+            "MENTORSHIP",
+            computeCollaborativeScore(
+              buildConnectionsByUser([...acceptedMentorships, ...acceptedConnections]),
+              session.user.id,
+              receiverId
+            )
+          )
+        : undefined,
     },
+  });
+
+  await createNotification({
+      userId: receiverId,
+      type: "MENTORSHIP_REQUEST",
+      title: "New mentorship request",
+      message: `${senderProfile?.fullName || "A stakeholder"} sent you a mentorship request.`,
+      href: "/requests",
+  });
+
+  await logActivity({
+    actorId: session.user.id,
+    targetId: receiverId,
+    actionType: "MENTORSHIP_REQUEST_SENT",
+    summary: `Sent a mentorship request to ${receiver.profile?.fullName || "another member"}`,
+    details: { requestId: mentorshipRequest.id, requestStatus: mentorshipRequest.status },
   });
 
   return NextResponse.json({ mentorshipRequest }, { status: 201 });

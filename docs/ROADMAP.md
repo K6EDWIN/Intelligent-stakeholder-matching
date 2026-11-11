@@ -22,8 +22,9 @@ Verified against the code, not just against what issues say:
 | Opportunity board, Events + RSVP | ✅ Done | `/api/opportunities`, `/api/events` — closes #9, #20 |
 | Flight Reconnect | ✅ Done | `/api/flight-reconnect`, mutual opt-in matching — closes #10 |
 | Admin & moderation dashboard | ✅ Done | `/admin`, `User.isSuspended` migration — closes #21. Manually verified against a live DB before merging |
-| Trained NCF model (accept/decline prediction) | ✅ Done | `ml/train_recommender.ipynb`, [`ML_MODEL.md`](ML_MODEL.md) — closes #46. Standalone research artifact, not wired into live ranking |
-| Evaluation metrics, UAT, deployment | ⬜ Not started | #11, #12, #22 |
+| Trained NCF model (accept/decline prediction) | ✅ Done | `ml/colab_live_recommender.ipynb`, [`ML_MODEL.md`](ML_MODEL.md) — live artifact is trained from filtered database outcomes and activated only after holdout checks pass; the older fabricated-data notebook remains research-only |
+| Admin ranking diagnostics | ✅ Implemented, proxy labels only | `/api/admin/evaluation`; not an independent measure of recommendation relevance |
+| Independent evaluation, UAT, deployment | ⬜ Not started | #11 (real or human-judged validation), #12, #22 |
 
 ## Milestones
 
@@ -39,10 +40,9 @@ Verified against the code, not just against what issues say:
   is a working template for this.
 - #46 — ✅ Done. Trained NCF model for accept/decline prediction — see
   [`ML_MODEL.md`](ML_MODEL.md). Finding: doesn't beat the majority-class
-  baseline, because every interaction pair in the seed data occurs exactly
-  once (no repeated co-occurrence for embeddings to learn from) — this
-  empirically validates why `hybrid.js` weights content similarity so
-  heavily when collaborative data is sparse.
+  baseline on the synthetic dataset. Every sender-recipient pair occurs once;
+  the result does not independently validate the separate live hybrid
+  recommendation formula.
 - #12 — UAT and bug fixing
 - #22 — Deploy to Vercel + managed Postgres (needed to actually run UAT with others)
 - #13 — Buffer, final documentation, report writeup, demo prep

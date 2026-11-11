@@ -25,6 +25,8 @@ export async function GET(request) {
       userId: { not: session.user.id },
       user: {
         isVerified: true,
+        isSuspended: false,
+        isDemo: false,
         ...(role ? { role } : {}),
       },
       ...(skillId ? { skills: { some: { skillId } } } : {}),

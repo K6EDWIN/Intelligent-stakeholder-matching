@@ -3,22 +3,25 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import KQAppShell from "@/components/KQAppShell";
+import { Button, Tag, Avatar } from "@/components/KQBrand";
+import { Icon } from "@/components/KQIcons";
 import RequestActions from "@/components/RequestActions";
 
 const ROLE_LABELS = {
-  ALUMNI: "Alumni",
-  STAFF: "Current Staff",
-  FORMER_STAFF: "Former Employee",
+  ALUMNI: "Pride Centre Alumni",
+  STAFF: "Active KQ Staff",
+  FORMER_STAFF: "Former KQ Employee",
   FREQUENT_FLYER: "Frequent Flyer",
   ADMIN: "Administrator",
 };
 
 const ROLE_OPTIONS = [
-  { value: "", label: "All roles" },
-  { value: "ALUMNI", label: "Alumni" },
-  { value: "STAFF", label: "Current Staff" },
-  { value: "FORMER_STAFF", label: "Former Employee" },
-  { value: "FREQUENT_FLYER", label: "Frequent Flyer" },
+  { value: "", label: "All Stakeholder Roles" },
+  { value: "STAFF", label: "Active Staff & Flight Crew" },
+  { value: "ALUMNI", label: "Pride Centre Alumni" },
+  { value: "FORMER_STAFF", label: "Former Employees" },
+  { value: "FREQUENT_FLYER", label: "Asante Frequent Flyers" },
 ];
 
 export default function DirectoryPage() {
@@ -46,7 +49,8 @@ export default function DirectoryPage() {
     if (status !== "authenticated") return;
     fetch("/api/meta")
       .then((res) => res.json())
-      .then(setMeta);
+      .then(setMeta)
+      .catch(() => {});
   }, [status]);
 
   useEffect(() => {
@@ -59,150 +63,231 @@ export default function DirectoryPage() {
       if (filters.interest) params.set("interest", filters.interest);
       if (filters.q) params.set("q", filters.q);
 
-      const res = await fetch(`/api/directory?${params.toString()}`);
-      const data = await res.json();
+      try {
+        const res = await fetch(`/api/directory?${params.toString()}`);
+        const data = await res.json();
 
-      if (!res.ok) {
-        setError(data.error || "Could not load the directory");
+        if (!res.ok) {
+          setError(data.error || "Could not load directory");
+          setLoading(false);
+          return;
+        }
+
+        setProfiles(data.profiles || []);
         setLoading(false);
-        return;
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
       }
-
-      setError("");
-      setProfiles(data.profiles);
-      setLoading(false);
     }
 
     load();
   }, [status, filters]);
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters((f) => ({ ...f, [name]: value }));
+  const handleFilterChange = (key, val) => {
+    setFilters((prev) => ({ ...prev, [key]: val }));
   };
 
-  if (status === "loading") {
-    return <div className="max-w-4xl mx-auto mt-16 p-6">Loading...</div>;
+  if (status === "loading" || loading) {
+    return (
+      <KQAppShell>
+        <div className="max-w-7xl mx-auto px-6 py-24 text-center">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-slate-100 text-[#0e2740] flex items-center justify-center">
+            <Icon name="directory" size={24} />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800">
+            Loading Stakeholder Directory...
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">
+            Accessing verified Kenya Airways community member records.
+          </p>
+        </div>
+      </KQAppShell>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 p-6">
-      <h1 className="text-2xl font-bold mb-2">Member Directory</h1>
-      <p className="text-gray-500 text-sm mb-6">
-        Browse and search public stakeholder profiles by role, skill, or
-        interest.
-      </p>
+    <KQAppShell>
+      <div className="app-page space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+          <div>
+            <div className="text-xs font-bold uppercase tracking-wider text-[#c8102e] mb-1">
+              Global Aviation Network
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+              Stakeholder Directory
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              Browse verified Kenya Airways mentors, alumni, active crew, and technical specialists.
+            </p>
+          </div>
+          <Button icon="sparkles" onClick={() => router.push("/recommendations")}>
+            View Smart Matches
+          </Button>
+        </div>
 
-      <div className="flex flex-wrap gap-3 mb-6">
-        <input
-          name="q"
-          value={filters.q}
-          onChange={handleFilterChange}
-          placeholder="Search name, department, bio..."
-          className="border rounded px-3 py-2 flex-1 min-w-[200px]"
-        />
-        <select
-          name="role"
-          value={filters.role}
-          onChange={handleFilterChange}
-          className="border rounded px-3 py-2"
-        >
-          {ROLE_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <select
-          name="skill"
-          value={filters.skill}
-          onChange={handleFilterChange}
-          className="border rounded px-3 py-2"
-        >
-          <option value="">All skills</option>
-          {meta.skills.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-        <select
-          name="interest"
-          value={filters.interest}
-          onChange={handleFilterChange}
-          className="border rounded px-3 py-2"
-        >
-          <option value="">All interests</option>
-          {meta.interests.map((i) => (
-            <option key={i.id} value={i.id}>
-              {i.name}
-            </option>
-          ))}
-        </select>
-      </div>
+        {/* Search & Filters Toolbar */}
+        <div className="card p-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
+            {/* Search Input */}
+            <div className="lg:col-span-5 relative">
+              <Icon
+                name="search"
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                placeholder="Search by name, department, or keyword..."
+                value={filters.q}
+                onChange={(e) => handleFilterChange("q", e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] focus:bg-white transition text-slate-800"
+              />
+            </div>
 
-      {loading ? (
-        <p className="text-gray-500">Loading...</p>
-      ) : error ? (
-        <p className="text-red-600 text-sm">{error}</p>
-      ) : profiles.length === 0 ? (
-        <p className="text-gray-500">No profiles match these filters.</p>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {profiles.map((p) => (
-            <div
-              key={p.userId}
-              className="border rounded-lg p-4 flex items-start justify-between gap-4"
+            {/* Role Filter */}
+            <div className="lg:col-span-3">
+              <select
+                value={filters.role}
+                onChange={(e) => handleFilterChange("role", e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] text-slate-700"
+              >
+                {ROLE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Skill Filter */}
+            <div className="lg:col-span-2">
+              <select
+                value={filters.skill}
+                onChange={(e) => handleFilterChange("skill", e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] text-slate-700"
+              >
+                <option value="">All Skills</option>
+                {(meta.skills || []).map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Interest Filter */}
+            <div className="lg:col-span-2">
+              <select
+                value={filters.interest}
+                onChange={(e) => handleFilterChange("interest", e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] text-slate-700"
+              >
+                <option value="">All Domains</option>
+                {(meta.interests || []).map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
+            <span>
+              Showing <b>{profiles.length}</b> verified stakeholders
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setFilters({ role: "", skill: "", interest: "", q: "" })
+              }
+              className="text-[#c8102e] font-semibold hover:underline cursor-pointer"
             >
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold">{p.fullName}</p>
-                  <span className="text-xs text-gray-500">
-                    {ROLE_LABELS[p.role] || p.role}
-                  </span>
-                </div>
-                {p.department && (
-                  <p className="text-sm text-gray-600">{p.department}</p>
-                )}
-                {p.bio && (
-                  <p className="text-sm text-gray-700 mt-1">{p.bio}</p>
-                )}
-                {p.mentorshipRole && (
-                  <span className="inline-block mt-1 text-xs bg-gray-100 rounded-full px-2 py-0.5">
-                    {p.mentorshipRole === "BOTH"
-                      ? "Mentor & Mentee"
-                      : p.mentorshipRole === "MENTOR"
-                      ? "Mentor"
-                      : "Mentee"}
-                  </span>
-                )}
-                {(p.skills.length > 0 || p.interests.length > 0) && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {p.skills.map((s) => (
-                      <span
-                        key={`skill-${s}`}
-                        className="text-xs bg-black text-white rounded-full px-2 py-0.5"
-                      >
-                        {s}
+              Reset Filters
+            </button>
+          </div>
+        </div>
+
+        {/* Directory Grid */}
+        {profiles.length === 0 ? (
+          <div className="card p-12 text-center text-slate-500 space-y-2">
+            <div className="w-12 h-12 mx-auto rounded-full bg-slate-100 text-slate-400 flex items-center justify-center">
+              <Icon name="search" size={22} />
+            </div>
+            <h3 className="font-bold text-slate-800 text-base">No Stakeholders Found</h3>
+            <p className="text-sm text-slate-500 max-w-sm mx-auto">
+              No profiles matched your filter criteria. Try clearing the search query or domain filters.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {profiles.map((p) => (
+              <article key={p.userId} className="card p-6 flex flex-col justify-between space-y-5">
+                <div>
+                  {/* Card Top: Role Tag */}
+                  <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                      {ROLE_LABELS[p.role] || p.role}
+                    </span>
+                    <span className="text-[11px] font-medium text-slate-400">
+                      Verified Member
+                    </span>
+                  </div>
+
+                  {/* Identity */}
+                  <div className="flex items-start gap-3.5 mt-3.5">
+                    <Avatar name={p.fullName} size="lg" role={p.role} />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-bold text-slate-900 truncate">
+                        {p.fullName}
+                      </h3>
+                      <p className="text-xs text-slate-500 truncate mt-0.5">
+                        {p.department || "Kenya Airways Community Member"}
+                      </p>
+                      <span className="inline-block mt-1 text-xs font-medium text-[#c8102e]">
+                        {p.mentorshipRole === "MENTOR"
+                          ? "Available Mentor"
+                          : p.mentorshipRole === "MENTEE"
+                          ? "Seeking Mentorship"
+                          : "Open to Connect"}
                       </span>
+                    </div>
+                  </div>
+
+                  {/* Bio */}
+                  {p.bio && (
+                    <p className="text-xs text-slate-600 line-clamp-2 mt-3.5 leading-relaxed">
+                      &quot;{p.bio}&quot;
+                    </p>
+                  )}
+
+                  {/* Skills & Interests Tags */}
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {(p.skills || []).slice(0, 3).map((skill) => (
+                      <Tag key={skill}>{skill}</Tag>
                     ))}
-                    {p.interests.map((i) => (
-                      <span
-                        key={`interest-${i}`}
-                        className="text-xs border border-gray-300 rounded-full px-2 py-0.5"
-                      >
-                        {i}
-                      </span>
+                    {(p.interests || []).slice(0, 2).map((interest) => (
+                      <Tag key={interest} gold>
+                        {interest}
+                      </Tag>
                     ))}
                   </div>
-                )}
-              </div>
+                </div>
 
-              <RequestActions userId={p.userId} />
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+                {/* Actions */}
+                <div className="pt-4 border-t border-slate-100">
+                  <RequestActions
+                    receiverId={p.userId}
+                    userId={p.userId}
+                    mentorshipRole={p.mentorshipRole}
+                  />
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </KQAppShell>
   );
 }

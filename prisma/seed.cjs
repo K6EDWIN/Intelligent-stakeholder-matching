@@ -1,11 +1,25 @@
 require("dotenv").config();
 const fs = require("fs");
 const path = require("path");
+
+if (process.env.NODE_ENV === "production") {
+  console.error("The synthetic seed dataset is disabled in production. Use live account registration and member activity instead.");
+  process.exit(1);
+}
+
 const { PrismaClient } = require("@prisma/client");
 const { PrismaPg } = require("@prisma/adapter-pg");
+const { PrismaNeon } = require("@prisma/adapter-neon");
+const { neonConfig } = require("@neondatabase/serverless");
+const ws = require("ws");
 const bcrypt = require("bcryptjs");
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
+neonConfig.webSocketConstructor = ws;
+
+const connectionString = process.env.DATABASE_URL;
+const adapter = connectionString?.includes("neon.tech")
+  ? new PrismaNeon({ connectionString })
+  : new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
 // Synthetic stakeholder/interaction dataset -- see docs/DATA.md for what
@@ -60,6 +74,40 @@ const interestNames = [
 // use a shared password for real accounts.
 const TEST_PASSWORD = "Test1234!";
 
+function jaccardOverlap(valuesA, valuesB) {
+  const a = new Set(valuesA || []);
+  const b = new Set(valuesB || []);
+  if (a.size === 0 && b.size === 0) return 0;
+  let shared = 0;
+  for (const value of a) if (b.has(value)) shared++;
+  return shared / new Set([...a, ...b]).size;
+}
+
+// The synthetic interactions have outcomes but no event-time network history.
+// Use zero for sharedNetwork to avoid leaking later accepted links into earlier
+// examples; the other five signals can be derived from the supplied profiles.
+function demoModelFeatures(sender, recipient, requestType) {
+  const isMentorship = requestType === "MENTORSHIP";
+  const senderRole = sender.mentorshipRole;
+  const recipientRole = recipient.mentorshipRole;
+  const mentorshipRoleFit =
+    (senderRole === "MENTEE" || senderRole === "BOTH") &&
+    (recipientRole === "MENTOR" || recipientRole === "BOTH");
+
+  return {
+    skillOverlap: jaccardOverlap(sender.skillIds, recipient.skillIds),
+    interestOverlap: jaccardOverlap(sender.interestIds, recipient.interestIds),
+    sameDepartment:
+      sender.department && recipient.department &&
+      sender.department.toLowerCase() === recipient.department.toLowerCase()
+        ? 1
+        : 0,
+    mentorshipRoleFit: isMentorship && mentorshipRoleFit ? 1 : 0,
+    sharedNetwork: 0,
+    isMentorshipRequest: isMentorship ? 1 : 0,
+  };
+}
+
 async function main() {
   // 1. Seed skills and interests
   for (const name of skillNames) {
@@ -79,16 +127,18 @@ async function main() {
 
   // 2. Seed stakeholders + profiles + skill/interest links
   const userIdByCsvId = {};
+  const profileFeaturesByCsvId = {};
 
   for (const row of stakeholderRows) {
     const user = await prisma.user.upsert({
       where: { email: row.email },
-      update: {},
+      update: { isDemo: true },
       create: {
         email: row.email,
         passwordHash,
         role: row.role,
         isVerified: row.is_verified === "True",
+        isDemo: true,
         profile: {
           create: {
             fullName: row.full_name,
@@ -104,6 +154,20 @@ async function main() {
     });
 
     userIdByCsvId[row.user_id] = user.id;
+    profileFeaturesByCsvId[row.user_id] = {
+      department: row.department,
+      mentorshipRole: row.mentorship_role || null,
+      skillIds: row.skills
+        .split(";")
+        .filter(Boolean)
+        .map((name) => skillIdByName[name])
+        .filter(Boolean),
+      interestIds: row.interests
+        .split(";")
+        .filter(Boolean)
+        .map((name) => interestIdByName[name])
+        .filter(Boolean),
+    };
 
     if (!user.profile) continue; // already existed from a prior run, skip re-linking
 
@@ -138,12 +202,13 @@ async function main() {
   // without this there'd be no way to log in and test the admin dashboard.
   await prisma.user.upsert({
     where: { email: "admin@example.com" },
-    update: {},
+    update: { isDemo: true },
     create: {
       email: "admin@example.com",
       passwordHash,
       role: "ADMIN",
       isVerified: true,
+      isDemo: true,
       profile: {
         create: {
           fullName: "Platform Admin",
@@ -180,6 +245,11 @@ async function main() {
   for (const row of interactionRows) {
     const senderId = userIdByCsvId[row.requester_id];
     const receiverId = userIdByCsvId[row.recipient_id];
+    const modelFeatures = demoModelFeatures(
+      profileFeaturesByCsvId[row.requester_id],
+      profileFeaturesByCsvId[row.recipient_id],
+      row.request_type
+    );
     const pairKey = `${senderId}->${receiverId}`;
     const rating = row.rating ? Number(row.rating) : null;
 
@@ -187,7 +257,7 @@ async function main() {
       if (existingMentorshipPairs.has(pairKey)) continue;
 
       const mentorshipRequest = await prisma.mentorshipRequest.create({
-        data: { senderId, receiverId, status: row.status },
+        data: { senderId, receiverId, status: row.status, modelFeatures },
       });
       mentorshipCount++;
 
@@ -201,7 +271,7 @@ async function main() {
       if (existingConnectionPairs.has(pairKey)) continue;
 
       const connectionRequest = await prisma.connectionRequest.create({
-        data: { senderId, receiverId, status: row.status },
+        data: { senderId, receiverId, status: row.status, modelFeatures },
       });
       connectionCount++;
 

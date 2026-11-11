@@ -2,19 +2,21 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { computeContentScore, sharedAttributes } from "@/lib/recommendation";
+import { sharedAttributes } from "@/lib/recommendation";
+import { buildConnectionsByUser } from "@/lib/collaborative";
 import {
-  buildConnectionsByUser,
-  computeCollaborativeScore,
-} from "@/lib/collaborative";
-import { computeHybridWeights, computeHybridScore } from "@/lib/hybrid";
+  buildTrainingExamples,
+  scoreCandidate,
+  trainAcceptanceModel,
+  trainRelevanceModel,
+} from "@/lib/adaptive-recommender";
+import { getAdaptivePredictions } from "@/lib/hosted-ml";
+import { diversifyRankedCandidates } from "@/lib/profile-vectors";
+import { getMlUserKey } from "@/lib/ml-sync-auth";
 
 // GET /api/recommendations
-// Computes content-based similarity and user-based collaborative filtering
-// between the logged-in user and every other eligible stakeholder, combines
-// them into a hybrid score (cold-start-aware weighting -- see
-// src/lib/hybrid.js), persists all three scores to the Recommendation
-// table, and ranks the "Suggested for you" list by hybridScore.
+// Fits a small acceptance model from resolved, feature-snapshotted live
+// requests. The model gradually takes over ranking as labeled outcomes grow.
 export async function GET() {
   const session = await getServerSession(authOptions);
 
@@ -24,7 +26,7 @@ export async function GET() {
 
   const ownerProfile = await prisma.profile.findUnique({
     where: { userId: session.user.id },
-    include: { skills: true, interests: true },
+    include: { skills: { include: { skill: true } }, interests: { include: { interest: true } } },
   });
 
   if (!ownerProfile) {
@@ -32,15 +34,24 @@ export async function GET() {
   }
 
   const ownerAttrs = {
-    skillIds: ownerProfile.skills.map((s) => s.skillId),
-    interestIds: ownerProfile.interests.map((i) => i.interestId),
+    skillIds: ownerProfile.skills.map((item) => item.skillId),
+    interestIds: ownerProfile.interests.map((item) => item.interestId),
   };
 
+  const dismissedEvents = await prisma.recommendationEvent.findMany({
+    where: {
+      ownerId: session.user.id,
+      eventType: "DISMISS",
+      createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+    },
+    select: { recommendation: { select: { matchedUserId: true } } },
+  });
+  const dismissedUserIds = [...new Set(dismissedEvents.map((event) => event.recommendation.matchedUserId))];
   const candidates = await prisma.profile.findMany({
     where: {
       isPublic: true,
-      userId: { not: session.user.id },
-      user: { isVerified: true },
+      userId: { not: session.user.id, notIn: dismissedUserIds },
+      user: { isVerified: true, isSuspended: false, isDemo: false },
     },
     include: {
       user: { select: { id: true, role: true } },
@@ -49,103 +60,225 @@ export async function GET() {
     },
   });
 
-  const [acceptedMentorships, acceptedConnections] = await Promise.all([
+  const [acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections] = await Promise.all([
     prisma.mentorshipRequest.findMany({
-      where: { status: "ACCEPTED" },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
       select: { senderId: true, receiverId: true },
     }),
     prisma.connectionRequest.findMany({
-      where: { status: "ACCEPTED" },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
       select: { senderId: true, receiverId: true },
     }),
+    prisma.mentorshipRequest.findMany({
+      where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+      select: { status: true, modelFeatures: true },
+    }),
+    prisma.connectionRequest.findMany({
+      where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+      select: { status: true, modelFeatures: true },
+    }),
   ]);
+
   const connectionsByUser = buildConnectionsByUser([
     ...acceptedMentorships,
     ...acceptedConnections,
   ]);
-  const hybridWeights = computeHybridWeights(
-    acceptedMentorships.length + acceptedConnections.length
-  );
+  const examples = buildTrainingExamples([
+    ...resolvedMentorships,
+    ...resolvedConnections,
+  ]);
+  const model = trainAcceptanceModel(examples);
+  const feedbackRows = await prisma.feedback.findMany({
+    where: {
+      userId: session.user.id,
+      recommendationId: { not: null },
+      user: { isDemo: false },
+      recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } },
+    },
+    select: { rating: true, modelFeatures: true, recommendation: { select: { matchedUserId: true } } },
+  });
+  const relevanceModel = trainRelevanceModel(feedbackRows);
+  const modelArtifacts = await prisma.mLModelArtifact.findMany({
+    where: { active: true },
+    orderBy: { createdAt: "desc" },
+  });
+  const totalInteractions = acceptedMentorships.length + acceptedConnections.length;
 
   const scored = candidates.map((candidate) => {
     const candidateAttrs = {
-      skillIds: candidate.skills.map((s) => s.skillId),
-      interestIds: candidate.interests.map((i) => i.interestId),
+      skillIds: candidate.skills.map((item) => item.skillId),
+      interestIds: candidate.interests.map((item) => item.interestId),
     };
-
-    const contentScore = computeContentScore(ownerAttrs, candidateAttrs);
-    const collaborativeScore = computeCollaborativeScore(
+    const score = scoreCandidate({
+      owner: ownerProfile,
+      candidate,
+      ownerAttrs,
+      candidateAttrs,
       connectionsByUser,
-      session.user.id,
-      candidate.user.id
-    );
-    const hybridScore = computeHybridScore(
-      contentScore,
-      collaborativeScore,
-      hybridWeights
-    );
+      model,
+      totalAcceptedInteractions: totalInteractions,
+    });
     const { sharedSkillIds, sharedInterestIds } = sharedAttributes(
       ownerAttrs,
       candidateAttrs
     );
 
-    const sharedSkillNames = candidate.skills
-      .filter((s) => sharedSkillIds.includes(s.skillId))
-      .map((s) => s.skill.name);
-    const sharedInterestNames = candidate.interests
-      .filter((i) => sharedInterestIds.includes(i.interestId))
-      .map((i) => i.interest.name);
-
     return {
       candidate,
-      contentScore,
-      collaborativeScore,
-      hybridScore,
-      sharedSkillNames,
-      sharedInterestNames,
+      ...score,
+      sharedSkillNames: candidate.skills
+        .filter((item) => sharedSkillIds.includes(item.skillId))
+        .map((item) => item.skill.name),
+      sharedInterestNames: candidate.interests
+        .filter((item) => sharedInterestIds.includes(item.interestId))
+        .map((item) => item.interest.name),
     };
   });
 
-  // Persist all three scores. hybridScore -- not contentScore -- is now the
-  // ranking signal, per the weighted formula in src/lib/hybrid.js.
-  await prisma.$transaction(
-    scored.map(({ candidate, contentScore, collaborativeScore, hybridScore }) =>
+  const hostedPredictions = await getAdaptivePredictions({
+    examples,
+    relevanceExamples: feedbackRows
+      .filter((row) => row.modelFeatures && (row.rating >= 4 || row.rating <= 2))
+      .map((row) => ({ features: row.modelFeatures, label: row.rating >= 4 ? 1 : 0 })),
+    candidates: scored.map((item) => ({ features: item.modelFeatures })),
+    ncfCandidates: scored.map((item) => ({
+      senderKey: getMlUserKey(session.user.id),
+      recipientKey: getMlUserKey(item.candidate.user.id),
+      features: item.modelFeatures,
+    })),
+    localModel: model,
+    relevanceModel,
+    artifacts: modelArtifacts,
+  });
+  const relevanceOutput = hostedPredictions.relevanceModel || relevanceModel;
+  const ncfOutput = hostedPredictions.ncfModel || { active: false, sampleCount: 0, acceptedCount: 0, declinedCount: 0, confidence: 0 };
+  const ncfPredictions = hostedPredictions.ncfPredictions || scored.map(() => null);
+  const relevancePredictions = hostedPredictions.relevancePredictions || scored.map(({ modelFeatures }) =>
+    relevanceModel.active ? relevanceModel.predict(modelFeatures) : null
+  );
+  scored.forEach((item, index) => {
+    item.mlAcceptanceProbability = hostedPredictions.predictions[index];
+    item.mlConfidence = hostedPredictions.model.confidence;
+    item.ncfProbability = ncfPredictions[index];
+    // Keep NCF in shadow: compute and expose predictions for monitoring, but
+    // do not let them affect member rankings until repeated holdouts support it.
+    item.ncfInfluence = 0;
+    item.mlRelevanceProbability = relevancePredictions[index];
+    item.relevanceInfluence = item.mlRelevanceProbability === null
+      ? 0
+      : relevanceOutput.confidence;
+    // Rank on profile/network fit, optionally blended with direct match ratings.
+    // Request acceptance predictions remain a separate, descriptive signal.
+    item.matchScore = item.mlRelevanceProbability === null
+      ? item.baselineScore
+      : item.baselineScore * (1 - item.relevanceInfluence) +
+        item.mlRelevanceProbability * item.relevanceInfluence;
+  });
+
+  const rankedCandidates = diversifyRankedCandidates(
+    [...scored].sort((a, b) => b.matchScore - a.matchScore),
+    12
+  );
+  const savedRecommendations = await prisma.$transaction(
+    rankedCandidates.map(({ candidate, contentScore, collaborativeScore, semanticScore, matchScore, modelFeatures }, index) =>
       prisma.recommendation.upsert({
-        where: {
-          ownerId_matchedUserId: {
-            ownerId: session.user.id,
-            matchedUserId: candidate.user.id,
-          },
-        },
-        update: {
-          contentScore,
-          collaborativeScore,
-          hybridScore,
-        },
+        where: { ownerId_matchedUserId: { ownerId: session.user.id, matchedUserId: candidate.user.id } },
+        update: { contentScore, collaborativeScore, semanticScore, hybridScore: matchScore, modelFeatures, rank: index + 1 },
         create: {
           ownerId: session.user.id,
           matchedUserId: candidate.user.id,
           contentScore,
           collaborativeScore,
-          hybridScore,
+          semanticScore,
+          hybridScore: matchScore,
+          modelFeatures,
+          rank: index + 1,
         },
       })
     )
   );
 
-  const ranked = scored
-    .sort((a, b) => b.hybridScore - a.hybridScore)
-    .slice(0, 10)
-    .map((s) => ({
-      userId: s.candidate.user.id,
-      role: s.candidate.user.role,
-      fullName: s.candidate.fullName,
-      department: s.candidate.department,
-      mentorshipRole: s.candidate.mentorshipRole,
-      matchPercent: Math.round(s.hybridScore * 100),
-      sharedSkills: s.sharedSkillNames,
-      sharedInterests: s.sharedInterestNames,
+  const recommendationIds = new Map(savedRecommendations.map((row) => [row.matchedUserId, row.id]));
+  await prisma.recommendationEvent.createMany({
+    data: rankedCandidates.map((item, index) => ({
+      ownerId: session.user.id,
+      recommendationId: recommendationIds.get(item.candidate.user.id),
+      eventType: "SERVED",
+      rank: index + 1,
+      scores: {
+        content: item.contentScore,
+        semantic: item.semanticScore,
+        collaborative: item.collaborativeScore,
+        profileHybrid: item.baselineScore,
+        acceptanceProbability: item.mlAcceptanceProbability,
+        relevanceProbability: item.mlRelevanceProbability,
+        ncfAcceptanceProbability: item.ncfProbability,
+        rankingScore: item.matchScore,
+      },
+    })),
+  });
+  const feedbackByCandidate = new Map(feedbackRows.map((row) => [row.recommendation?.matchedUserId, row.rating]));
+  const ranked = rankedCandidates
+    .map((item) => ({
+      recommendationId: recommendationIds.get(item.candidate.user.id),
+      feedbackRating: feedbackByCandidate.get(item.candidate.user.id) ?? null,
+      userId: item.candidate.user.id,
+      role: item.candidate.user.role,
+      fullName: item.candidate.fullName,
+      department: item.candidate.department,
+      bio: item.candidate.bio,
+      mentorshipRole: item.candidate.mentorshipRole,
+      matchPercent: Math.round(item.matchScore * 100),
+      rankAdjustedPercent: Math.round((item.matchScore - item.diversityAdjustment) * 100),
+      contentScore: Math.round(item.contentScore * 100),
+      semanticScore: Math.round(item.semanticScore * 100),
+      collaborativeScore: Math.round(item.collaborativeScore * 100),
+      relevanceProbability: item.mlRelevanceProbability === null ? null : Math.round(item.mlRelevanceProbability * 100),
+      relevanceInfluence: Math.round(item.relevanceInfluence * 100),
+      diversityAdjustment: Math.round(item.diversityAdjustment * 100),
+      mlAcceptanceProbability: item.mlAcceptanceProbability === null
+        ? null
+        : Math.round(item.mlAcceptanceProbability * 100),
+      mlInfluence: Math.round(item.mlConfidence * 100),
+      ncfAcceptanceProbability: item.ncfProbability === null ? null : Math.round(item.ncfProbability * 100),
+      ncfInfluence: Math.round(item.ncfInfluence * 100),
+      signals: {
+        skillOverlap: Math.round((Number(item.modelFeatures.skillOverlap) || 0) * 100),
+        interestOverlap: Math.round((Number(item.modelFeatures.interestOverlap) || 0) * 100),
+        profileTextAlignment: Math.round((Number(item.modelFeatures.semanticProfileOverlap) || 0) * 100),
+        sameDepartment: Boolean(item.modelFeatures.sameDepartment),
+        mentorshipRoleFit: Boolean(item.modelFeatures.mentorshipRoleFit),
+        sharedNetwork: Math.round((Number(item.modelFeatures.sharedNetwork) || 0) * 100),
+        requestType: item.modelFeatures.isMentorshipRequest ? "Mentorship" : "Connection",
+      },
+      sharedSkills: item.sharedSkillNames,
+      sharedInterests: item.sharedInterestNames,
     }));
 
-  return NextResponse.json({ recommendations: ranked });
+  return NextResponse.json({
+    recommendations: ranked,
+    meta: {
+      totalInteractions,
+      model: {
+        active: hostedPredictions.model.active,
+        provider: hostedPredictions.provider,
+        trainingExamples: hostedPredictions.model.sampleCount,
+        acceptedExamples: hostedPredictions.model.acceptedCount,
+        declinedExamples: hostedPredictions.model.declinedCount,
+        confidence: Math.round(hostedPredictions.model.confidence * 100),
+        status: hostedPredictions.model.active ? "LEARNING_FROM_OUTCOMES" : "GATHERING_OUTCOMES",
+      },
+      relevanceModel: {
+        active: relevanceOutput.active,
+        trainingExamples: relevanceOutput.sampleCount,
+        confidence: Math.round(relevanceOutput.confidence * 100),
+        status: relevanceOutput.active ? "LEARNING_FROM_MEMBER_FEEDBACK" : "GATHERING_FEEDBACK",
+      },
+      ncfModel: {
+        ...ncfOutput,
+        confidence: Math.round(ncfOutput.confidence * 100),
+      },
+      ranking: { semanticProfileSignal: true, diversityReranking: true, acceptanceUsedForRanking: false, ncfStatus: "SHADOW", version: "profile-feedback-ranker-v3" },
+    },
+  });
 }

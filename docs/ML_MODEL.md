@@ -1,123 +1,135 @@
-# Trained Model: Neural Collaborative Filtering for Accept/Decline Prediction
+# Machine-learning experiment: predicting request acceptance
 
-This documents the one genuinely *trained* component in the project — a
-model with learned weights, checkpoints, and an evaluation run — as distinct
-from the live recommendation engine (`src/lib/recommendation.js`,
-`collaborative.js`, `hybrid.js`), which is entirely hand-specified
-similarity/weighting math with no training step. See
-[`AI_USAGE.md`](AI_USAGE.md) for how this fits into the wider development
-pipeline, and [`ml/README.md`](../ml/README.md) for how to run it yourself.
+This report explains the live database-trained models and a separate neural-network research experiment.
 
-## What's trained, and on what
+- The **live recommendations** learn a regularized logistic-regression model from resolved request outcomes. Feature snapshots are captured when new requests are sent, before the recipient decides. See `src/lib/adaptive-recommender.js`.
+- The **live NCF model** is trained by `ml/colab_live_recommender.ipynb` from eligible PostgreSQL outcomes and is loaded only when coverage and time-based quality checks pass. The older `ml/train_recommender.ipynb` experiment used fabricated data and is not loaded by the website.
 
-A small Neural Collaborative Filtering (NCF) model, trained in
-[`ml/train_recommender.ipynb`](../ml/train_recommender.ipynb) (Google
-Colab, GPU-capable, checkpoints to Google Drive) on the same synthetic
-dataset described in [`DATA.md`](DATA.md):
-`prisma/data/stakeholders.csv` (150 users) and
-`prisma/data/interactions.csv` (441 mentorship/connection requests).
+## Live model used by the website
 
-## Why accept/decline prediction, not rating prediction
+When a member sends a request, the API snapshots eleven numeric signals from the sender and recipient profiles: skill overlap, interest overlap, same department, mentorship-role fit, shared accepted-network score, request type, locally computed profile text alignment, availability overlap by day, availability overlap by time window, meeting-frequency fit, and whether both availability entries could be interpreted. When the request is accepted or declined, that status becomes the training label. Pending requests and older interactions without a feature snapshot are excluded. Members should be informed that these outcomes help improve recommendations.
 
-The data supports classification much better than regression here:
-- **Accept/decline**: 372 labeled examples (every row where
-  `status != PENDING`) — 198 `ACCEPTED`, 174 `DECLINED`. Balanced, and both
-  classes carry signal.
-- **Rating prediction**: only 198 rows have a rating at all (the `ACCEPTED`
-  ones), and every one of those ratings is inherently a "positive" example
-  (nobody rates a declined request) — a much weaker, one-sided training
-  signal for a fraction of the data.
+### How availability text becomes model input
 
-## Architecture
+The profile lets members select available days, an exact start/end time or full day, cadence, and how many meetings or hours they can offer per period. The app stores a readable description such as “Monday, Wednesday; 09:00-12:00; 2 meetings per week.” A deterministic parser in `src/lib/availability.js` also recognizes older text such as “weekend mornings,” “flexible,” or “2 hours/month.” It converts two members' schedules into numeric day-overlap, exact time-window overlap, and frequency-fit values. A fourth signal indicates whether both entries contained something the parser could compare. These numbers are snapshotted with each request and used by the JavaScript model, optional hosted API, and Colab acceptance/relevance models. The Colab NCF model also receives the four numeric availability values alongside pseudonymous member embeddings and request type; it never receives raw availability text. Unknown text is left unknown and shown for correction in the profile UI.
 
-- One shared `Embedding(num_users=150, dim=8)` table, looked up by both
-  sender and receiver index (same embedding space for both roles).
-- `concat([sender_emb, receiver_emb, request_type_onehot(2)])` → `Linear(18→16)
-  → ReLU → Linear(16→1) → Sigmoid`, predicting P(accepted).
-- Loss: binary cross-entropy. Optimizer: Adam, `lr=0.005`,
-  `weight_decay=1e-2`. Early stopping on a held-out validation split
-  (patience 30 epochs).
+The recommendation API fits a small L2-regularized logistic-regression model to the available labeled request snapshots. It uses balanced class weights so an uneven number of acceptances or declines does not automatically dominate. This model estimates acceptance likelihood; that probability is displayed as a separate signal and does not determine the recommendation order. Members can provide explicit match relevance feedback; a second logistic-regression model learns from those ratings, using ratings 4–5 as positive, 1–2 as negative, and ignoring neutral rating 3. The ranker uses the profile/network score, blended with learned relevance when it has evidence, then applies a department/role diversity adjustment.
 
-Deliberately small — with ~150 users and ~300 training examples, a larger
-model has nothing to gain and everything to overfit.
+The acceptance model needs at least 12 eligible labeled examples with at least four outcomes of each class. The relevance model needs at least eight ratings and three from each class. These minimums only permit a model to begin contributing; the app also reports time-separated holdout diagnostics and does not treat the thresholds as performance guarantees. Recommendations now record served rank and component-score snapshots, plus view, dismiss, contact, and member-rating events. The admin evaluation includes a newest-20%-by-time NDCG@5 comparison on judged recommendation groups. It only measures among recommendations that received ratings, so it is not unbiased evidence about all impressions. The admin's shared-skills/connection benchmark remains a labeled proxy diagnostic, not independent member judgment. Colab trains the embedding-based NCF model from the protected live-data export, using stable HMAC pseudonyms instead of account IDs. NCF acceptance estimates remain in shadow and have zero ranking influence while they are compared against baselines over additional time-separated evaluations. Colab saves weights and metrics in Google Drive and publishes versioned artifacts to PostgreSQL, where inference reads them after Colab disconnects. Its export contains numeric features, binary labels, timestamps, and keyed pseudonyms only. Profile text, availability text, request messages, names, email addresses, and raw user IDs are not sent to Colab or the optional Python API in `ml/huggingface/`. Demo accounts and their outcomes are excluded from live training. The profile text vector is computed locally using normalized aviation phrases and sparse word/bigram vectors; it is not a pretrained language model.
 
-## Results (from an actual run — see `ml/artifacts/metrics.json`)
+The administrator console exposes training counts, influence, member ratings, and chronological holdout checks for both learned models. Each check uses the newest fifth of its dated examples and fits on older examples. It is shown only when both periods have examples from both outcome classes. These internal splits do not establish that the models are accurate, fair, or useful to real members. Consented real usage and independent evaluation are still needed. The admin's profile-overlap benchmark is a separate proxy diagnostic and does not validate the learned acceptance model.
 
-| Metric | Value |
-|---|---|
-| Test accuracy | 0.52 |
-| Test precision | 0.53 |
-| Test recall | 0.78 |
-| Test F1 | 0.63 |
-| Test ROC-AUC | **0.498** |
-| Majority-class baseline | 0.532 |
-| Precision@5 (ranking eval) | 0.028 |
+## 1. The question the experiment asks
 
-## The finding: this model does not generalize, and here's why
+For a mentorship or connection request between two stakeholders, can a model estimate whether the request will be **accepted** or **declined**?
 
-ROC-AUC of 0.498 is indistinguishable from random guessing (0.5). The model
-does **not** beat the trivial majority-class baseline. This is not a bug —
-it's a real, checked finding:
+This is a binary classification problem: the model returns a number between 0 and 1. A number closer to 1 means “the model predicts acceptance”; a number closer to 0 means “the model predicts decline.” The experiment converts that score to a class using a 0.5 threshold for accuracy, precision, recall, and F1 calculations.
 
+It is not the same task as the live recommender, which ranks people using profile overlap and accepted network relationships. The trained model predicts outcomes for request pairs; it does not decide which profiles should appear in the live recommendations list.
+
+## 2. Data used
+
+The experiment reads the fabricated demonstration records in `prisma/data/stakeholders.csv` and `prisma/data/interactions.csv`:
+
+- 150 synthetic stakeholders.
+- 441 request records in total: 208 mentorship and 233 connection requests.
+- 69 pending requests are excluded because their outcomes are not known.
+- 372 labeled requests remain: 198 accepted and 174 declined.
+- Each labeled sender-recipient pair appears once. There are no repeated labeled pairs.
+
+The requests are split at random, while preserving the acceptance/decline ratio, into 237 training rows, 60 validation rows, and 75 test rows. A row means one observed request. The same stakeholder can appear in more than one split through different request pairs, so this tests prediction for held-out interactions among the known synthetic users. It does not test generalization to entirely new users.
+
+The data contains fabricated names and interactions, not records from Kenya Airways. The results therefore describe this experiment and dataset only.
+
+## 3. What the model is
+
+The notebook uses a small **Neural Collaborative Filtering (NCF)** architecture. “Neural” means the parameters are learned by a neural network during training. “Collaborative” means it tries to learn patterns from user interaction records.
+
+### Inputs
+
+For each request, the model receives:
+
+1. The sender's stakeholder ID.
+2. The recipient's stakeholder ID.
+3. The request type, represented as two values: mentorship or connection.
+
+The model does not currently receive profile skills, interests, departments, message text, ratings, or dates.
+
+### Learned representation and network
+
+Each of the 150 users is assigned a learned vector of 8 numbers, called an **embedding**. The model looks up one vector for the sender and one for the recipient. It joins those 16 numbers with the 2 request-type values, then passes the 18-number input through a dense layer with 16 units and a ReLU activation. A final layer and sigmoid function produce the acceptance score.
+
+```text
+sender ID ───────┐
+                 ├─ 8-number user vectors ─┐
+recipient ID ────┘                         ├─ 16-unit neural layer ─ output 0…1
+request type ───────────── 2 values ───────┘
 ```
-unique (sender, recipient) pairs: 372 / 372 rows
-pairs seen more than once: 0
-```
 
-**Every single interaction in the dataset is between a pair of users who
-never interact again elsewhere in the data.** Collaborative filtering —
-learned or heuristic — works by finding structure in *repeated* co-occurrence
-(“people who connected with X also connected with Y”). With zero repeated
-pairs, there is nothing of that shape for an embedding to learn: each
-training example is an isolated, one-off observation about two specific
-users, and embeddings trained that way have no way to generalize to unseen
-pairs at test time.
+The embedding vectors start as learned parameters and are adjusted during training. They are not hand-written descriptions of a person's skills or personality.
 
-This was verified to be a genuine data-sparsity ceiling, not an
-implementation mistake: an earlier, unregularized version of the same model
-(no weight decay, no early stopping — see commit history) fit the *training*
-set to near-zero loss (0.0004), confirming the architecture has the capacity
-to learn — it simply has nothing generalizable available to learn from at
-this interaction volume. The loss curve in `ml/artifacts/loss_curve.png`
-shows the textbook shape: validation loss bottoms out at epoch 22 while
-training loss keeps falling, the standard signature of overfitting rather
-than an undertrained or broken model. The PCA plot of learned embeddings
-(`ml/artifacts/embedding_space.png`) shows no meaningful clustering by
-`UserRole` either, consistent with the embeddings not having learned
-transferable structure.
+### Training choices
 
-## Why this result matters, not just what it says
+- **Loss:** binary cross-entropy, which penalizes the model when its predicted probability is far from the known accepted/declined label.
+- **Optimizer:** Adam, learning rate 0.005.
+- **Regularization:** weight decay 0.01, which discourages excessively large learned parameters.
+- **Training style:** full-batch, appropriate for this very small dataset.
+- **Early stopping:** after 30 epochs without improved validation loss, training stops. The checkpoint with the best validation loss is used for the final test calculation.
+- **Random seed:** 42 for NumPy and PyTorch operations in the notebook.
 
-This directly validates a design decision already made in the live app.
-`src/lib/hybrid.js` computes `hybridScore = alpha * contentScore + beta *
-collaborativeScore`, where `alpha` starts at **0.9** (heavily favoring
-content-based similarity) and only decays toward 0.5 as the platform
-accumulates *many* accepted interactions — explicitly reasoned, in that
-file's own comments, as a cold-start mitigation for exactly this situation:
-sparse interaction data. This training run is empirical confirmation of that
-reasoning, not just a plausible-sounding comment — with this little
-repeated-interaction structure, a purely collaborative signal (learned or
-heuristic) is close to noise, and leaning on content similarity is the
-correct call.
+The model is intentionally small. With only 372 labeled examples, a larger network would have a high risk of memorizing training examples instead of learning patterns that transfer.
 
-## Integration with the live app: deliberately none
+## 4. Results currently recorded
 
-This trained model's output does **not** feed into `/api/recommendations`
-or any other live route. Given the finding above, wiring an
-effectively-random model into production ranking would make recommendations
-worse, not better. It exists as a standalone research/evaluation artifact —
-real training infrastructure (Colab, GPU-capable, GDrive checkpoints), a
-proper train/val/test methodology, and an honestly-reported result, kept
-separate from what actually serves users.
+The checked-in values are in `ml/artifacts/metrics.json` and are summarized below.
 
-## What would change this result
+| Test measure | Recorded result | Meaning |
+|---|---:|---|
+| Accuracy | 0.520 | Correct class on 52% of held-out rows at the 0.5 threshold. |
+| Precision | 0.534 | Of rows predicted accepted, about 53% were accepted. |
+| Recall | 0.775 | Of accepted test requests, about 78% were predicted accepted. |
+| F1 | 0.633 | A single score balancing precision and recall. |
+| ROC-AUC | 0.498 | Ability to rank accepted requests above declined ones; 0.5 is chance-level ranking. |
+| Majority-class accuracy baseline | 0.532 | Accuracy from always predicting the more common class in the labeled dataset. |
 
-More accumulated real interaction data, specifically **repeated
-co-occurrence** — the same users (or users with overlapping social graphs)
-interacting multiple times, which only happens with sustained real usage
-over time, not a one-shot synthetic dataset. If/when the platform has that,
-re-running this same notebook against real `MentorshipRequest`/
-`ConnectionRequest` data is the natural next step, and the
-`Precision@5` ranking-evaluation cell in the notebook doubles as a
-template for the Precision@K/Recall@K/NDCG evaluation work in
-[issue #11](https://github.com/K6EDWIN/Intelligent-stakeholder-matching/issues/11).
+The result does **not** show useful predictive performance: test accuracy is below the majority-class baseline, and ROC-AUC is approximately 0.5. High recall alone does not mean the predictions are good; the model can identify many accepted requests while also making many incorrect acceptance predictions.
+
+### About the recorded “Precision@5” field
+
+The checked-in `precision_at_5` value (`0.0278`) is a historical output from an earlier version of the notebook. That version divided the top-five hits by `min(5, number of accepted test requests for that sender)`, which is not standard Precision@5 when fewer than five accepted examples exist. The notebook cell has now been corrected: it divides hits by the number of ranked candidates (five here) and excludes the sender from their own candidate list. The checked-in metric artifact has **not** been regenerated with the corrected calculation, so do not quote its `precision_at_5` field as a standard metric. Rerun the notebook to produce a current value.
+
+The classification metrics above and this ranking-style value are separate measurements. Neither is the live admin endpoint's profile-ranking diagnostic.
+
+## 5. What the data sparsity means
+
+Although each stakeholder may occur in several different requests, every individual sender-recipient pair occurs only once. There is consequently no repeated outcome for the same pair, and only a small number of request examples per stakeholder. That gives the embeddings little evidence from which to learn stable preferences. The random row split also leaves users in both training and test sets, so the experiment says nothing about brand-new users whose IDs were never seen during training.
+
+The observed chance-level ROC-AUC is evidence that this particular model and dataset did not produce useful held-out predictions. It is not proof that all collaborative filtering methods must fail, or that the live hybrid recommender is empirically validated. The live system's content-heavy cold-start schedule is a reasoned prototype choice; it still needs independent evaluation with real, consented interaction data.
+
+The plots in `ml/artifacts/loss_curve.png` and `ml/artifacts/embedding_space.png` are exploratory diagnostics. A two-dimensional PCA visualization is a compressed view of the learned vectors; visual clusters (or lack of clusters) alone do not establish model quality.
+
+## 6. Older fabricated-data NCF experiment
+
+The old `ml/train_recommender.ipynb` results do not support using that experiment's predictions to rank stakeholders. Its checkpoint and exported embeddings remain research outputs. The live NCF model is trained separately by `ml/colab_live_recommender.ipynb` from eligible database outcomes, and its artifact is activated only after the live-data checks pass.
+
+The live logistic models fit from eligible request and feedback examples stored in PostgreSQL. The live NCF artifact is versioned in PostgreSQL after Colab trains it from the protected live-data export. Model training exports exclude demo users. No always-running Colab session is required for inference; the app loads stored artifact weights and computes predictions itself. If evidence or quality checks fail, NCF stays inactive and profile/network matching supports cold start. The older `ml/train_recommender.ipynb` notebook remains a fabricated-data experiment only.
+
+## 7. How to reproduce the experiment
+
+1. Open `ml/train_recommender.ipynb` in Google Colab (or a compatible Python environment).
+2. Provide `prisma/data/stakeholders.csv` and `prisma/data/interactions.csv`. In Colab, use a `GITHUB_TOKEN` secret with repository read access, or upload the files when prompted.
+3. Run the notebook from top to bottom. It can use CPU; a GPU is optional for this dataset.
+4. Review the training and validation loss, test metrics, and generated plots.
+5. The notebook writes metrics, embeddings, and figures to `/content/artifacts/` and checkpoints to Google Drive when mounted. Compare newly produced outputs with the checked-in files before replacing the recorded results.
+
+See [`ml/README.md`](../ml/README.md) for setup details and [`docs/DATA.md`](DATA.md) for the seed dataset description.
+
+## 8. What a stronger follow-up evaluation needs
+
+- More real, consented request outcomes collected over time.
+- A clear evaluation split. For future-user performance, split by user; for future-time performance, train on earlier requests and test on later ones.
+- Baseline models, including a majority-class predictor and simple profile or user-history methods.
+- Metrics chosen for the task, with each definition and denominator stated explicitly.
+- Separate validation from final test decisions, and avoid tuning on the test set.
+- Member feedback or relevance judgments to assess whether suggested mentors are actually useful.
+- Privacy controls and data minimization before any real organizational data is used.

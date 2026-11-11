@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createNotification } from "@/lib/notifications";
+import { ensureConversation } from "@/lib/conversations";
+import { logActivity } from "@/lib/audit-log";
 
 const VALID_STATUSES = ["ACCEPTED", "DECLINED"];
 
@@ -48,6 +51,28 @@ export async function PATCH(request, { params }) {
   const connectionRequest = await prisma.connectionRequest.update({
     where: { id },
     data: { status },
+  });
+
+  if (status === "ACCEPTED") {
+    await ensureConversation(existing.senderId, existing.receiverId);
+  }
+
+  const responder = await prisma.profile.findUnique({ where: { userId: session.user.id }, select: { fullName: true } });
+  await createNotification({
+      userId: existing.senderId,
+      type: `CONNECTION_${status}`,
+      title: status === "ACCEPTED" ? "Connection request accepted" : "Connection request declined",
+      message: `${responder?.fullName || "A stakeholder"} ${status === "ACCEPTED" ? "accepted" : "declined"} your connection request.`,
+      href: "/requests",
+  });
+
+  const senderProfile = await prisma.profile.findUnique({ where: { userId: existing.senderId }, select: { fullName: true } });
+  await logActivity({
+    actorId: session.user.id,
+    targetId: existing.senderId,
+    actionType: `CONNECTION_REQUEST_${status}`,
+    summary: `${status === "ACCEPTED" ? "Accepted" : "Declined"} ${senderProfile?.fullName || "a member"}’s connection request`,
+    details: { requestId: connectionRequest.id, requestStatus: status },
   });
 
   return NextResponse.json({ connectionRequest });

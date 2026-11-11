@@ -1,12 +1,36 @@
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { logActivity } from "./audit-log";
 
 export const authOptions = {
   session: {
     strategy: "jwt",
   },
   providers: [
+    ...(() => {
+      const googleClientId = (process.env.GOOGLE_CLIENT_ID || "")
+        .replace(/^["']|["']$/g, "")
+        .trim();
+      const googleClientSecret = (process.env.GOOGLE_CLIENT_SECRET || "")
+        .replace(/^["']|["']$/g, "")
+        .trim();
+
+      return googleClientId && googleClientSecret
+        ? [
+            GoogleProvider({
+              clientId: googleClientId,
+              clientSecret: googleClientSecret,
+            }),
+          ]
+        : [
+            GoogleProvider({
+              clientId: googleClientId || "placeholder_client_id",
+              clientSecret: googleClientSecret || "placeholder_secret",
+            }),
+          ];
+    })(),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -24,6 +48,10 @@ export const authOptions = {
 
         if (!user) {
           throw new Error("No account found with that email");
+        }
+
+        if (process.env.NODE_ENV === "production" && user.isDemo) {
+          throw new Error("Demonstration accounts cannot sign in to the live service.");
         }
 
         const isValid = await bcrypt.compare(
@@ -47,6 +75,14 @@ export const authOptions = {
           );
         }
 
+        await logActivity({
+          actorId: user.id,
+          targetId: user.id,
+          actionType: "USER_SIGNED_IN",
+          summary: `${user.role === "ADMIN" ? "Administrator" : "Member"} signed in with email and password`,
+          details: { method: "credentials", role: user.role },
+        });
+
         return {
           id: user.id,
           email: user.email,
@@ -56,19 +92,114 @@ export const authOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        if (!user.email) return false;
+        const googleEmail = user.email.trim().toLowerCase();
+
+        let existingUser = await prisma.user.findUnique({
+          where: { email: googleEmail },
+        });
+
+        if (!existingUser) {
+          // Auto-provision verified user from Google OAuth
+          existingUser = await prisma.user.create({
+            data: {
+              email: googleEmail,
+              passwordHash: "",
+              role: "STAFF",
+              isVerified: true,
+              isSuspended: false,
+              profile: {
+                create: {
+                  fullName: user.name || googleEmail.split("@")[0],
+                  isPublic: false,
+                },
+              },
+            },
+          });
+        }
+
+        // Administrator accounts created through an invitation are staged as
+        // unverified. Do not let Google OAuth skip the invitation/password step.
+        if (existingUser.role === "ADMIN" && !existingUser.isVerified) {
+          return false;
+        }
+
+        if (process.env.NODE_ENV === "production" && existingUser.isDemo) {
+          return false;
+        }
+
+        if (existingUser.isSuspended) {
+          return false;
+        }
+
+        user.id = existingUser.id;
+        user.role = existingUser.role;
+        await logActivity({
+          actorId: existingUser.id,
+          targetId: existingUser.id,
+          actionType: "USER_SIGNED_IN",
+          summary: `${existingUser.role === "ADMIN" ? "Administrator" : "Member"} signed in with Google`,
+          details: { method: "google", role: existingUser.role },
+        });
+        return true;
+      }
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.isSuspended = Boolean(user.isSuspended);
       }
+
+      // Check database for active suspension status on existing session tokens
+      if (token?.id) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id },
+            select: { isSuspended: true, isDemo: true, role: true },
+          });
+
+          if (dbUser) {
+            token.isSuspended = dbUser.isSuspended;
+            token.isDemo = dbUser.isDemo;
+            token.role = dbUser.role;
+          } else {
+            token.isSuspended = true;
+          }
+        } catch {
+          // Fallback gracefully on transient DB connection issues
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
+      // Immediately invalidate session if the account has been suspended by an admin
+      if (token?.isSuspended || (process.env.NODE_ENV === "production" && token?.isDemo)) {
+        return null;
+      }
+
       if (session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
+        session.user.isSuspended = token.isSuspended || false;
       }
       return session;
+    },
+  },
+  events: {
+    async signOut({ token }) {
+      if (!token?.id) return;
+      await logActivity({
+        actorId: token.id,
+        targetId: token.id,
+        actionType: "USER_SIGNED_OUT",
+        summary: "Signed out of PrideConnect",
+        details: {},
+      });
     },
   },
   pages: {

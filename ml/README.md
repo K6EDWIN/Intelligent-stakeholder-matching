@@ -1,54 +1,41 @@
-# ML: NCF accept/decline model
+# Machine-learning experiment
 
-A standalone Colab training notebook and its results — see
-[`docs/ML_MODEL.md`](../docs/ML_MODEL.md) for the full writeup (what's
-trained, why, and what it found).
+This folder contains a small Neural Collaborative Filtering (NCF) experiment. In everyday terms, it tests whether a neural network can predict if an already-sent mentorship or connection request will be accepted or declined.
+
+For the live-app training workflow, see [`colab_live_recommender.ipynb`](colab_live_recommender.ipynb). It trains both the numeric outcome models and the NCF embedding model from app-collected resolved interactions, saves model weights to Google Drive, and publishes quality-checked weights to the app for inference. It is adapted from the NCF architecture below, but trains on the app's own history rather than only the checked-in fabricated CSV files.
+
+**The older `train_recommender.ipynb` notebook is not the live recommendation engine.** Its fabricated-data result was near chance. The separate `colab_live_recommender.ipynb` trains the live acceptance, usefulness, and NCF artifacts from eligible PostgreSQL outcomes; the app activates them only after source and quality checks. The live models and limitations are detailed in [`docs/ML_MODEL.md`](../docs/ML_MODEL.md).
 
 ## Files
 
-- `train_recommender.ipynb` — the notebook. Open in
-  [Google Colab](https://colab.research.google.com/), run all cells. It
-  mounts your Google Drive, gets `prisma/data/*.csv` from this repo (see
-  "This repo is private" below), trains a small Neural Collaborative
-  Filtering (NCF) model, evaluates it, and saves checkpoints to
-  `/content/drive/MyDrive/ism-checkpoints/`.
-- `artifacts/` — outputs from an actual run: `metrics.json` (full eval
-  results), `embeddings.json` (learned user embeddings, keyed by CSV
-  `user_id`), `loss_curve.png`, `embedding_space.png`.
+- `train_recommender.ipynb` — training and evaluation notebook for Google Colab or a compatible Python environment. It reads `prisma/data/stakeholders.csv` and `prisma/data/interactions.csv`, trains a small PyTorch model, and saves metrics, plots, and user embeddings.
+- `artifacts/metrics.json` — recorded data counts and test metrics from the checked-in experiment.
+- `artifacts/loss_curve.png` — training and validation loss over epochs. A widening gap can indicate memorization/overfitting.
+- `artifacts/embedding_space.png` — a two-dimensional PCA view of the learned user vectors, colored by role. It is an exploratory picture, not a quality score.
+- `artifacts/embeddings.json` — learned 8-number vectors keyed by the CSV user IDs. They are useful for inspecting the experiment, but are not loaded by the application.
 
-## This repo is private
+## Run in Google Colab
 
-An anonymous `git clone` (no auth) fails silently against a private repo in
-Colab — the data-loading cell handles this two ways:
+1. Open `train_recommender.ipynb` in Colab (or upload the notebook).
+2. If desired, select a GPU under Runtime → Change runtime type. CPU is sufficient for this small dataset.
+3. The data-loading cell will try to read the repository files. This project repository is private, so provide either:
+   - a Colab Secret named `GITHUB_TOKEN`, with notebook access enabled and a token that can read this repository; or
+   - upload `stakeholders.csv` and `interactions.csv` when the notebook asks.
+4. Run all cells from top to bottom. Authorize Google Drive when asked; checkpoints are saved under `MyDrive/ism-checkpoints/`.
+5. Download outputs from `/content/artifacts/` if you want to compare them with the checked-in artifacts. Replace the checked-in results only after reviewing the new run and updating the report.
 
-- **With a token (recommended, keeps data in sync automatically)**: in
-  Colab, open the Secrets panel (key icon, left sidebar), add a secret named
-  `GITHUB_TOKEN` with a GitHub personal access token that has read access to
-  this repo, and toggle "Notebook access" on. Re-run the cell.
-- **Without one**: the cell falls back to prompting you to upload
-  `stakeholders.csv` and `interactions.csv` directly (from `prisma/data/` in
-  your local checkout). Works immediately, no setup, just won't auto-update
-  on a later run.
+The Colab notebook picker may use your signed-in GitHub account to open the private notebook, while the notebook's own data-loading cell uses `GITHUB_TOKEN` or file upload. These are separate access paths.
 
-## Running it yourself
+## Understand the recorded outcome
 
-1. Open `train_recommender.ipynb` in Colab (upload it, or open directly from
-   GitHub via Colab's File → Open notebook → GitHub tab — that picker uses
-   your own GitHub OAuth session, separate from the `git clone` cell above,
-   so it works against the private repo as long as you're signed in with an
-   account that has access).
-2. Runtime → Change runtime type → GPU (optional — the notebook works on
-   CPU too, and this dataset is small enough that GPU makes no practical
-   difference here).
-3. Run all cells. You'll be prompted to authorize Google Drive access, and
-   either provide the `GITHUB_TOKEN` secret or upload the two CSVs when the
-   data-loading cell asks.
-4. Once finished, `/content/artifacts/` has the same files as this repo's
-   `artifacts/` directory. Download them and replace the checked-in copies
-   if you want this run's results to become the recorded ones.
+The available labeled data contains 372 accepted/declined requests, but every sender-recipient pair appears only once. The current model's recorded test ROC-AUC is about `0.498`, approximately chance-level, and its accuracy (`0.520`) is below the majority-class baseline (`0.532`). The result does not demonstrate useful predictive performance. The dataset is fabricated and small, so this should not be generalized to real stakeholders.
 
-## Why this is separate from the live app
+The checked-in `precision_at_5` field is a historical value from an earlier notebook version and used a nonstandard denominator. The notebook has since been corrected to calculate standard Precision@5 (excluding the sender as a candidate), but the artifacts have not been regenerated. Do not compare the old artifact value with standard Precision@5 results; rerun the notebook to get an updated value. See [`docs/ML_MODEL.md`](../docs/ML_MODEL.md).
 
-The trained model's output is **not** wired into `/api/recommendations` or
-any other live route — it's a research/evaluation artifact for the report
-and demo. See "Integration" in `docs/ML_MODEL.md` for why.
+## Host the live recommender separately
+
+The live adaptive recommendation service is prepared in [`huggingface/`](huggingface/). It is a Docker API that fits an acceptance model from resolved request outcomes and a separate relevance model from explicit member ratings. The app sends only numeric feature vectors and labels; profile and availability text are parsed locally in the web app. Availability is represented by day-overlap, time-overlap, frequency-fit, and parseability signals, and the live Colab NCF also trains on those numeric signals. This is separate from the older research notebook above. Redeploy the Python service when changing its request or response contract. Follow the deployment steps in the main [README](../README.md#host-the-live-recommender-separately) and the Space-specific [`README`](huggingface/README.md).
+
+## Why the fabricated-data experiment stays separate
+
+The old NCF model did not show reliable predictive value on this fabricated dataset. The live app does not load this notebook's checkpoint or embeddings. Instead, its separate live Colab workflow can publish a newly trained NCF artifact only from the filtered database export and only when the holdout gates pass. Running the website does not require Python or an active Colab session.

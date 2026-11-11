@@ -2,32 +2,47 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/audit-log";
+
+function nairobiToday() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Nairobi",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  return parts.filter((part) => part.type !== "literal")
+    .map(({ type, value }) => [type, value])
+    .reduce((result, [type, value]) => ({ ...result, [type]: value }), {});
+}
+
+function parseFlightRoute(flightRoute) {
+  // The v2 prefix marks records created after sharing became explicit opt-in.
+  // Older records may have a checked-by-default consent value, so they are
+  // intentionally excluded from matching until the member logs them again.
+  const match = /^v2\|(KQ ?\d{1,4}[A-Z]?)\|([A-Z]{3})\|([A-Z]{3})$/.exec(flightRoute || "");
+  return match
+    ? { flightNumber: match[1], origin: match[2], destination: match[3] }
+    : { flightNumber: null, origin: null, destination: null };
+}
 
 // GET /api/flight-reconnect
-// Returns the logged-in user's own logged flights, plus "matches" -- other
-// verified stakeholders who logged the same route on the same date.
-//
-// Privacy: login itself already requires isVerified (see src/lib/auth.js),
-// so every session here is already a verified user -- restricting to
-// verified users doesn't need an extra check. Beyond that, a flight is only
-// ever visible to someone else if BOTH sides opted in (consentToShare on
-// both rows), not just the other person's -- one-way visibility would let a
-// non-consenting user peek at consenting users' travel data for free, which
-// the README's "opt-in and restricted" data-minimization principle reads as
-// ruling out.
+// Only pairs opted-in, verified members who logged the exact same flight,
+// direction, and completed travel date.
 export async function GET() {
   const session = await getServerSession(authOptions);
-
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const myFlights = await prisma.flightReconnect.findMany({
+  const savedFlights = await prisma.flightReconnect.findMany({
     where: { userId: session.user.id },
-    orderBy: { travelDate: "asc" },
+    orderBy: { travelDate: "desc" },
   });
-
-  const consentedFlights = myFlights.filter((f) => f.consentToShare);
+  const myFlights = savedFlights.map((flight) => ({ ...flight, ...parseFlightRoute(flight.flightRoute) }));
+  const consentedFlights = myFlights.filter((flight) =>
+    flight.consentToShare && flight.flightNumber && flight.origin && flight.destination
+  );
 
   const matches = [];
   for (const flight of consentedFlights) {
@@ -37,47 +52,146 @@ export async function GET() {
         travelDate: flight.travelDate,
         consentToShare: true,
         userId: { not: session.user.id },
+        user: { isVerified: true, isSuspended: false, isDemo: false, role: { not: "ADMIN" } },
       },
       include: {
-        user: { select: { id: true, role: true, profile: { select: { fullName: true } } } },
+        user: {
+          select: {
+            id: true,
+            role: true,
+            profile: { select: { fullName: true, department: true } },
+          },
+        },
       },
     });
 
     for (const other of others) {
       matches.push({
+        ...parseFlightRoute(flight.flightRoute),
         flightRoute: flight.flightRoute,
         travelDate: flight.travelDate,
         userId: other.user.id,
         role: other.user.role,
-        fullName: other.user.profile?.fullName || "Unknown",
+        fullName: other.user.profile?.fullName || "Member",
+        department: other.user.profile?.department || null,
       });
     }
   }
 
-  return NextResponse.json({ myFlights, matches });
+  const peerIds = [...new Set(matches.map((match) => match.userId))];
+  const [connectionRequests, mentorshipRequests] = peerIds.length
+    ? await Promise.all([
+        prisma.connectionRequest.findMany({
+          where: {
+            OR: [
+              { senderId: session.user.id, receiverId: { in: peerIds } },
+              { receiverId: session.user.id, senderId: { in: peerIds } },
+            ],
+          },
+          select: { id: true, senderId: true, receiverId: true, status: true, createdAt: true },
+        }),
+        prisma.mentorshipRequest.findMany({
+          where: {
+            OR: [
+              { senderId: session.user.id, receiverId: { in: peerIds } },
+              { receiverId: session.user.id, senderId: { in: peerIds } },
+            ],
+          },
+          select: { id: true, senderId: true, receiverId: true, status: true, createdAt: true },
+        }),
+      ])
+    : [[], []];
+  const requests = [
+    ...connectionRequests.map((request) => ({ ...request, requestType: "CONNECTION" })),
+    ...mentorshipRequests.map((request) => ({ ...request, requestType: "MENTORSHIP" })),
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const latestRequestByPeer = new Map();
+  for (const connectionRequest of requests) {
+    const peerId = connectionRequest.senderId === session.user.id
+      ? connectionRequest.receiverId
+      : connectionRequest.senderId;
+    if (connectionRequest.status === "ACCEPTED" || !latestRequestByPeer.has(peerId)) {
+      latestRequestByPeer.set(peerId, {
+        id: connectionRequest.id,
+        status: connectionRequest.status,
+        direction: connectionRequest.senderId === session.user.id ? "SENT" : "RECEIVED",
+        type: connectionRequest.requestType,
+      });
+    }
+  }
+
+  const uniqueMatches = new Map();
+  for (const match of matches) {
+    const key = `${match.userId}:${match.flightNumber}:${match.travelDate.toISOString()}`;
+    if (uniqueMatches.has(key)) continue;
+    const connection = latestRequestByPeer.get(match.userId);
+    uniqueMatches.set(key, {
+      ...match,
+      connectionRequestId: connection?.id || null,
+      connectionStatus: connection?.status || null,
+      connectionDirection: connection?.direction || null,
+      connectionType: connection?.type || null,
+    });
+  }
+
+  return NextResponse.json({ myFlights, matches: [...uniqueMatches.values()] });
 }
 
 // POST /api/flight-reconnect
-// Logs a flight route/date for the logged-in user, with explicit consent.
+// Logs a completed itinerary. Sharing is explicit opt-in and defaults off.
 export async function POST(request) {
   const session = await getServerSession(authOptions);
-
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { flightRoute, travelDate, consentToShare } = await request.json();
+  const body = await request.json().catch(() => ({}));
+  const flightNumber = typeof body.flightNumber === "string"
+    ? body.flightNumber.trim().toUpperCase().replace(/\s+/g, " ")
+    : "";
+  const origin = typeof body.origin === "string" ? body.origin.trim().toUpperCase() : "";
+  const destination = typeof body.destination === "string" ? body.destination.trim().toUpperCase() : "";
+  const { travelDate } = body;
 
-  if (!flightRoute || !travelDate) {
+  if (!flightNumber || !origin || !destination || !travelDate) {
     return NextResponse.json(
-      { error: "flightRoute and travelDate are required" },
+      { error: "Flight number, origin, destination, and travel date are required" },
+      { status: 400 }
+    );
+  }
+  if (!/^KQ ?\d{1,4}[A-Z]?$/.test(flightNumber)) {
+    return NextResponse.json({ error: "Enter a valid Kenya Airways flight number, such as KQ 102" }, { status: 400 });
+  }
+  const canonicalFlightNumber = flightNumber.replace(/^KQ ?/, "KQ ");
+  if (!/^[A-Z]{3}$/.test(origin) || !/^[A-Z]{3}$/.test(destination)) {
+    return NextResponse.json({ error: "Origin and destination must be three-letter airport codes" }, { status: 400 });
+  }
+  if (origin === destination) {
+    return NextResponse.json({ error: "Origin and destination must be different airports" }, { status: 400 });
+  }
+  if (typeof travelDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(travelDate)) {
+    return NextResponse.json({ error: "Enter a valid travel date" }, { status: 400 });
+  }
+  const parsedDate = new Date(`${travelDate}T00:00:00.000Z`);
+  if (Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== travelDate) {
+    return NextResponse.json({ error: "Enter a valid travel date" }, { status: 400 });
+  }
+  const { year, month, day } = nairobiToday();
+  const today = `${year}-${month}-${day}`;
+  if (travelDate >= today) {
+    return NextResponse.json(
+      { error: "Flight Reconnect is for completed trips. Choose a date before today." },
       { status: 400 }
     );
   }
 
-  const parsedDate = new Date(travelDate);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return NextResponse.json({ error: "travelDate is invalid" }, { status: 400 });
+  const flightRoute = `v2|${canonicalFlightNumber}|${origin}|${destination}`;
+  const existing = await prisma.flightReconnect.findFirst({
+    where: { userId: session.user.id, flightRoute, travelDate: parsedDate },
+    select: { id: true },
+  });
+  if (existing) {
+    return NextResponse.json({ error: "You already logged this flight and date" }, { status: 409 });
   }
 
   const flight = await prisma.flightReconnect.create({
@@ -85,8 +199,16 @@ export async function POST(request) {
       userId: session.user.id,
       flightRoute,
       travelDate: parsedDate,
-      consentToShare: Boolean(consentToShare),
+      consentToShare: body.consentToShare === true,
     },
+  });
+
+  await logActivity({
+    actorId: session.user.id,
+    targetId: session.user.id,
+    actionType: "FLIGHT_TRIP_LOGGED",
+    summary: `Logged completed flight ${canonicalFlightNumber} (${origin} → ${destination})`,
+    details: { flightId: flight.id, flightNumber: canonicalFlightNumber, origin, destination, travelDate, sharingEnabled: flight.consentToShare },
   });
 
   return NextResponse.json({ flight }, { status: 201 });
