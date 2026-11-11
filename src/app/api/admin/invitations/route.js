@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { GMAIL_SENDER, sendAppEmail } from "@/lib/gmail";
 import { logActivity } from "@/lib/audit-log";
+import { buildAppUrl, escapeHtml } from "@/lib/app-url";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INVITE_SENT = "ADMIN_INVITE_SENT";
@@ -12,12 +13,6 @@ const INVITE_ACCEPTED = "ADMIN_INVITE_ACCEPTED";
 
 function tokenHash(token) {
   return createHash("sha256").update(token).digest("hex");
-}
-
-function escapeHtml(value) {
-  return value.replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  })[character]);
 }
 
 async function requireAdmin() {
@@ -94,6 +89,14 @@ export async function POST(request) {
     return NextResponse.json({ error: "This account is suspended. Resolve its account status before inviting it." }, { status: 409 });
   }
 
+  let inviteBaseUrl;
+  try {
+    inviteBaseUrl = buildAppUrl("/admin-invite/accept");
+  } catch (error) {
+    console.error("Administrator invitation URL is not configured:", error);
+    return NextResponse.json({ error: "Email links are not configured. Set APP_URL to the public site address and redeploy." }, { status: 503 });
+  }
+
   let createdUser = false;
   if (!user) {
     const displayName = email.split("@")[0].replace(/[._-]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()).slice(0, 100) || "Administrator";
@@ -127,8 +130,8 @@ export async function POST(request) {
     : await prisma.adminAction.create({ data: { adminId: session.user.id, actionType: INVITE_SENT, targetId: user.id, notes: hashedToken } });
   await prisma.verificationToken.create({ data: { userId: user.id, token, expiresAt } });
 
-  const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
-  const inviteUrl = new URL(`/admin-invite/accept?token=${encodeURIComponent(token)}`, appUrl).toString();
+  const inviteUrl = new URL(inviteBaseUrl);
+  inviteUrl.searchParams.set("token", token);
   const inviter = session.user.name || session.user.email || "A KQ PrideConnect administrator";
   const safeInviter = escapeHtml(inviter);
 
@@ -136,7 +139,7 @@ export async function POST(request) {
     await sendAppEmail({
       to: email,
       subject: "You’re invited to administer KQ PrideConnect",
-      html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#10243a;line-height:1.6"><div style="background:#071626;color:#fff;padding:24px;border-radius:14px 14px 0 0"><p style="margin:0;color:#ff6b80;font-size:12px;font-weight:bold;letter-spacing:2px">KQ PRIDECONNECT</p><h1 style="margin:10px 0 0;font-size:24px">Administrator invitation</h1></div><div style="padding:26px;border:1px solid #dce5ef;border-top:0;border-radius:0 0 14px 14px"><p>${safeInviter} invited you to help administer the Kenya Airways stakeholder network.</p><p>To activate your access, confirm this invitation and create an account password. Once activated, you can also sign in with Google using <b>${escapeHtml(email)}</b>. Your Google account email must match this invitation.</p><p><a href="${inviteUrl}" style="display:inline-block;background:#c8102e;color:#fff;text-decoration:none;font-weight:bold;padding:12px 18px;border-radius:8px">Accept invitation &amp; set password</a></p><p style="font-size:13px;color:#5b6b7d">This one-time invitation expires in 24 hours. If you did not expect it, you can ignore this message.</p></div></div>`,
+      html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#10243a;line-height:1.6"><div style="background:#071626;color:#fff;padding:24px;border-radius:14px 14px 0 0"><p style="margin:0;color:#ff6b80;font-size:12px;font-weight:bold;letter-spacing:2px">KQ PRIDECONNECT</p><h1 style="margin:10px 0 0;font-size:24px">Administrator invitation</h1></div><div style="padding:26px;border:1px solid #dce5ef;border-top:0;border-radius:0 0 14px 14px"><p>${safeInviter} invited you to help administer the Kenya Airways stakeholder network.</p><p>To activate your access, confirm this invitation and create an account password. Once activated, you can also sign in with Google using <b>${escapeHtml(email)}</b>. Your Google account email must match this invitation.</p><p><a href="${escapeHtml(inviteUrl.toString())}" style="display:inline-block;background:#c8102e;color:#fff;text-decoration:none;font-weight:bold;padding:12px 18px;border-radius:8px">Accept invitation &amp; set password</a></p><p style="font-size:13px;color:#5b6b7d">This one-time invitation expires in 24 hours. If you did not expect it, you can ignore this message.</p></div></div>`,
     });
   } catch (error) {
     await prisma.verificationToken.deleteMany({ where: { userId: user.id, token } });

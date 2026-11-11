@@ -62,6 +62,7 @@ model User {
 
   recommendationsReceived Recommendation[] @relation("RecommendationOwner")
   recommendationsAsMatch  Recommendation[] @relation("RecommendationMatch")
+  recommendationEvents RecommendationEvent[]
 
   feedbackGiven Feedback[]
 
@@ -188,8 +189,25 @@ model Recommendation {
   matchedUser        User @relation("RecommendationMatch", fields: [matchedUserId], references: [id], onDelete: Cascade)
 
   feedback           Feedback[]
+  events             RecommendationEvent[]
 
   @@unique([ownerId, matchedUserId])
+}
+
+model RecommendationEvent {
+  id               String   @id @default(cuid())
+  ownerId          String
+  recommendationId String
+  eventType        String
+  rank             Int?
+  scores           Json?
+  createdAt        DateTime @default(now())
+
+  owner            User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  recommendation   Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId, eventType, createdAt])
+  @@index([recommendationId, eventType, createdAt])
 }
 
 model Feedback {

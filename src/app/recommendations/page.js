@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import KQAppShell from "@/components/KQAppShell";
@@ -54,6 +54,24 @@ export default function RecommendationsPage() {
   const [sendingRequest, setSendingRequest] = useState(false);
   const [feedbackSuccess, setFeedbackSuccess] = useState("");
   const [recommendationFeedback, setRecommendationFeedback] = useState({});
+  const loggedViews = useRef(new Set());
+
+  async function recordRecommendationEvent(item, eventType) {
+    if (!item?.recommendationId) return;
+    if (eventType === "VIEW") {
+      if (loggedViews.current.has(item.recommendationId)) return;
+      loggedViews.current.add(item.recommendationId);
+    }
+    try {
+      await fetch("/api/recommendation-events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recommendationId: item.recommendationId, eventType }),
+      });
+    } catch {
+      // Event logging is best-effort and must not interrupt the member flow.
+    }
+  }
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -114,6 +132,25 @@ export default function RecommendationsPage() {
     });
   }, [recommendations, searchQuery, roleFilter, minScore, mentorshipFilter]);
 
+  useEffect(() => {
+    if (!filteredMatches.length || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const recommendationId = entry.target.dataset.recommendationId;
+        if (!recommendationId || loggedViews.current.has(recommendationId)) continue;
+        loggedViews.current.add(recommendationId);
+        fetch("/api/recommendation-events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recommendationId, eventType: "VIEW" }),
+        }).catch(() => {});
+      }
+    }, { threshold: 0.5 });
+    document.querySelectorAll("[data-recommendation-id]").forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, [filteredMatches]);
+
   async function handleSendRequest(recipientId) {
     if (!requestMessage.trim()) return;
     setSendingRequest(true);
@@ -139,6 +176,7 @@ export default function RecommendationsPage() {
       }
 
       setFeedbackSuccess("Mentorship request dispatched successfully via KQ PrideConnect.");
+      await recordRecommendationEvent(selectedMatch, "CONTACT");
       setTimeout(() => {
         setSelectedMatch(null);
         setSendingRequest(false);
@@ -410,6 +448,7 @@ export default function RecommendationsPage() {
               return (
                 <article
                   key={item.userId}
+                  data-recommendation-id={item.recommendationId}
                   className="group relative bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-xl transition-all duration-300 p-6 sm:p-7 flex flex-col justify-between space-y-5"
                 >
                   <div className="space-y-4">
@@ -426,7 +465,7 @@ export default function RecommendationsPage() {
                           <span className="text-base sm:text-lg font-bold text-emerald-800 font-mono">
                             {item.matchPercent === 0 ? "New" : `${item.matchPercent}%`}
                           </span>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Affinity</span>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Match score</span>
                         </div>
                         <div className="w-20 h-1.5 bg-emerald-200/70 rounded-full overflow-hidden">
                           <div
@@ -488,8 +527,8 @@ export default function RecommendationsPage() {
                         <b className="font-mono text-slate-900">{item.relevanceProbability == null ? "Gathering ratings" : `${item.relevanceProbability}%`}</b>
                       </div>
                       <div className="flex items-center justify-between text-slate-600 pt-1">
-                        <span className="font-medium">NCF interaction estimate:</span>
-                        <b className="font-mono text-slate-900">{item.ncfAcceptanceProbability == null ? "Not enough reliable history" : `${item.ncfAcceptanceProbability}%`}</b>
+                        <span className="font-medium">NCF shadow estimate (not used for ranking):</span>
+                        <b className="font-mono text-slate-900">{item.ncfAcceptanceProbability == null ? "Not available" : `${item.ncfAcceptanceProbability}%`}</b>
                       </div>
 
                       <div className="flex items-center justify-between text-slate-600 pt-1">
@@ -587,12 +626,26 @@ export default function RecommendationsPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSelectedMatch(item)}
+                      onClick={() => {
+                        setSelectedMatch(item);
+                        recordRecommendationEvent(item, "VIEW");
+                      }}
                       className="py-2.5 px-4 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
                       title="View Profile Details"
                     >
                       <Icon name="eye" size={14} />
                       <span className="hidden sm:inline">Details</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        recordRecommendationEvent(item, "DISMISS");
+                        setRecommendations((current) => current.filter((match) => match.userId !== item.userId));
+                      }}
+                      className="py-2.5 px-3 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-500 text-xs font-semibold transition cursor-pointer"
+                      title="Dismiss this recommendation"
+                    >
+                      Hide
                     </button>
                   </div>
                 </article>

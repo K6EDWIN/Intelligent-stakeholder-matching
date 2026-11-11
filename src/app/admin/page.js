@@ -809,8 +809,13 @@ export default function AdminPage() {
                 </div>
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                   <span className="block text-[10px] uppercase tracking-wider font-bold text-slate-400">NCF interaction model</span>
-                  <b className="text-sm text-slate-900">{benchmark?.adaptiveModel?.ncf?.active ? `Active · ${benchmark.adaptiveModel.ncf.trainingExamples} outcomes` : benchmark?.adaptiveModel?.ncf?.evaluated ? "Evaluated · held back by quality check" : "Waiting for enough interaction history"}</b>
-                  <span className="block text-xs text-slate-500 mt-1">{benchmark?.adaptiveModel?.ncf?.holdoutRocAuc != null ? `${benchmark.adaptiveModel.ncf.latestEvaluationActive ? "Latest time holdout" : "Latest run held back"} · AUC ${(benchmark.adaptiveModel.ncf.holdoutRocAuc * 100).toFixed(1)}%` : "Requires 80 outcomes and a valid time holdout"}</span>
+                  <b className="text-sm text-slate-900">{benchmark?.adaptiveModel?.ncf?.active ? `Shadow monitoring · ${benchmark.adaptiveModel.ncf.trainingExamples} outcomes` : benchmark?.adaptiveModel?.ncf?.evaluated ? "Evaluated · held back by quality check" : "Waiting for enough interaction history"}</b>
+                  <span className="block text-xs text-slate-500 mt-1">{benchmark?.adaptiveModel?.ncf?.holdoutRocAuc != null ? `Latest holdout · AUC ${(benchmark.adaptiveModel.ncf.holdoutRocAuc * 100).toFixed(1)}% · no ranking influence` : "Requires 80 outcomes and a valid time holdout"}</span>
+                  {benchmark?.adaptiveModel?.ncf?.holdoutRocAuc != null && (
+                    <span className="block text-[11px] text-slate-500 mt-1">
+                      PR-AUC {benchmark.adaptiveModel.ncf.holdoutPrAuc?.toFixed(3) ?? "—"} · Brier {benchmark.adaptiveModel.ncf.holdoutBrierScore?.toFixed(3) ?? "—"} · Coverage {benchmark.adaptiveModel.ncf.holdoutCoverage == null ? "—" : `${(benchmark.adaptiveModel.ncf.holdoutCoverage * 100).toFixed(1)}%`} · NDCG@5 {benchmark.adaptiveModel.ncf.holdoutNdcgAt5?.toFixed(3) ?? "—"} · n={benchmark.adaptiveModel.ncf.holdoutCount ?? "—"}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -948,6 +953,26 @@ export default function AdminPage() {
                 </div>
               </section>
             </div>
+
+            <section className="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Member-judged ranking · newest 20% holdout</div>
+              {benchmark?.memberJudgedRanking?.available ? (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {Object.entries(benchmark.memberJudgedRanking.metrics).map(([name, metric]) => (
+                      <div key={name} className="rounded-lg bg-slate-50 border border-slate-100 p-3">
+                        <div className="text-[11px] text-slate-500">{name}</div>
+                        <b className="text-lg text-slate-900">{metric.ndcgAt5 == null ? "—" : metric.ndcgAt5.toFixed(3)}</b>
+                        <div className="text-[10px] text-slate-400">NDCG@5 · {metric.evaluatedGroups} groups</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-slate-500">{benchmark.memberJudgedRanking.holdoutExamples} of {benchmark.memberJudgedRanking.feedbackExamples} rated recommendations held out. {benchmark.memberJudgedRanking.note}</p>
+                </>
+              ) : (
+                <p className="text-xs text-slate-600">{benchmark?.memberJudgedRanking?.note || "Collect recommendation views and member ratings to start an independent ranking evaluation."}</p>
+              )}
+            </section>
 
             {/* Feature Weight Signals */}
             <section className="p-6 sm:p-8 bg-white border border-slate-200/80 rounded-2xl shadow-xs space-y-6">
@@ -1129,7 +1154,7 @@ export default function AdminPage() {
                       {simulationData.model.versions?.acceptance && <div>Model version: <b className="text-slate-900">{simulationData.model.versions.acceptance}</b></div>}
                       {simulationData.model.ncf?.version && <div>NCF version: <b className="text-slate-900">{simulationData.model.ncf.version}</b></div>}
                       <div>Adaptive ML influence: <b className="text-slate-900">{simulationData.model.confidence}%</b></div>
-                      <div>NCF influence cap: <b className="text-slate-900">20%</b></div>
+                      <div>NCF ranking influence: <b className="text-slate-900">0% (shadow)</b></div>
                     </div>
                   </div>
 
@@ -1170,7 +1195,7 @@ export default function AdminPage() {
                                 Profile text alignment: <b className="text-slate-800">{cand.semanticScore}%</b> · Member relevance: <b className="text-slate-800">{cand.relevanceProbability == null ? "Gathering ratings" : `${cand.relevanceProbability}%`}</b>
                                 {cand.diversityAdjustment > 0 && <span className="ml-1 text-emerald-700">· Rank adjusted for variety (-{cand.diversityAdjustment}%)</span>}
                               </span>
-                              {cand.ncfAcceptanceProbability != null && <span className="text-[11px] text-slate-500 block mt-1">NCF interaction estimate: <b className="text-slate-800">{cand.ncfAcceptanceProbability}%</b> · Blended into score: <b className="text-slate-800">{cand.ncfInfluence}%</b></span>}
+                              {cand.ncfAcceptanceProbability != null && <span className="text-[11px] text-slate-500 block mt-1">NCF shadow acceptance estimate: <b className="text-slate-800">{cand.ncfAcceptanceProbability}%</b> · Ranking influence: <b className="text-slate-800">0%</b></span>}
 
                               {cand.sharedSkills.length > 0 && (
                                 <div className="flex flex-wrap gap-1 mt-2">
