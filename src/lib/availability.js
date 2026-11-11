@@ -263,6 +263,14 @@ export function availabilityPairFeatures(leftValue, rightValue) {
   };
 }
 
+export function availabilityDoesNotConflict(leftValue, rightValue) {
+  const left = parseAvailability(leftValue);
+  const right = parseAvailability(rightValue);
+  const daysConflict = left.days.length > 0 && right.days.length > 0 && setOverlap(left.days, right.days) === 0;
+  const timesConflict = left.windows.length > 0 && right.windows.length > 0 && windowOverlap(left.windows, right.windows) === 0;
+  return !daysConflict && !timesConflict;
+}
+
 function formatTime(minutes) {
   const hour = Math.floor(minutes / 60).toString().padStart(2, "0");
   const minute = (minutes % 60).toString().padStart(2, "0");

@@ -9,6 +9,7 @@ export const FEATURE_NAMES = [
   "interestOverlap",
   "sameDepartment",
   "mentorshipRoleFit",
+  "mentorshipTopicFit",
   "sharedNetwork",
   "isMentorshipRequest",
   "semanticProfileOverlap",
@@ -30,6 +31,30 @@ function overlap(idsA, idsB) {
   return shared / new Set([...a, ...b]).size;
 }
 
+function mentorshipTopicFit(profileA, profileB) {
+  const topics = (profile, direction) => new Set(
+    (profile.mentorshipTopics || [])
+      .filter((topic) => topic.direction === direction)
+      .map((topic) => topic.skillId)
+  );
+  const ownerSeeking = topics(profileA, "SEEKING");
+  const candidateOffering = topics(profileB, "OFFERING");
+  const candidateSeeking = topics(profileB, "SEEKING");
+  const ownerOffering = topics(profileA, "OFFERING");
+  const fits = [];
+  if (ownerSeeking.size) fits.push(overlap([...ownerSeeking], [...candidateOffering]));
+  if (candidateSeeking.size) fits.push(overlap([...candidateSeeking], [...ownerOffering]));
+  return fits.length ? fits.reduce((sum, value) => sum + value, 0) / fits.length : 0;
+}
+
+function roleFit(senderRole, recipientRole) {
+  const senderCanMentor = senderRole === "MENTOR" || senderRole === "BOTH";
+  const senderCanLearn = senderRole === "MENTEE" || senderRole === "BOTH";
+  const recipientCanMentor = recipientRole === "MENTOR" || recipientRole === "BOTH";
+  const recipientCanLearn = recipientRole === "MENTEE" || recipientRole === "BOTH";
+  return Number((senderCanLearn && recipientCanMentor) || (senderCanMentor && recipientCanLearn));
+}
+
 /** Features are captured when a request is sent, before its outcome is known. */
 export function extractPairFeatures(sender, recipient, requestType, sharedNetwork = 0) {
   const senderSkillIds = (sender.skills || []).map((item) => item.skillId);
@@ -38,11 +63,7 @@ export function extractPairFeatures(sender, recipient, requestType, sharedNetwor
   const recipientInterestIds = (recipient.interests || []).map((item) => item.interestId);
   const senderRole = sender.mentorshipRole;
   const recipientRole = recipient.mentorshipRole;
-  const mentorshipRoleFit =
-    (senderRole === "MENTEE" || senderRole === "BOTH") &&
-    (recipientRole === "MENTOR" || recipientRole === "BOTH")
-      ? 1
-      : 0;
+  const mentorshipRoleFit = roleFit(senderRole, recipientRole);
 
   return {
     skillOverlap: overlap(senderSkillIds, recipientSkillIds),
@@ -53,6 +74,7 @@ export function extractPairFeatures(sender, recipient, requestType, sharedNetwor
         ? 1
         : 0,
     mentorshipRoleFit: requestType === "MENTORSHIP" ? mentorshipRoleFit : 0,
+    mentorshipTopicFit: requestType === "MENTORSHIP" ? mentorshipTopicFit(sender, recipient) : 0,
     sharedNetwork: Math.max(0, Math.min(1, sharedNetwork)),
     isMentorshipRequest: requestType === "MENTORSHIP" ? 1 : 0,
     semanticProfileOverlap: profileSemanticSimilarity(sender, recipient),
@@ -261,9 +283,14 @@ export function scoreCandidate({
   );
   const baselineWeights = computeHybridWeights(totalAcceptedInteractions);
   const semanticScore = profileSemanticSimilarity(owner, candidate);
-  const profileScore = contentScore * 0.78 + semanticScore * 0.22;
-  const baselineScore = computeHybridScore(profileScore, collaborativeScore, baselineWeights);
   const modelFeatures = extractPairFeatures(owner, candidate, "MENTORSHIP", collaborativeScore);
+  const topicsDeclared = [...(owner.mentorshipTopics || []), ...(candidate.mentorshipTopics || [])]
+    .some((topic) => topic.direction === "SEEKING");
+  const topicWeight = topicsDeclared ? 0.18 : 0;
+  const profileScore = contentScore * (0.78 - topicWeight * 0.78) +
+    semanticScore * (0.22 - topicWeight * 0.22) +
+    modelFeatures.mentorshipTopicFit * topicWeight;
+  const baselineScore = computeHybridScore(profileScore, collaborativeScore, baselineWeights);
   const mlAcceptanceProbability = model.active ? model.predict(modelFeatures) : null;
   const matchScore = model.active
     ? baselineScore * (1 - model.confidence) + mlAcceptanceProbability * model.confidence

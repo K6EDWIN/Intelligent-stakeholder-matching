@@ -95,7 +95,7 @@ export default function RequestsPage() {
       });
 
       if (res.ok) {
-        if (newStatus === "ACCEPTED") {
+        if (newStatus === "ACCEPTED" && kind === "connection") {
           setRatingTarget({ id, kind, role: "Partner" });
         }
         refreshRequests();
@@ -105,6 +105,25 @@ export default function RequestsPage() {
       }
     } catch (err) {
       alert("Error: " + err.message);
+    }
+  };
+
+  const handleCompleteMentorship = async (req, name) => {
+    try {
+      const response = await fetch(`/api/mentorship-requests/${req.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: true }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || "Could not mark mentorship complete");
+        return;
+      }
+      await refreshRequests();
+      setRatingTarget({ id: req.id, kind: "mentorship", name });
+    } catch (error) {
+      alert("Could not mark mentorship complete: " + error.message);
     }
   };
 
@@ -118,6 +137,7 @@ export default function RequestsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mentorshipRequestId: ratingTarget.kind === "mentorship" ? ratingTarget.id : null,
+          connectionRequestId: ratingTarget.kind === "connection" ? ratingTarget.id : null,
           rating: selectedStars,
           comment: feedbackComment || null,
         }),
@@ -125,6 +145,7 @@ export default function RequestsPage() {
 
       if (res.ok) {
         setFeedbackSuccess(true);
+        await refreshRequests();
         setTimeout(() => {
           setRatingTarget(null);
           setFeedbackSuccess(false);
@@ -460,14 +481,31 @@ export default function RequestsPage() {
                       </div>
 
                       <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
-                        <button
-                          type="button"
-                          onClick={() => setRatingTarget({ id: req.id, kind: req.kind, name })}
-                          className="btn btn-secondary text-xs py-2 w-full rounded-md"
-                        >
-                          <Icon name="star" size={14} className="text-[#c59b27]" />
-                          <span>Rate Connection Quality</span>
-                        </button>
+                        {req.kind === "mentorship" ? (
+                          req.completedAt && req.feedback?.length ? (
+                            <p className="w-full text-center text-xs text-emerald-700">Completed · you rated this mentorship {req.feedback[0].rating}/5</p>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => req.completedAt
+                                ? setRatingTarget({ id: req.id, kind: "mentorship", name })
+                                : handleCompleteMentorship(req, name)}
+                              className="btn btn-secondary text-xs py-2 w-full rounded-md"
+                            >
+                              <Icon name={req.completedAt ? "star" : "check"} size={14} className="text-[#c59b27]" />
+                              <span>{req.completedAt ? "Rate mentorship usefulness" : "Mark mentorship complete & rate"}</span>
+                            </button>
+                          )
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setRatingTarget({ id: req.id, kind: req.kind, name })}
+                            className="btn btn-secondary text-xs py-2 w-full rounded-md"
+                          >
+                            <Icon name="star" size={14} className="text-[#c59b27]" />
+                            <span>Rate Connection Quality</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -501,10 +539,12 @@ export default function RequestsPage() {
 
               <div>
                 <h3 className="text-lg font-bold text-slate-900">
-                  Rate Connection Quality
+                  {ratingTarget.kind === "mentorship" ? "Rate this mentorship" : "Rate Connection Quality"}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
-                  Your feedback helps optimize collaborative interaction scoring for all Kenya Airways stakeholders.
+                  {ratingTarget.kind === "mentorship"
+                    ? "How useful was this mentorship for your goals? Your rating helps improve future mentor matches."
+                    : "Your feedback helps improve future connection recommendations."}
                 </p>
               </div>
 

@@ -14,7 +14,8 @@ export async function POST(request) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { mentorshipRequestId, connectionRequestId, recommendationId, rating, comment } = await request.json();
+  const body = await request.json().catch(() => ({}));
+  const { mentorshipRequestId, connectionRequestId, recommendationId, rating, comment } = body;
 
   const numericRating = Number(rating);
   if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) {
@@ -25,32 +26,79 @@ export async function POST(request) {
   }
 
   let recommendation = null;
+  let mentorshipRequest = null;
+  let connectionRequest = null;
   if (recommendationId) {
     recommendation = await prisma.recommendation.findFirst({
       where: { id: recommendationId, ownerId: session.user.id },
-      select: { id: true, modelFeatures: true },
+      select: { id: true, ownerId: true, modelFeatures: true },
     });
     if (!recommendation) {
       return NextResponse.json({ error: "Recommendation not found for this account" }, { status: 404 });
     }
   }
 
+  if (mentorshipRequestId) {
+    mentorshipRequest = await prisma.mentorshipRequest.findUnique({ where: { id: mentorshipRequestId } });
+    if (!mentorshipRequest || ![mentorshipRequest.senderId, mentorshipRequest.receiverId].includes(session.user.id)) {
+      return NextResponse.json({ error: "Mentorship request not found for this account" }, { status: 404 });
+    }
+    if (mentorshipRequest.status !== "ACCEPTED" || !mentorshipRequest.completedAt) {
+      return NextResponse.json({ error: "You can rate mentorship usefulness after it has been marked complete" }, { status: 409 });
+    }
+  }
+  if (connectionRequestId) {
+    connectionRequest = await prisma.connectionRequest.findUnique({ where: { id: connectionRequestId } });
+    if (!connectionRequest || ![connectionRequest.senderId, connectionRequest.receiverId].includes(session.user.id)) {
+      return NextResponse.json({ error: "Connection request not found for this account" }, { status: 404 });
+    }
+    if (connectionRequest.status !== "ACCEPTED") {
+      return NextResponse.json({ error: "You can rate an accepted connection only" }, { status: 409 });
+    }
+  }
+  if (!recommendation && !mentorshipRequest && !connectionRequest) {
+    return NextResponse.json({ error: "Provide a recommendation or accepted interaction to rate" }, { status: 400 });
+  }
+
   try {
-    const existing = recommendation
-      ? await prisma.feedback.findFirst({ where: { userId: session.user.id, recommendationId: recommendation.id } })
-      : null;
+    const existing = await prisma.feedback.findFirst({
+      where: {
+        userId: session.user.id,
+        ...(recommendation ? { recommendationId: recommendation.id } : {}),
+        ...(mentorshipRequest ? { mentorshipRequestId: mentorshipRequest.id } : {}),
+        ...(connectionRequest ? { connectionRequestId: connectionRequest.id } : {}),
+      },
+    });
     const feedbackData = {
         userId: session.user.id,
-        mentorshipRequestId: mentorshipRequestId || null,
-        connectionRequestId: connectionRequestId || null,
-        recommendationId: recommendation?.id || null,
-        modelFeatures: recommendation?.modelFeatures || undefined,
+        mentorshipRequestId: mentorshipRequest?.id || null,
+        connectionRequestId: connectionRequest?.id || null,
+        recommendationId: recommendation?.id || mentorshipRequest?.recommendationId || null,
+        modelFeatures: mentorshipRequest?.modelFeatures || recommendation?.modelFeatures || connectionRequest?.modelFeatures || undefined,
         rating: numericRating,
         comment: comment || null,
     };
     const feedback = existing
       ? await prisma.feedback.update({ where: { id: existing.id }, data: feedbackData })
       : await prisma.feedback.create({ data: feedbackData });
+
+    const ratedRecommendationId = recommendation?.id || mentorshipRequest?.recommendationId;
+    if (ratedRecommendationId) {
+      const ratedRecommendation = recommendation || await prisma.recommendation.findUnique({
+        where: { id: ratedRecommendationId },
+        select: { id: true, ownerId: true },
+      });
+      if (ratedRecommendation?.ownerId === session.user.id) {
+        await prisma.recommendationEvent.create({
+          data: {
+            ownerId: session.user.id,
+            recommendationId: ratedRecommendation.id,
+            eventType: "RATED",
+            scores: { rating: numericRating },
+          },
+        });
+      }
+    }
 
     await logActivity({
       actorId: session.user.id,

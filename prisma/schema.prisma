@@ -37,6 +37,11 @@ enum MLModelType {
   NCF
 }
 
+enum MentorshipTopicDirection {
+  SEEKING
+  OFFERING
+}
+
 // ---------- CORE USER & PROFILE ----------
 
 model User {
@@ -99,6 +104,7 @@ model Profile {
 
   skills               ProfileSkill[]
   interests            ProfileInterest[]
+  mentorshipTopics     ProfileMentorshipTopic[]
 
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
@@ -108,6 +114,19 @@ model Skill {
   id       String         @id @default(cuid())
   name     String         @unique
   profiles ProfileSkill[]
+  mentorshipTopics ProfileMentorshipTopic[]
+}
+
+model ProfileMentorshipTopic {
+  profileId String
+  skillId   String
+  direction MentorshipTopicDirection
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  skill   Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([profileId, skillId, direction])
+  @@index([skillId, direction])
 }
 
 model ProfileSkill {
@@ -145,11 +164,14 @@ model MentorshipRequest {
   message    String?
   status     RequestStatus @default(PENDING)
   modelFeatures Json?         // Numeric feature snapshot used after outcome is known.
+  completedAt DateTime?
+  recommendationId String?
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 
   sender     User @relation("MentorshipSender", fields: [senderId], references: [id], onDelete: Cascade)
   receiver   User @relation("MentorshipReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  recommendation Recommendation? @relation(fields: [recommendationId], references: [id], onDelete: SetNull)
 
   feedback   Feedback[]
 }
@@ -190,6 +212,7 @@ model Recommendation {
 
   feedback           Feedback[]
   events             RecommendationEvent[]
+  mentorshipRequests MentorshipRequest[]
 
   @@unique([ownerId, matchedUserId])
 }
@@ -200,6 +223,8 @@ model RecommendationEvent {
   recommendationId String
   eventType        String
   rank             Int?
+  policy           String?
+  selectionProbability Float?
   scores           Json?
   createdAt        DateTime @default(now())
 

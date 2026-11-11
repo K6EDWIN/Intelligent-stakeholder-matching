@@ -29,29 +29,26 @@ function normalizeText(value) {
   return text;
 }
 
-function profileTerms(profile) {
-  const values = [
-    profile?.department,
-    profile?.bio,
-    profile?.professionalBackground,
-    profile?.trainingHistory,
-    profile?.careerGoals,
-    profile?.mentorshipNeeds,
-    ...(profile?.skills || []).map((item) => item.skill?.name || item.name),
-    ...(profile?.interests || []).map((item) => item.interest?.name || item.name),
-  ];
-  return normalizeText(values.filter(Boolean).join(" "))
-    .split(/\s+/)
-    .filter((token) => token.length > 2 && !STOP_WORDS.has(token));
-}
-
 export function profileVector(profile) {
-  const terms = profileTerms(profile);
-  const features = [...terms];
-  for (let i = 0; i < terms.length - 1; i++) features.push(`${terms[i]}_${terms[i + 1]}`);
   const vector = new Map();
-  for (const feature of features) {
-    vector.set(feature, (vector.get(feature) || 0) + 1);
+  const fields = [
+    [profile?.department, 0.7],
+    [profile?.bio, 1],
+    [profile?.professionalBackground, 1.4],
+    [profile?.trainingHistory, 1.4],
+    [profile?.careerGoals, 2],
+    [profile?.mentorshipNeeds, 2.5],
+    ...((profile?.skills || []).map((item) => [item.skill?.name || item.name, 1.5])),
+    ...((profile?.interests || []).map((item) => [item.interest?.name || item.name, 0.8])),
+    ...((profile?.mentorshipTopics || []).map((item) => [item.skill?.name || item.name, 2.5])),
+  ];
+  for (const [value, weight] of fields) {
+    const terms = normalizeText(value).split(/\s+/).filter((token) => token.length > 2 && !STOP_WORDS.has(token));
+    const features = [...terms];
+    for (let index = 0; index < terms.length - 1; index++) features.push(`${terms[index]}_${terms[index + 1]}`);
+    for (const feature of features) {
+      vector.set(feature, (vector.get(feature) || 0) + weight);
+    }
   }
   return vector;
 }
@@ -70,6 +67,37 @@ export function profileSemanticSimilarity(profileA, profileB) {
   if (!normA || !normB) return 0;
   const cosine = dot / Math.sqrt(normA * normB);
   return Math.max(0, Math.min(1, cosine));
+}
+
+export function explainProfileMatch(owner, candidate, features = {}) {
+  const reasons = [];
+  const ownerSkills = new Set((owner.skills || []).map((row) => row.skillId));
+  const sharedSkills = (candidate.skills || [])
+    .filter((row) => ownerSkills.has(row.skillId))
+    .map((row) => row.skill?.name || row.name)
+    .filter(Boolean)
+    .slice(0, 3);
+  if (sharedSkills.length) reasons.push(`Shared skills: ${sharedSkills.join(", ")}`);
+
+  const idName = new Map();
+  for (const topic of [...(owner.mentorshipTopics || []), ...(candidate.mentorshipTopics || [])]) {
+    if (topic.skillId && topic.skill?.name) idName.set(topic.skillId, topic.skill.name);
+  }
+  const seeking = new Set((owner.mentorshipTopics || []).filter((topic) => topic.direction === "SEEKING").map((topic) => topic.skillId));
+  const candidateOffers = new Set((candidate.mentorshipTopics || []).filter((topic) => topic.direction === "OFFERING").map((topic) => topic.skillId));
+  const teaching = [...seeking].filter((id) => candidateOffers.has(id)).map((id) => idName.get(id)).filter(Boolean);
+  if (teaching.length) reasons.push(`They can help with: ${teaching.slice(0, 2).join(", ")}`);
+
+  const ownerOffers = new Set((owner.mentorshipTopics || []).filter((topic) => topic.direction === "OFFERING").map((topic) => topic.skillId));
+  const candidateSeeks = new Set((candidate.mentorshipTopics || []).filter((topic) => topic.direction === "SEEKING").map((topic) => topic.skillId));
+  const reciprocal = [...candidateSeeks].filter((id) => ownerOffers.has(id)).map((id) => idName.get(id)).filter(Boolean);
+  if (reciprocal.length) reasons.push(`You can support their goals in: ${reciprocal.slice(0, 2).join(", ")}`);
+
+  if (features.mentorshipRoleFit) reasons.push("Mentor and mentee roles are compatible");
+  if (features.availabilityPairKnown && (features.availabilityDayOverlap > 0 || features.availabilityTimeOverlap > 0)) reasons.push("Your availability has an overlap");
+  if (features.semanticProfileOverlap >= 0.25) reasons.push("Career goals and professional backgrounds are aligned");
+  if (!reasons.length) reasons.push("Roles and stated availability do not conflict");
+  return reasons.slice(0, 4);
 }
 
 export function diversifyRankedCandidates(candidates, limit = 12) {

@@ -18,6 +18,7 @@ export async function GET() {
     include: {
       skills: { include: { skill: true } },
       interests: { include: { interest: true } },
+      mentorshipTopics: { select: { skillId: true, direction: true } },
     },
   });
 
@@ -29,7 +30,7 @@ export async function GET() {
         department: session.user.role === "ADMIN" ? "Administration" : null,
         isPublic: false,
       },
-      include: { skills: true, interests: true },
+      include: { skills: true, interests: true, mentorshipTopics: true },
     });
   }
 
@@ -37,7 +38,7 @@ export async function GET() {
     profile = await prisma.profile.update({
       where: { id: profile.id },
       data: { isPublic: false, mentorshipRole: null, mentorshipNeeds: null, availability: null },
-      include: { skills: { include: { skill: true } }, interests: { include: { interest: true } } },
+      include: { skills: { include: { skill: true } }, interests: { include: { interest: true } }, mentorshipTopics: true },
     });
   }
 
@@ -46,6 +47,8 @@ export async function GET() {
       ...profile,
       skillIds: profile.skills.map((s) => s.skillId),
       interestIds: profile.interests.map((i) => i.interestId),
+      seekingTopicIds: profile.mentorshipTopics.filter((topic) => topic.direction === "SEEKING").map((topic) => topic.skillId),
+      offeringTopicIds: profile.mentorshipTopics.filter((topic) => topic.direction === "OFFERING").map((topic) => topic.skillId),
     },
   });
 }
@@ -73,6 +76,8 @@ export async function PUT(request) {
     isPublic,
     skillIds = [],
     interestIds = [],
+    seekingTopicIds = [],
+    offeringTopicIds = [],
   } = body;
 
   if (!fullName) {
@@ -80,6 +85,9 @@ export async function PUT(request) {
       { error: "fullName is required" },
       { status: 400 }
     );
+  }
+  if (![skillIds, interestIds, seekingTopicIds, offeringTopicIds].every((ids) => Array.isArray(ids) && ids.every((id) => typeof id === "string"))) {
+    return NextResponse.json({ error: "Profile selections must be arrays of identifiers" }, { status: 400 });
   }
 
   const profile = await prisma.profile.findUnique({
@@ -112,6 +120,7 @@ export async function PUT(request) {
     }),
     prisma.profileSkill.deleteMany({ where: { profileId: profile.id } }),
     prisma.profileInterest.deleteMany({ where: { profileId: profile.id } }),
+    prisma.profileMentorshipTopic.deleteMany({ where: { profileId: profile.id } }),
     ...(!isAdmin && skillIds.length
       ? [
           prisma.profileSkill.createMany({
@@ -132,10 +141,20 @@ export async function PUT(request) {
           }),
         ]
       : []),
+    ...(!isAdmin && [...new Set([...seekingTopicIds, ...offeringTopicIds])].length
+      ? [
+          prisma.profileMentorshipTopic.createMany({
+            data: [
+              ...new Set(seekingTopicIds).map((skillId) => ({ profileId: profile.id, skillId, direction: "SEEKING" })),
+              ...new Set(offeringTopicIds).map((skillId) => ({ profileId: profile.id, skillId, direction: "OFFERING" })),
+            ],
+          }),
+        ]
+      : []),
   ]);
 
   const updatedFields = ["fullName", "bio", "department", "isPublic"];
-  if (!isAdmin) updatedFields.push("professionalBackground", "trainingHistory", "careerGoals", "mentorshipNeeds", "mentorshipRole", "availability", "skills", "interests");
+  if (!isAdmin) updatedFields.push("professionalBackground", "trainingHistory", "careerGoals", "mentorshipNeeds", "mentorshipRole", "availability", "skills", "interests", "mentorshipTopics");
   await logActivity({
     actorId: session.user.id,
     targetId: session.user.id,

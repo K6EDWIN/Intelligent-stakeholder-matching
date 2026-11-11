@@ -816,6 +816,12 @@ export default function AdminPage() {
                       PR-AUC {benchmark.adaptiveModel.ncf.holdoutPrAuc?.toFixed(3) ?? "—"} · Brier {benchmark.adaptiveModel.ncf.holdoutBrierScore?.toFixed(3) ?? "—"} · Coverage {benchmark.adaptiveModel.ncf.holdoutCoverage == null ? "—" : `${(benchmark.adaptiveModel.ncf.holdoutCoverage * 100).toFixed(1)}%`} · NDCG@5 {benchmark.adaptiveModel.ncf.holdoutNdcgAt5?.toFixed(3) ?? "—"} · n={benchmark.adaptiveModel.ncf.holdoutCount ?? "—"}
                     </span>
                   )}
+                  {benchmark?.adaptiveModel?.ncf?.evaluated && (
+                    <span className="block text-[11px] text-slate-500 mt-1">
+                      Known in embeddings: {benchmark.adaptiveModel.ncf.knownMembers} · unseen fallback: {benchmark.adaptiveModel.ncf.unseenMembers}
+                    </span>
+                  )}
+                  <span className="block text-[11px] text-slate-500 mt-1">Promotion still requires repeated time-based comparisons, uncertainty ranges, and separate known/new-member results.</span>
                 </div>
               </div>
 
@@ -836,6 +842,7 @@ export default function AdminPage() {
                       interestOverlap: "Shared interests",
                       sameDepartment: "Same department",
                       mentorshipRoleFit: "Mentor and mentee fit",
+                      mentorshipTopicFit: "Mentorship topics align",
                       sharedNetwork: "Shared network patterns",
                       isMentorshipRequest: "Mentorship request type",
                       semanticProfileOverlap: "Related profile language",
@@ -972,6 +979,39 @@ export default function AdminPage() {
               ) : (
                 <p className="text-xs text-slate-600">{benchmark?.memberJudgedRanking?.note || "Collect recommendation views and member ratings to start an independent ranking evaluation."}</p>
               )}
+            </section>
+
+            <section className="rounded-xl border border-slate-200 bg-white p-5 space-y-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Recommendation exposure · last 30 days</div>
+                <span className="text-xs text-slate-500">{benchmark?.recommendationExposure?.servedImpressions ?? 0} served</span>
+              </div>
+              {benchmark?.recommendationExposure?.policyCounts && (
+                <p className="text-[11px] text-slate-500">
+                  Policies: {Object.entries(benchmark.recommendationExposure.policyCounts).map(([policy, count]) => `${policy} ${count}`).join(" · ")}
+                </p>
+              )}
+              {benchmark?.recommendationExposure?.groups?.length ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="text-slate-500 border-b border-slate-100">
+                      <tr><th className="py-2 pr-3">Group</th><th className="py-2 pr-3">Eligible</th><th className="py-2 pr-3">Seen</th><th className="py-2 pr-3">Impressions</th><th className="py-2">Rank weighted / member</th></tr>
+                    </thead>
+                    <tbody>
+                      {benchmark.recommendationExposure.groups.map((group) => (
+                        <tr key={`${group.dimension}-${group.group}`} className="border-b border-slate-50">
+                          <td className="py-2 pr-3 text-slate-700">{group.dimension}: {group.group}</td>
+                          <td className="py-2 pr-3">{group.eligibleMembers}</td>
+                          <td className="py-2 pr-3">{group.exposedMembers}</td>
+                          <td className="py-2 pr-3">{group.impressions}</td>
+                          <td className="py-2">{group.rankWeightedExposurePerMember.toFixed(3)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : <p className="text-xs text-slate-600">{benchmark?.recommendationExposure?.note || "Exposure summaries will appear after recommendations are served."}</p>}
+              <p className="text-[11px] text-slate-500">{benchmark?.recommendationExposure?.note}</p>
             </section>
 
             {/* Feature Weight Signals */}

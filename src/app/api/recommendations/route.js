@@ -11,8 +11,10 @@ import {
   trainRelevanceModel,
 } from "@/lib/adaptive-recommender";
 import { getAdaptivePredictions } from "@/lib/hosted-ml";
-import { diversifyRankedCandidates } from "@/lib/profile-vectors";
+import { diversifyRankedCandidates, explainProfileMatch } from "@/lib/profile-vectors";
 import { getMlUserKey } from "@/lib/ml-sync-auth";
+import { isEligibleMentorshipMatch } from "@/lib/matching-eligibility";
+import { randomInt } from "node:crypto";
 
 // GET /api/recommendations
 // Fits a small acceptance model from resolved, feature-snapshotted live
@@ -26,7 +28,11 @@ export async function GET() {
 
   const ownerProfile = await prisma.profile.findUnique({
     where: { userId: session.user.id },
-    include: { skills: { include: { skill: true } }, interests: { include: { interest: true } } },
+    include: {
+      skills: { include: { skill: true } },
+      interests: { include: { interest: true } },
+      mentorshipTopics: { include: { skill: { select: { id: true, name: true } } } },
+    },
   });
 
   if (!ownerProfile) {
@@ -57,8 +63,10 @@ export async function GET() {
       user: { select: { id: true, role: true } },
       skills: { include: { skill: true } },
       interests: { include: { interest: true } },
+      mentorshipTopics: { include: { skill: { select: { id: true, name: true } } } },
     },
   });
+  const eligibleCandidates = candidates.filter((candidate) => isEligibleMentorshipMatch(ownerProfile, candidate));
 
   const [acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections] = await Promise.all([
     prisma.mentorshipRequest.findMany({
@@ -91,9 +99,11 @@ export async function GET() {
   const feedbackRows = await prisma.feedback.findMany({
     where: {
       userId: session.user.id,
-      recommendationId: { not: null },
       user: { isDemo: false },
-      recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } },
+      OR: [
+        { recommendationId: { not: null }, recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } } },
+        { mentorshipRequest: { is: { status: "ACCEPTED", completedAt: { not: null }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } } } },
+      ],
     },
     select: { rating: true, modelFeatures: true, recommendation: { select: { matchedUserId: true } } },
   });
@@ -104,7 +114,7 @@ export async function GET() {
   });
   const totalInteractions = acceptedMentorships.length + acceptedConnections.length;
 
-  const scored = candidates.map((candidate) => {
+  const scored = eligibleCandidates.map((candidate) => {
     const candidateAttrs = {
       skillIds: candidate.skills.map((item) => item.skillId),
       interestIds: candidate.interests.map((item) => item.interestId),
@@ -132,6 +142,7 @@ export async function GET() {
       sharedInterestNames: candidate.interests
         .filter((item) => sharedInterestIds.includes(item.interestId))
         .map((item) => item.interest.name),
+      matchReasons: explainProfileMatch(ownerProfile, candidate, score.modelFeatures),
     };
   });
 
@@ -175,10 +186,45 @@ export async function GET() {
         item.mlRelevanceProbability * item.relevanceInfluence;
   });
 
-  const rankedCandidates = diversifyRankedCandidates(
+  const diversifiedAll = diversifyRankedCandidates(
     [...scored].sort((a, b) => b.matchScore - a.matchScore),
-    12
+    scored.length
   );
+  let rankedCandidates = diversifiedAll.slice(0, 12).map((item) => ({ ...item, exploration: false, selectionProbability: 1 }));
+  const explorationPool = diversifiedAll.filter((item) => !rankedCandidates.some((selected) => selected.candidate.user.id === item.candidate.user.id));
+  const [servedHistoryCount, usefulFeedbackCount] = await Promise.all([
+    prisma.recommendationEvent.count({
+      where: {
+        eventType: "SERVED",
+        owner: { is: { isDemo: false } },
+        recommendation: { is: { matchedUser: { is: { isDemo: false } } } },
+      },
+    }),
+    prisma.feedback.count({
+      where: {
+        user: { isDemo: false },
+        OR: [{ rating: { gte: 4 } }, { rating: { lte: 2 } }],
+        AND: [{
+          OR: [
+            { recommendation: { is: { owner: { is: { isDemo: false } }, matchedUser: { is: { isDemo: false } } } } },
+            { mentorshipRequest: { is: { sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } } } },
+          ],
+        }],
+      },
+    }),
+  ]);
+  const explorationEnabled = process.env.RECOMMENDATION_EXPLORATION_ENABLED === "true" &&
+    servedHistoryCount >= 500 && usefulFeedbackCount >= 100 && rankedCandidates.length >= 12 && explorationPool.length > 0;
+  if (explorationEnabled) {
+    const selectedIndex = randomInt(explorationPool.length);
+    const selected = explorationPool[selectedIndex];
+    rankedCandidates[11] = {
+      ...selected,
+      diversityAdjustment: 0,
+      exploration: true,
+      selectionProbability: 1 / explorationPool.length,
+    };
+  }
   const savedRecommendations = await prisma.$transaction(
     rankedCandidates.map(({ candidate, contentScore, collaborativeScore, semanticScore, matchScore, modelFeatures }, index) =>
       prisma.recommendation.upsert({
@@ -205,6 +251,8 @@ export async function GET() {
       recommendationId: recommendationIds.get(item.candidate.user.id),
       eventType: "SERVED",
       rank: index + 1,
+      policy: item.exploration ? "RANDOM_QUALIFIED_LAST_SLOT_V1" : "DETERMINISTIC_PROFILE_RELEVANCE_V3",
+      selectionProbability: item.selectionProbability,
       scores: {
         content: item.contentScore,
         semantic: item.semanticScore,
@@ -250,9 +298,11 @@ export async function GET() {
         mentorshipRoleFit: Boolean(item.modelFeatures.mentorshipRoleFit),
         sharedNetwork: Math.round((Number(item.modelFeatures.sharedNetwork) || 0) * 100),
         requestType: item.modelFeatures.isMentorshipRequest ? "Mentorship" : "Connection",
+        mentorshipTopicFit: Math.round((Number(item.modelFeatures.mentorshipTopicFit) || 0) * 100),
       },
       sharedSkills: item.sharedSkillNames,
       sharedInterests: item.sharedInterestNames,
+      matchReasons: item.matchReasons,
     }));
 
   return NextResponse.json({
@@ -278,7 +328,15 @@ export async function GET() {
         ...ncfOutput,
         confidence: Math.round(ncfOutput.confidence * 100),
       },
-      ranking: { semanticProfileSignal: true, diversityReranking: true, acceptanceUsedForRanking: false, ncfStatus: "SHADOW", version: "profile-feedback-ranker-v3" },
+      ranking: {
+        semanticProfileSignal: true,
+        diversityReranking: true,
+        acceptanceUsedForRanking: false,
+        ncfStatus: "SHADOW",
+        explorationEnabled,
+        explorationHistory: { servedImpressions: servedHistoryCount, usefulFeedback: usefulFeedbackCount },
+        version: "profile-feedback-ranker-v4",
+      },
     },
   });
 }
