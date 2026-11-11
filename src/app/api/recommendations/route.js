@@ -38,10 +38,19 @@ export async function GET() {
     interestIds: ownerProfile.interests.map((item) => item.interestId),
   };
 
+  const dismissedEvents = await prisma.recommendationEvent.findMany({
+    where: {
+      ownerId: session.user.id,
+      eventType: "DISMISS",
+      createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
+    },
+    select: { recommendation: { select: { matchedUserId: true } } },
+  });
+  const dismissedUserIds = [...new Set(dismissedEvents.map((event) => event.recommendation.matchedUserId))];
   const candidates = await prisma.profile.findMany({
     where: {
       isPublic: true,
-      userId: { not: session.user.id },
+      userId: { not: session.user.id, notIn: dismissedUserIds },
       user: { isVerified: true, isSuspended: false, isDemo: false },
     },
     include: {
@@ -150,24 +159,19 @@ export async function GET() {
   scored.forEach((item, index) => {
     item.mlAcceptanceProbability = hostedPredictions.predictions[index];
     item.mlConfidence = hostedPredictions.model.confidence;
-    const acceptanceScore = item.mlAcceptanceProbability === null
-      ? item.baselineScore
-      : item.baselineScore * (1 - item.mlConfidence) +
-        item.mlAcceptanceProbability * item.mlConfidence;
     item.ncfProbability = ncfPredictions[index];
-    item.ncfInfluence = item.ncfProbability === null
-      ? 0
-      : Math.min(0.2, ncfOutput.confidence * 0.2);
-    const ncfAdjustedScore = item.ncfProbability === null
-      ? acceptanceScore
-      : acceptanceScore * (1 - item.ncfInfluence) + item.ncfProbability * item.ncfInfluence;
+    // Keep NCF in shadow: compute and expose predictions for monitoring, but
+    // do not let them affect member rankings until repeated holdouts support it.
+    item.ncfInfluence = 0;
     item.mlRelevanceProbability = relevancePredictions[index];
     item.relevanceInfluence = item.mlRelevanceProbability === null
       ? 0
-      : relevanceOutput.confidence * 0.35;
+      : relevanceOutput.confidence;
+    // Rank on profile/network fit, optionally blended with direct match ratings.
+    // Request acceptance predictions remain a separate, descriptive signal.
     item.matchScore = item.mlRelevanceProbability === null
-      ? ncfAdjustedScore
-      : ncfAdjustedScore * (1 - item.relevanceInfluence) +
+      ? item.baselineScore
+      : item.baselineScore * (1 - item.relevanceInfluence) +
         item.mlRelevanceProbability * item.relevanceInfluence;
   });
 
@@ -195,6 +199,24 @@ export async function GET() {
   );
 
   const recommendationIds = new Map(savedRecommendations.map((row) => [row.matchedUserId, row.id]));
+  await prisma.recommendationEvent.createMany({
+    data: rankedCandidates.map((item, index) => ({
+      ownerId: session.user.id,
+      recommendationId: recommendationIds.get(item.candidate.user.id),
+      eventType: "SERVED",
+      rank: index + 1,
+      scores: {
+        content: item.contentScore,
+        semantic: item.semanticScore,
+        collaborative: item.collaborativeScore,
+        profileHybrid: item.baselineScore,
+        acceptanceProbability: item.mlAcceptanceProbability,
+        relevanceProbability: item.mlRelevanceProbability,
+        ncfAcceptanceProbability: item.ncfProbability,
+        rankingScore: item.matchScore,
+      },
+    })),
+  });
   const feedbackByCandidate = new Map(feedbackRows.map((row) => [row.recommendation?.matchedUserId, row.rating]));
   const ranked = rankedCandidates
     .map((item) => ({
@@ -256,7 +278,7 @@ export async function GET() {
         ...ncfOutput,
         confidence: Math.round(ncfOutput.confidence * 100),
       },
-      ranking: { semanticProfileSignal: true, diversityReranking: true, version: "profile-vector-feedback-ranker-v2" },
+      ranking: { semanticProfileSignal: true, diversityReranking: true, acceptanceUsedForRanking: false, ncfStatus: "SHADOW", version: "profile-feedback-ranker-v3" },
     },
   });
 }

@@ -6,7 +6,7 @@ import { logActivity } from "@/lib/audit-log";
 
 // POST /api/feedback
 // Submits a rating (1-5) and qualitative comment for a mentorship or connection session.
-// This interaction feeds directly back into the Collaborative Filtering matrix.
+// Recommendation ratings are used as direct relevance labels for the ranking model.
 export async function POST(request) {
   const session = await getServerSession(authOptions);
 

@@ -17,6 +17,71 @@ function computeDCG(relevanceList) {
   }, 0);
 }
 
+function evaluateMemberJudgedRanking(events, feedbackRows) {
+  const eventsByRecommendation = new Map();
+  for (const event of events) {
+    const rows = eventsByRecommendation.get(event.recommendationId) || [];
+    rows.push(event);
+    eventsByRecommendation.set(event.recommendationId, rows);
+  }
+
+  const judged = feedbackRows.flatMap((feedback) => {
+    const history = eventsByRecommendation.get(feedback.recommendationId) || [];
+    const event = [...history].reverse().find((row) => row.createdAt <= feedback.createdAt);
+    return event ? [{ feedback, event }] : [];
+  }).sort((a, b) => a.feedback.createdAt - b.feedback.createdAt);
+
+  const holdoutSize = Math.max(1, Math.ceil(judged.length * 0.2));
+  const holdout = judged.slice(Math.max(0, judged.length - holdoutSize));
+  const groups = new Map();
+  for (const row of holdout) {
+    const key = `${row.event.ownerId}:${row.event.createdAt.toISOString()}`;
+    const group = groups.get(key) || [];
+    group.push(row);
+    groups.set(key, group);
+  }
+
+  const strategies = [
+    ["Content-Based", "content"],
+    ["Collaborative", "collaborative"],
+    ["Profile Hybrid", "profileHybrid"],
+    ["Learned Relevance", "relevanceProbability"],
+  ];
+  const totals = Object.fromEntries(strategies.map(([name]) => [name, { sum: 0, groups: 0 }]));
+  for (const rows of groups.values()) {
+    if (rows.length < 2) continue;
+    const cutoff = Math.min(5, rows.length);
+    const ideal = [...rows].sort((a, b) => b.feedback.rating - a.feedback.rating)
+      .slice(0, cutoff).map(({ feedback }) => feedback.rating);
+    const idcg = computeDCG(ideal) || 1;
+    for (const [name, scoreKey] of strategies) {
+      const ranked = rows.filter(({ event }) => Number.isFinite(event.scores?.[scoreKey]))
+        .sort((a, b) => eventScore(b.event, scoreKey) - eventScore(a.event, scoreKey))
+        .slice(0, cutoff);
+      if (ranked.length < 2) continue;
+      const ndcg = computeDCG(ranked.map(({ feedback }) => feedback.rating)) / idcg;
+      totals[name].sum += ndcg;
+      totals[name].groups++;
+    }
+  }
+
+  return {
+    available: Object.values(totals).some(({ groups: count }) => count > 0),
+    feedbackExamples: judged.length,
+    holdoutExamples: holdout.length,
+    holdoutGroups: groups.size,
+    metrics: Object.fromEntries(Object.entries(totals).map(([name, value]) => [
+      name,
+      { ndcgAt5: value.groups ? +(value.sum / value.groups).toFixed(3) : null, evaluatedGroups: value.groups },
+    ])),
+    note: "Newest 20% of member-rated recommendation impressions; groups with at least two rated candidates. This measures ranking among rated items, not all impressions.",
+  };
+}
+
+function eventScore(event, key) {
+  return Number(event.scores?.[key]);
+}
+
 // GET /api/admin/evaluation
 // Computes Precision@K, Recall@K, NDCG@K, and MRR for CBF, CF, and Hybrid
 // Also supports ?simulateUserId=<id> for live recommendation engine inspection
@@ -38,7 +103,7 @@ export async function GET(req) {
     const url = new URL(req.url);
     const simulateUserId = url.searchParams.get("simulateUserId");
 
-    const [profiles, acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections, relevanceFeedback, modelArtifacts] = await Promise.all([
+    const [profiles, acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections, relevanceFeedback, modelArtifacts, recommendationEvents] = await Promise.all([
       prisma.profile.findMany({
         where: { user: { isVerified: true, isSuspended: false, isDemo: false } },
         include: {
@@ -69,12 +134,17 @@ export async function GET(req) {
           user: { isDemo: false },
           recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } },
         },
-        select: { rating: true, modelFeatures: true, createdAt: true },
+        select: { rating: true, modelFeatures: true, recommendationId: true, createdAt: true },
       }),
       prisma.mLModelArtifact.findMany({
         where: { OR: [{ active: true }, { type: "NCF" }] },
         orderBy: { createdAt: "desc" },
         take: 100,
+      }),
+      prisma.recommendationEvent.findMany({
+        where: { eventType: "SERVED", owner: { is: { isDemo: false } } },
+        orderBy: { createdAt: "asc" },
+        select: { ownerId: true, recommendationId: true, createdAt: true, scores: true },
       }),
     ]);
 
@@ -95,6 +165,7 @@ export async function GET(req) {
       ...resolvedConnections,
     ]);
     const relevanceEvaluation = evaluateTemporalRelevance(relevanceFeedback);
+    const memberJudgedRanking = evaluateMemberJudgedRanking(recommendationEvents, relevanceFeedback);
     const hybridWeights = computeHybridWeights(totalInteractions);
     const modelState = await getAdaptivePredictions({
       examples: trainingExamples,
@@ -184,22 +255,13 @@ export async function GET(req) {
       const simulationRelevancePredictions = hostedPredictions.relevancePredictions || simResults.map(() => null);
       simResults.forEach((item, index) => {
         item.mlAcceptanceProbability = hostedPredictions.predictions[index];
-        const acceptanceScore = item.mlAcceptanceProbability === null
-          ? item.baselineScore
-          : item.baselineScore * (1 - hostedPredictions.model.confidence) +
-            item.mlAcceptanceProbability * hostedPredictions.model.confidence;
         item.ncfProbability = simulationNcfPredictions[index];
-        item.ncfInfluence = item.ncfProbability === null
-          ? 0
-          : Math.min(0.2, simulationNcfModel.confidence * 0.2);
-        const ncfAdjustedScore = item.ncfProbability === null
-          ? acceptanceScore
-          : acceptanceScore * (1 - item.ncfInfluence) + item.ncfProbability * item.ncfInfluence;
+        item.ncfInfluence = 0;
         item.relevanceProbability = simulationRelevancePredictions[index];
-        const relevanceInfluence = item.relevanceProbability === null ? 0 : simulationRelevanceModel.confidence * 0.35;
+        const relevanceInfluence = item.relevanceProbability === null ? 0 : simulationRelevanceModel.confidence;
         item.matchScore = item.relevanceProbability === null
-          ? ncfAdjustedScore
-          : ncfAdjustedScore * (1 - relevanceInfluence) + item.relevanceProbability * relevanceInfluence;
+          ? item.baselineScore
+          : item.baselineScore * (1 - relevanceInfluence) + item.relevanceProbability * relevanceInfluence;
       });
       const rankedSimResults = diversifyRankedCandidates(simResults.sort((a, b) => b.matchScore - a.matchScore), 5);
 
@@ -248,6 +310,11 @@ export async function GET(req) {
               evaluated: Boolean(latestNcfArtifact),
               latestEvaluationActive: latestNcfArtifact?.active ?? null,
               holdoutRocAuc: simulationNcfModel.metrics?.holdoutRocAuc ?? latestNcfArtifact?.metrics?.holdoutRocAuc ?? null,
+              holdoutPrAuc: simulationNcfModel.metrics?.holdoutPrAuc ?? latestNcfArtifact?.metrics?.holdoutPrAuc ?? null,
+              holdoutBrierScore: simulationNcfModel.metrics?.holdoutBrierScore ?? latestNcfArtifact?.metrics?.holdoutBrierScore ?? null,
+              holdoutCoverage: simulationNcfModel.metrics?.holdoutCoverage ?? latestNcfArtifact?.metrics?.holdoutCoverage ?? null,
+              holdoutCount: simulationNcfModel.metrics?.holdoutCount ?? latestNcfArtifact?.metrics?.holdoutCount ?? null,
+              holdoutNdcgAt5: simulationNcfModel.metrics?.["ndcg@5"] ?? latestNcfArtifact?.metrics?.["ndcg@5"] ?? null,
             },
           },
           latencyMs: Date.now() - startTime,
@@ -386,10 +453,16 @@ export async function GET(req) {
           evaluated: Boolean(latestNcfArtifact),
           latestEvaluationActive: latestNcfArtifact?.active ?? null,
           holdoutRocAuc: modelState.ncfModel.metrics?.holdoutRocAuc ?? latestNcfArtifact?.metrics?.holdoutRocAuc ?? null,
+          holdoutPrAuc: modelState.ncfModel.metrics?.holdoutPrAuc ?? latestNcfArtifact?.metrics?.holdoutPrAuc ?? null,
+          holdoutBrierScore: modelState.ncfModel.metrics?.holdoutBrierScore ?? latestNcfArtifact?.metrics?.holdoutBrierScore ?? null,
+          holdoutCoverage: modelState.ncfModel.metrics?.holdoutCoverage ?? latestNcfArtifact?.metrics?.holdoutCoverage ?? null,
+          holdoutCount: modelState.ncfModel.metrics?.holdoutCount ?? latestNcfArtifact?.metrics?.holdoutCount ?? null,
+          holdoutNdcgAt5: modelState.ncfModel.metrics?.["ndcg@5"] ?? latestNcfArtifact?.metrics?.["ndcg@5"] ?? null,
         },
       },
       temporalEvaluation,
       relevanceEvaluation,
+      memberJudgedRanking,
       memberFeedback: {
         total: relevanceFeedback.length,
         useful: relevanceFeedback.filter((row) => row.rating >= 4).length,
