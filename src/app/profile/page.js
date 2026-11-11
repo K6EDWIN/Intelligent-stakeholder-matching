@@ -39,6 +39,8 @@ export default function ProfilePage() {
     isPublic: true,
     skillIds: [],
     interestIds: [],
+    seekingTopicIds: [],
+    offeringTopicIds: [],
   });
   const [availabilityDraft, setAvailabilityDraft] = useState(() => createAvailabilityDraft(""));
   const [loading, setLoading] = useState(true);
@@ -161,6 +163,8 @@ export default function ProfilePage() {
             isPublic: profile.isPublic ?? true,
             skillIds: profile.skillIds || [],
             interestIds: profile.interestIds || [],
+            seekingTopicIds: profile.seekingTopicIds || [],
+            offeringTopicIds: profile.offeringTopicIds || [],
           }));
         }
 
@@ -629,6 +633,34 @@ export default function ProfilePage() {
                     );
                   })}
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {[
+                  { key: "seekingTopicIds", title: "Topics I want help with", help: "Choose skills where you would value coaching or guidance." },
+                  { key: "offeringTopicIds", title: "Topics I can mentor on", help: "Choose skills where you can coach or share experience." },
+                ].map(({ key, title, help }) => (
+                  <div key={key}>
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">{title}</label>
+                    <p className="text-xs text-slate-500 mb-2">{help}</p>
+                    <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-3 border border-slate-200 rounded-xl bg-slate-50">
+                      {(meta.skills || []).map((skill) => {
+                        const selected = form[key].includes(skill.id);
+                        return (
+                          <button
+                            key={skill.id}
+                            type="button"
+                            onClick={() => toggleId(key, skill.id)}
+                            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition border ${selected ? "bg-emerald-700 text-white border-emerald-700" : "bg-white text-slate-700 border-slate-300 hover:border-slate-400"}`}
+                          >
+                            {selected && <Icon name="check" size={12} className="inline mr-1" />}
+                            {skill.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div>

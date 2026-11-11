@@ -19,7 +19,43 @@ export async function PATCH(request, { params }) {
   }
 
   const { id } = await params;
-  const { status } = await request.json();
+  const body = await request.json().catch(() => ({}));
+  const existing = await prisma.mentorshipRequest.findUnique({ where: { id } });
+
+  if (!existing) {
+    return NextResponse.json({ error: "Request not found" }, { status: 404 });
+  }
+
+  if (body.completed === true) {
+    if (![existing.senderId, existing.receiverId].includes(session.user.id)) {
+      return NextResponse.json({ error: "Only participants can report mentorship completion" }, { status: 403 });
+    }
+    if (existing.status !== "ACCEPTED") {
+      return NextResponse.json({ error: "Only accepted mentorships can be completed" }, { status: 409 });
+    }
+    if (existing.completedAt) {
+      return NextResponse.json({ mentorshipRequest: existing });
+    }
+    const mentorshipRequest = await prisma.mentorshipRequest.update({ where: { id }, data: { completedAt: new Date() } });
+    const counterpartId = existing.senderId === session.user.id ? existing.receiverId : existing.senderId;
+    await createNotification({
+      userId: counterpartId,
+      type: "MENTORSHIP_COMPLETED",
+      title: "Mentorship marked complete",
+      message: "Your mentorship partner marked this mentorship as complete. You can both leave a private usefulness rating.",
+      href: "/requests",
+    });
+    await logActivity({
+      actorId: session.user.id,
+      targetId: counterpartId,
+      actionType: "MENTORSHIP_COMPLETED",
+      summary: "Marked an accepted mentorship as complete",
+      details: { requestId: id },
+    });
+    return NextResponse.json({ mentorshipRequest });
+  }
+
+  const { status } = body;
 
   if (!VALID_STATUSES.includes(status)) {
     return NextResponse.json(
@@ -28,13 +64,6 @@ export async function PATCH(request, { params }) {
     );
   }
 
-  const existing = await prisma.mentorshipRequest.findUnique({
-    where: { id },
-  });
-
-  if (!existing) {
-    return NextResponse.json({ error: "Request not found" }, { status: 404 });
-  }
   if (existing.receiverId !== session.user.id) {
     return NextResponse.json(
       { error: "Only the recipient can respond to this request" },

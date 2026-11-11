@@ -6,6 +6,7 @@ import { extractPairFeatures } from "@/lib/adaptive-recommender";
 import { buildConnectionsByUser, computeCollaborativeScore } from "@/lib/collaborative";
 import { createNotification } from "@/lib/notifications";
 import { logActivity } from "@/lib/audit-log";
+import { isEligibleMentorshipMatch } from "@/lib/matching-eligibility";
 
 const COUNTERPART_SELECT = {
   id: true,
@@ -25,12 +26,12 @@ export async function GET() {
   const [sent, received] = await Promise.all([
     prisma.mentorshipRequest.findMany({
       where: { senderId: session.user.id, receiver: { is: { isDemo: false } } },
-      include: { receiver: { select: COUNTERPART_SELECT } },
+      include: { receiver: { select: COUNTERPART_SELECT }, feedback: { where: { userId: session.user.id }, select: { id: true, rating: true } } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.mentorshipRequest.findMany({
       where: { receiverId: session.user.id, sender: { is: { isDemo: false } } },
-      include: { sender: { select: COUNTERPART_SELECT } },
+      include: { sender: { select: COUNTERPART_SELECT }, feedback: { where: { userId: session.user.id }, select: { id: true, rating: true } } },
       orderBy: { createdAt: "desc" },
     }),
   ]);
@@ -52,6 +53,7 @@ export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   const receiverId = body.receiverId || body.userId || body.targetUserId;
   const message = body.message;
+  const recommendationId = typeof body.recommendationId === "string" ? body.recommendationId : null;
 
   if (!receiverId) {
     return NextResponse.json(
@@ -74,13 +76,21 @@ export async function POST(request) {
       where: { id: receiverId },
       include: {
         profile: {
-          include: { skills: { include: { skill: true } }, interests: { include: { interest: true } } },
+          include: {
+            skills: { include: { skill: true } },
+            interests: { include: { interest: true } },
+            mentorshipTopics: { select: { skillId: true, direction: true } },
+          },
         },
       },
     }),
     prisma.profile.findUnique({
       where: { userId: session.user.id },
-      include: { skills: { include: { skill: true } }, interests: { include: { interest: true } } },
+      include: {
+        skills: { include: { skill: true } },
+        interests: { include: { interest: true } },
+        mentorshipTopics: { select: { skillId: true, direction: true } },
+      },
     }),
     prisma.mentorshipRequest.findMany({
       where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
@@ -97,6 +107,18 @@ export async function POST(request) {
   if (receiver.isDemo || receiver.role === "ADMIN") {
     return NextResponse.json({ error: "Administrator accounts are not available for mentorship matching" }, { status: 403 });
   }
+  if (!isEligibleMentorshipMatch(senderProfile, receiver.profile)) {
+    return NextResponse.json({ error: "This mentorship pairing does not fit the selected mentor roles or stated availability" }, { status: 409 });
+  }
+  if (recommendationId) {
+    const recommendation = await prisma.recommendation.findFirst({
+      where: { id: recommendationId, ownerId: session.user.id, matchedUserId: receiverId },
+      select: { id: true },
+    });
+    if (!recommendation) {
+      return NextResponse.json({ error: "Recommendation is not available for this match" }, { status: 400 });
+    }
+  }
 
   const existing = await prisma.mentorshipRequest.findFirst({
     where: { senderId: session.user.id, receiverId, status: "PENDING" },
@@ -112,6 +134,7 @@ export async function POST(request) {
     data: {
       senderId: session.user.id,
       receiverId,
+      recommendationId,
       message: message || null,
       modelFeatures: senderProfile && receiver.profile
         ? extractPairFeatures(

@@ -157,13 +157,14 @@ export default function RecommendationsPage() {
     setFeedbackSuccess("");
 
     try {
-      const res = await fetch("/api/requests", {
+      const res = await fetch("/api/mentorship-requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           receiverId: recipientId,
           type: "MENTORSHIP",
           message: requestMessage,
+          recommendationId: selectedMatch?.recommendationId || null,
         }),
       });
 
@@ -595,6 +596,15 @@ export default function RecommendationsPage() {
 
                     {/* Shared Skills Chips */}
                     <div>
+                      <div className="text-[11px] uppercase font-semibold text-slate-400 mb-2 tracking-wider">Why this match</div>
+                      <ul className="space-y-1 mb-3">
+                        {(item.matchReasons || []).map((reason) => (
+                          <li key={reason} className="text-xs text-slate-600 flex items-start gap-2">
+                            <Icon name="check" size={13} className="mt-0.5 text-emerald-700 shrink-0" />
+                            <span>{reason}</span>
+                          </li>
+                        ))}
+                      </ul>
                       <div className="text-[11px] uppercase font-semibold text-slate-400 mb-2 tracking-wider">
                         Shared Competencies
                       </div>

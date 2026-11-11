@@ -13,6 +13,7 @@ FEATURE_NAMES = [
     "interestOverlap",
     "sameDepartment",
     "mentorshipRoleFit",
+    "mentorshipTopicFit",
     "sharedNetwork",
     "isMentorshipRequest",
     "semanticProfileOverlap",

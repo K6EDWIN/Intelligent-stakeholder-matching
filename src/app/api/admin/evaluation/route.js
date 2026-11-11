@@ -9,6 +9,7 @@ import { buildTrainingExamples, evaluateTemporalModel, evaluateTemporalRelevance
 import { getAdaptivePredictions } from "@/lib/hosted-ml";
 import { diversifyRankedCandidates } from "@/lib/profile-vectors";
 import { getMlUserKey } from "@/lib/ml-sync-auth";
+import { isEligibleMentorshipMatch } from "@/lib/matching-eligibility";
 
 // Helper: Discounted Cumulative Gain
 function computeDCG(relevanceList) {
@@ -26,8 +27,10 @@ function evaluateMemberJudgedRanking(events, feedbackRows) {
   }
 
   const judged = feedbackRows.flatMap((feedback) => {
-    const history = eventsByRecommendation.get(feedback.recommendationId) || [];
-    const event = [...history].reverse().find((row) => row.createdAt <= feedback.createdAt);
+    const recommendationId = feedback.recommendationId || feedback.mentorshipRequest?.recommendationId;
+    const history = eventsByRecommendation.get(recommendationId) || [];
+    const impressionCutoff = feedback.mentorshipRequest?.createdAt || feedback.createdAt;
+    const event = [...history].reverse().find((row) => row.createdAt <= impressionCutoff);
     return event ? [{ feedback, event }] : [];
   }).sort((a, b) => a.feedback.createdAt - b.feedback.createdAt);
 
@@ -82,6 +85,67 @@ function eventScore(event, key) {
   return Number(event.scores?.[key]);
 }
 
+function summarizeRecommendationExposure(events, profiles, acceptedRequests) {
+  const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const recent = events.filter((event) => event.createdAt >= cutoff);
+  const policyCounts = {};
+  for (const event of recent) {
+    const policy = event.policy || "LEGACY_DETERMINISTIC";
+    policyCounts[policy] = (policyCounts[policy] || 0) + 1;
+  }
+  const acceptedCounts = new Map();
+  for (const request of acceptedRequests) {
+    acceptedCounts.set(request.senderId, (acceptedCounts.get(request.senderId) || 0) + 1);
+    acceptedCounts.set(request.receiverId, (acceptedCounts.get(request.receiverId) || 0) + 1);
+  }
+  const perMember = new Map();
+  for (const event of recent) {
+    const id = event.recommendation?.matchedUserId;
+    if (!id) continue;
+    const entry = perMember.get(id) || { served: 0, weighted: 0 };
+    entry.served++;
+    entry.weighted += 1 / Math.log2(Math.max(2, (event.rank || 1) + 1));
+    perMember.set(id, entry);
+  }
+
+  const groups = new Map();
+  const add = (name, key) => {
+    const group = groups.get(key) || { name, members: 0, exposedMembers: 0, impressions: 0, weightedExposure: 0 };
+    group.members++;
+    const exposure = perMember.get(name.userId);
+    if (exposure) {
+      group.exposedMembers++;
+      group.impressions += exposure.served;
+      group.weightedExposure += exposure.weighted;
+    }
+    groups.set(key, group);
+  };
+  for (const profile of profiles) {
+    const userId = profile.user.id;
+    const department = profile.department || "Unassigned";
+    add({ userId }, `department:${department}`);
+    const activity = (acceptedCounts.get(userId) || 0) > 0 ? "Prior accepted interaction" : "No prior accepted interaction";
+    add({ userId }, `activity:${activity}`);
+  }
+
+  return {
+    windowDays: 30,
+    servedImpressions: recent.length,
+    policyCounts,
+    groups: [...groups.entries()]
+      .filter(([, group]) => group.members >= 5)
+      .map(([key, group]) => ({
+        group: key.slice(key.indexOf(":") + 1),
+        dimension: key.startsWith("department:") ? "department" : "accepted-interaction history",
+        eligibleMembers: group.members,
+        exposedMembers: group.exposedMembers,
+        impressions: group.impressions,
+        rankWeightedExposurePerMember: group.members ? +(group.weightedExposure / group.members).toFixed(3) : 0,
+      })),
+    note: "Exposure is a visibility diagnostic, not a fairness verdict. Groups with fewer than five eligible members are omitted.",
+  };
+}
+
 // GET /api/admin/evaluation
 // Computes Precision@K, Recall@K, NDCG@K, and MRR for CBF, CF, and Hybrid
 // Also supports ?simulateUserId=<id> for live recommendation engine inspection
@@ -110,6 +174,7 @@ export async function GET(req) {
           user: { select: { id: true, role: true } },
           skills: { include: { skill: true } },
           interests: { include: { interest: true } },
+          mentorshipTopics: { include: { skill: { select: { id: true, name: true } } } },
         },
       }),
       prisma.mentorshipRequest.findMany({
@@ -130,11 +195,19 @@ export async function GET(req) {
       }),
       prisma.feedback.findMany({
         where: {
-          recommendationId: { not: null },
           user: { isDemo: false },
-          recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } },
+          OR: [
+            { recommendationId: { not: null }, recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } } },
+            { mentorshipRequest: { is: { status: "ACCEPTED", completedAt: { not: null }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } } } },
+          ],
         },
-        select: { rating: true, modelFeatures: true, recommendationId: true, createdAt: true },
+        select: {
+          rating: true,
+          modelFeatures: true,
+          recommendationId: true,
+          createdAt: true,
+          mentorshipRequest: { select: { createdAt: true, recommendationId: true } },
+        },
       }),
       prisma.mLModelArtifact.findMany({
         where: { OR: [{ active: true }, { type: "NCF" }] },
@@ -142,9 +215,22 @@ export async function GET(req) {
         take: 100,
       }),
       prisma.recommendationEvent.findMany({
-        where: { eventType: "SERVED", owner: { is: { isDemo: false } } },
+        where: {
+          eventType: "SERVED",
+          owner: { is: { isDemo: false } },
+          recommendation: { is: { matchedUser: { is: { isDemo: false } } } },
+        },
         orderBy: { createdAt: "asc" },
-        select: { ownerId: true, recommendationId: true, createdAt: true, scores: true },
+        select: {
+          ownerId: true,
+          recommendationId: true,
+          createdAt: true,
+          rank: true,
+          policy: true,
+          selectionProbability: true,
+          scores: true,
+          recommendation: { select: { matchedUserId: true } },
+        },
       }),
     ]);
 
@@ -160,12 +246,19 @@ export async function GET(req) {
     const model = trainAcceptanceModel(trainingExamples);
     const relevanceModel = trainRelevanceModel(relevanceFeedback);
     const latestNcfArtifact = modelArtifacts.find((artifact) => artifact.type === "NCF") || null;
+    const ncfMemberKeys = new Set(Object.keys(latestNcfArtifact?.weights?.userEmbeddings || {}));
+    const ncfKnownMembers = profiles.filter((profile) => ncfMemberKeys.has(getMlUserKey(profile.user.id))).length;
     const temporalEvaluation = evaluateTemporalModel([
       ...resolvedMentorships,
       ...resolvedConnections,
     ]);
     const relevanceEvaluation = evaluateTemporalRelevance(relevanceFeedback);
     const memberJudgedRanking = evaluateMemberJudgedRanking(recommendationEvents, relevanceFeedback);
+    const recommendationExposure = summarizeRecommendationExposure(
+      recommendationEvents,
+      profiles,
+      [...acceptedMentorships, ...acceptedConnections]
+    );
     const hybridWeights = computeHybridWeights(totalInteractions);
     const modelState = await getAdaptivePredictions({
       examples: trainingExamples,
@@ -195,7 +288,7 @@ export async function GET(req) {
       const targetSkillIds = new Set(targetAttrs.skillIds);
 
       const simResults = profiles
-        .filter((p) => p.user.id !== simulateUserId)
+        .filter((p) => p.user.id !== simulateUserId && isEligibleMentorshipMatch(targetProfile, p))
         .map((cand) => {
           const candAttrs = {
             skillIds: cand.skills.map((s) => s.skillId),
@@ -315,6 +408,8 @@ export async function GET(req) {
               holdoutCoverage: simulationNcfModel.metrics?.holdoutCoverage ?? latestNcfArtifact?.metrics?.holdoutCoverage ?? null,
               holdoutCount: simulationNcfModel.metrics?.holdoutCount ?? latestNcfArtifact?.metrics?.holdoutCount ?? null,
               holdoutNdcgAt5: simulationNcfModel.metrics?.["ndcg@5"] ?? latestNcfArtifact?.metrics?.["ndcg@5"] ?? null,
+              knownMembers: ncfKnownMembers,
+              unseenMembers: Math.max(0, profiles.length - ncfKnownMembers),
             },
           },
           latencyMs: Date.now() - startTime,
@@ -458,11 +553,14 @@ export async function GET(req) {
           holdoutCoverage: modelState.ncfModel.metrics?.holdoutCoverage ?? latestNcfArtifact?.metrics?.holdoutCoverage ?? null,
           holdoutCount: modelState.ncfModel.metrics?.holdoutCount ?? latestNcfArtifact?.metrics?.holdoutCount ?? null,
           holdoutNdcgAt5: modelState.ncfModel.metrics?.["ndcg@5"] ?? latestNcfArtifact?.metrics?.["ndcg@5"] ?? null,
+          knownMembers: ncfKnownMembers,
+          unseenMembers: Math.max(0, profiles.length - ncfKnownMembers),
         },
       },
       temporalEvaluation,
       relevanceEvaluation,
       memberJudgedRanking,
+      recommendationExposure,
       memberFeedback: {
         total: relevanceFeedback.length,
         useful: relevanceFeedback.filter((row) => row.rating >= 4).length,
