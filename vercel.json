@@ -1,4 +1,4 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm test && prisma generate && next build --webpack"
+  "buildCommand": "npm test && prisma generate && if [ \"$VERCEL_ENV\" = \"production\" ]; then prisma migrate deploy; fi && next build --webpack"
 }
