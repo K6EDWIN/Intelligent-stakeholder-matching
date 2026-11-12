@@ -5,7 +5,9 @@ import { neonConfig } from "@neondatabase/serverless";
 import ws from "ws";
 
 if (typeof window === "undefined") {
-  neonConfig.webSocketConstructor = ws;
+  neonConfig.webSocketConstructor = typeof globalThis.WebSocket === "function"
+    ? globalThis.WebSocket
+    : ws;
 }
 
 const connectionString = process.env.DATABASE_URL;
