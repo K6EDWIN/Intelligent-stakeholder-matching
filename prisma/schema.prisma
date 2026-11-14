@@ -42,6 +42,12 @@ enum MentorshipTopicDirection {
   OFFERING
 }
 
+enum FeedbackType {
+  MATCH_RELEVANCE
+  MENTORSHIP_USEFULNESS
+  CONNECTION_USEFULNESS
+}
+
 // ---------- CORE USER & PROFILE ----------
 
 model User {
@@ -242,6 +248,7 @@ model Feedback {
   mentorshipRequestId String?
   connectionRequestId String?
 
+  feedbackType     FeedbackType @default(MATCH_RELEVANCE)
   rating           Int
   comment          String?
   modelFeatures    Json?
@@ -251,6 +258,9 @@ model Feedback {
   recommendation   Recommendation?  @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
   mentorshipRequest MentorshipRequest? @relation(fields: [mentorshipRequestId], references: [id], onDelete: Cascade)
   connectionRequest ConnectionRequest? @relation(fields: [connectionRequestId], references: [id], onDelete: Cascade)
+
+  @@index([feedbackType, createdAt])
+  @@index([recommendationId, userId, feedbackType])
 }
 
 model MLModelArtifact {

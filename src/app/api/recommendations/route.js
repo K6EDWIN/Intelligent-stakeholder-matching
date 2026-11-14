@@ -98,12 +98,10 @@ export async function GET() {
   const model = trainAcceptanceModel(examples);
   const feedbackRows = await prisma.feedback.findMany({
     where: {
+      feedbackType: "MATCH_RELEVANCE",
       userId: session.user.id,
       user: { isDemo: false },
-      OR: [
-        { recommendationId: { not: null }, recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } } },
-        { mentorshipRequest: { is: { status: "ACCEPTED", completedAt: { not: null }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } } } },
-      ],
+      recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } },
     },
     select: { rating: true, modelFeatures: true, recommendation: { select: { matchedUserId: true } } },
   });
