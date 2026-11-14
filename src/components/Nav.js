@@ -24,6 +24,7 @@ export default function Nav() {
     "/opportunities",
     "/events",
     "/admin",
+    "/admin/profile",
   ];
 
   if (appRoutes.some((route) => pathname === route || pathname.startsWith(route + "/"))) {

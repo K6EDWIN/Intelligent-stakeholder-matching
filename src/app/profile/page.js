@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import KQAppShell from "@/components/KQAppShell";
@@ -20,7 +20,7 @@ const ROLE_OPTIONS = [
   { value: "BOTH", label: "Open to Both (Mentor & Mentee)" },
 ];
 
-export default function ProfilePage() {
+export default function ProfilePage({ adminWorkspace = false }) {
   const { status, data: session } = useSession();
   const router = useRouter();
   const isAdmin = session?.user?.role === "ADMIN";
@@ -134,6 +134,12 @@ export default function ProfilePage() {
   }, [status, router]);
 
   useEffect(() => {
+    if (status === "authenticated" && isAdmin && !adminWorkspace) {
+      router.replace("/admin/profile");
+    }
+  }, [status, isAdmin, adminWorkspace, router]);
+
+  useEffect(() => {
     if (status !== "authenticated") return;
 
     async function load() {
@@ -245,20 +251,26 @@ export default function ProfilePage() {
   };
 
   if (status === "loading" || loading) {
+    if (status === "authenticated" && isAdmin && !adminWorkspace) return null;
+
+    const Shell = adminWorkspace ? Fragment : KQAppShell;
     return (
-      <KQAppShell>
+      <Shell>
         <div className="app-page">
           <div className="p-12 text-center text-gray-500 font-medium">
             <Icon name="profile" size={28} className="mx-auto mb-3 text-[#bb162b] animate-spin" />
             Loading your profile data...
           </div>
         </div>
-      </KQAppShell>
+      </Shell>
     );
   }
 
+  if (isAdmin && !adminWorkspace) return null;
+
+  const Shell = adminWorkspace ? Fragment : KQAppShell;
   return (
-    <KQAppShell>
+    <Shell>
       <div className="app-page max-w-5xl">
         {/* Profile Header */}
         <div className="card overflow-hidden mb-8">
@@ -718,6 +730,6 @@ export default function ProfilePage() {
           </div>
         </form>
       </div>
-    </KQAppShell>
+    </Shell>
   );
 }

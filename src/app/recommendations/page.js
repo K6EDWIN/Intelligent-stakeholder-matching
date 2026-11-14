@@ -290,7 +290,7 @@ export default function RecommendationsPage() {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => router.push("/profile")}
+                  onClick={() => router.push(session?.user?.role === "ADMIN" ? "/admin/profile" : "/profile")}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition backdrop-blur-xs"
                 >
                   <Icon name="profile" size={14} />

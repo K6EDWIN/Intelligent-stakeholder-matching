@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./workspace-responsive.css";
 import Providers from "./providers";
 import Nav from "@/components/Nav";
 

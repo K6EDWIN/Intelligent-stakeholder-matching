@@ -14,6 +14,7 @@ export default function KQAppShell({ children }) {
   const router = useRouter();
   const [mobileSelect, setMobileSelect] = useState(pathname);
   const [unreadCount, setUnreadCount] = useState(0);
+  const profileHref = session?.user?.role === "ADMIN" ? "/admin/profile" : "/profile";
 
   useEffect(() => {
     if (!session?.user?.id) return undefined;
@@ -57,7 +58,7 @@ export default function KQAppShell({ children }) {
     {
       heading: "Account",
       items: [
-        { href: "/profile", icon: "profile", label: "My Profile" },
+        { href: profileHref, icon: "profile", label: session?.user?.role === "ADMIN" ? "Admin Profile" : "My Profile" },
       ],
     },
   ];
@@ -131,7 +132,7 @@ export default function KQAppShell({ children }) {
         {session?.user && (
           <div className="sidebar-profile mt-auto">
             <Link
-              href="/profile"
+              href={profileHref}
               className="flex items-center gap-2.5 overflow-hidden flex-1 min-w-0 hover:opacity-95 transition"
               title="View your profile"
             >
@@ -237,7 +238,7 @@ export default function KQAppShell({ children }) {
             {session?.user ? (
               <div className="flex items-center gap-2 pl-1 border-l border-slate-200">
                 <Link
-                  href="/profile"
+                  href={profileHref}
                   className="flex items-center gap-2 hover:opacity-90 transition p-1 rounded-lg"
                   title="My Profile"
                 >

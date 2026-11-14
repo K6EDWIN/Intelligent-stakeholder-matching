@@ -1,0 +1,295 @@
+/* Administrator profile workspace: keep administrator identity and navigation
+   when the account profile is opened from the admin console. */
+.admin-profile-workspace {
+  min-height: 100vh;
+  min-height: 100svh;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+.admin-profile-header {
+  position: sticky;
+  top: 0;
+  z-index: 45;
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px clamp(16px, 3vw, 48px);
+  background: #071626;
+  border-bottom: 1px solid #1e3a5f;
+  color: #f8fafc;
+}
+.admin-profile-brand,
+.admin-profile-header-actions,
+.admin-profile-identity,
+.admin-profile-logout,
+.admin-profile-nav-link,
+.admin-profile-nav-current {
+  display: inline-flex;
+  align-items: center;
+}
+.admin-profile-brand {
+  min-width: 0;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+.admin-profile-brand-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+.admin-profile-brand-copy b {
+  font-size: 13px;
+}
+.admin-profile-brand-copy small {
+  color: #94a3b8;
+  font-size: 11px;
+}
+.admin-profile-header-actions {
+  min-width: 0;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.admin-profile-identity {
+  min-width: 0;
+  gap: 8px;
+  color: #cbd5e1;
+  font-size: 12px;
+}
+.admin-profile-identity > span:last-child {
+  overflow: hidden;
+  max-width: 220px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.admin-profile-logout {
+  min-height: 40px;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid #334155;
+  border-radius: 9px;
+  background: #0c1f33;
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 700;
+}
+.admin-profile-logout:hover {
+  border-color: #be123c;
+  background: #881337;
+  color: #fff;
+}
+.admin-profile-nav {
+  display: flex;
+  min-height: 54px;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 7px clamp(16px, 3vw, 48px);
+  background: #0c1f33;
+  border-bottom: 1px solid #1e3a5f;
+  scrollbar-width: thin;
+}
+.admin-profile-nav-link,
+.admin-profile-nav-current {
+  min-height: 38px;
+  flex: 0 0 auto;
+  gap: 8px;
+  padding: 0 12px;
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.admin-profile-nav-link:hover {
+  background: #102b45;
+  color: #fff;
+}
+.admin-profile-nav-current {
+  background: rgba(200, 16, 46, .22);
+  color: #fff;
+  box-shadow: inset 3px 0 #e11d3f;
+}
+.admin-profile-main {
+  width: min(100%, 1500px);
+  min-width: 0;
+  margin-inline: auto;
+}
+.admin-profile-main > .app-page {
+  max-width: none;
+  padding: clamp(18px, 3vw, 40px) clamp(12px, 3vw, 40px) 56px;
+}
+.admin-profile-loading {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100svh;
+  place-items: center;
+  padding: 24px;
+  background: #071626;
+  color: #cbd5e1;
+  font: 600 14px/1.5 var(--font-sans);
+}
+html[data-view-mode="modern"] .admin-profile-workspace {
+  background: #071626;
+  color: #f8fafc;
+}
+html[data-view-mode="modern"] .admin-profile-nav {
+  background: #0c1f33;
+}
+
+/* Prevent long labels, forms, and data views from widening the page on phones. */
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+.shell,
+.shell-main,
+.shell-main > main,
+.app-page,
+.admin-console,
+.admin-console main,
+.admin-profile-workspace,
+.admin-profile-main {
+  min-width: 0;
+}
+.shell-main > main,
+.admin-console,
+.admin-profile-workspace {
+  width: 100%;
+  max-width: 100%;
+}
+.app-page img,
+.app-page video,
+.admin-console img,
+.admin-profile-workspace img {
+  max-width: 100%;
+}
+.admin-console .overflow-x-auto,
+.app-page .overflow-x-auto {
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+@media (max-width: 1024px) {
+  .shell-main {
+    width: 100%;
+    margin-left: 0;
+  }
+  .admin-console > header,
+  .admin-console > header ~ div,
+  .admin-console main {
+    min-width: 0;
+  }
+  .admin-console .admin-tabs .admin-sidebar-brand,
+  .admin-console .admin-sidebar-footer {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    padding-inline: 12px;
+  }
+  .mobile-brand {
+    gap: 8px;
+  }
+  .mobile-brand select {
+    min-height: 40px;
+    font-size: 12px;
+  }
+  .app-page {
+    padding: 18px 12px 40px;
+  }
+  .app-page .card {
+    border-radius: 14px;
+  }
+  .admin-console > header .admin-header-inner {
+    padding-inline: 12px !important;
+  }
+  .admin-header-top {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 10px !important;
+    padding-block: 11px !important;
+  }
+  .admin-header-actions {
+    min-width: 0;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .admin-console .admin-tabs {
+    min-height: 50px !important;
+    padding-inline: 8px !important;
+    gap: 3px !important;
+  }
+  .admin-console .admin-tabs > button {
+    min-height: 38px !important;
+    padding-inline: 9px !important;
+    font-size: 10px !important;
+  }
+  .admin-console > header ~ div.bg-white > div {
+    padding: 16px 12px !important;
+  }
+  .admin-console main {
+    padding: 16px 12px 36px !important;
+  }
+  .admin-profile-header {
+    min-height: 0;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  .admin-profile-brand-copy small {
+    font-size: 10px;
+  }
+  .admin-profile-header-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .admin-profile-identity {
+    flex: 1 1 auto;
+  }
+  .admin-profile-identity > span:last-child {
+    max-width: 36vw;
+  }
+  .admin-profile-logout {
+    min-height: 40px;
+    padding-inline: 10px;
+  }
+  .admin-profile-nav {
+    min-height: 48px;
+    gap: 4px;
+    padding-inline: 8px;
+  }
+  .admin-profile-nav-link,
+  .admin-profile-nav-current {
+    min-height: 36px;
+    gap: 6px;
+    padding-inline: 9px;
+    font-size: 11px;
+  }
+  .admin-profile-main > .app-page {
+    padding: 14px 10px 36px;
+  }
+}
+
+@media (max-width: 380px) {
+  .admin-profile-header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .admin-profile-identity {
+    flex: 1 1 140px;
+  }
+  .admin-profile-identity > span:last-child {
+    max-width: 30vw;
+  }
+}
