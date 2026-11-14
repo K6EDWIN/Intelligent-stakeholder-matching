@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import AdminProfileShell from "@/components/AdminProfileShell";
-import ProfilePage from "@/app/profile/page";
+import ProfileEditor from "@/components/ProfileEditor";
 
 export default function AdminProfilePage() {
   const { data: session, status } = useSession();
@@ -25,7 +25,7 @@ export default function AdminProfilePage() {
 
   return (
     <AdminProfileShell>
-      <ProfilePage adminWorkspace />
+      <ProfileEditor adminWorkspace />
     </AdminProfileShell>
   );
 }
