@@ -568,11 +568,11 @@ export default function RecommendationsPage() {
                     <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <p className="text-xs font-semibold text-slate-800">Is this a useful match?</p>
-                          <p className="text-[11px] text-slate-500">Your rating helps improve future recommendations.</p>
+                          <p className="text-xs font-semibold text-slate-800">Based on this profile, is this a relevant match for your goals?</p>
+                          <p className="text-[11px] text-slate-500">Rate the suggested match itself. You can rate mentorship usefulness separately after it is completed.</p>
                         </div>
                         <div className="flex gap-2">
-                          {[{ rating: 5, label: "Useful" }, { rating: 1, label: "Not useful" }].map((choice) => {
+                          {[{ rating: 5, label: "Relevant" }, { rating: 1, label: "Not relevant" }].map((choice) => {
                             const saved = recommendationFeedback[item.recommendationId];
                             const selected = saved?.rating === choice.rating;
                             return (

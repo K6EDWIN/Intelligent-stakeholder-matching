@@ -17,6 +17,15 @@ export async function POST(request) {
   const body = await request.json().catch(() => ({}));
   const { mentorshipRequestId, connectionRequestId, recommendationId, rating, comment } = body;
 
+  const targetCount = [recommendationId, mentorshipRequestId, connectionRequestId]
+    .filter((value) => typeof value === "string" && value.length > 0).length;
+  if (targetCount !== 1) {
+    return NextResponse.json(
+      { error: "Rate exactly one recommendation or accepted interaction" },
+      { status: 400 }
+    );
+  }
+
   const numericRating = Number(rating);
   if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) {
     return NextResponse.json(
@@ -74,6 +83,11 @@ export async function POST(request) {
         mentorshipRequestId: mentorshipRequest?.id || null,
         connectionRequestId: connectionRequest?.id || null,
         recommendationId: recommendation?.id || mentorshipRequest?.recommendationId || null,
+        feedbackType: recommendation
+          ? "MATCH_RELEVANCE"
+          : mentorshipRequest
+            ? "MENTORSHIP_USEFULNESS"
+            : "CONNECTION_USEFULNESS",
         modelFeatures: mentorshipRequest?.modelFeatures || recommendation?.modelFeatures || connectionRequest?.modelFeatures || undefined,
         rating: numericRating,
         comment: comment || null,
@@ -94,7 +108,7 @@ export async function POST(request) {
             ownerId: session.user.id,
             recommendationId: ratedRecommendation.id,
             eventType: "RATED",
-            scores: { rating: numericRating },
+            scores: { rating: numericRating, feedbackType: feedbackData.feedbackType },
           },
         });
       }
@@ -104,8 +118,8 @@ export async function POST(request) {
       actorId: session.user.id,
       targetId: session.user.id,
       actionType: "FEEDBACK_SUBMITTED",
-      summary: "Submitted a connection or mentorship rating",
-      details: { rating: numericRating, mentorshipRequestId: mentorshipRequestId || null, connectionRequestId: connectionRequestId || null, recommendationId: recommendation?.id || null, commentIncluded: Boolean(comment) },
+      summary: recommendation ? "Rated recommendation relevance" : "Rated interaction usefulness",
+      details: { feedbackType: feedbackData.feedbackType, rating: numericRating, mentorshipRequestId: mentorshipRequestId || null, connectionRequestId: connectionRequestId || null, recommendationId: recommendation?.id || null, commentIncluded: Boolean(comment) },
     });
 
     return NextResponse.json({ feedback, message: "Feedback submitted successfully" }, { status: 201 });

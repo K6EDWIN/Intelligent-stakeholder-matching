@@ -58,7 +58,10 @@ export async function GET() {
       ? prisma.feedback.aggregate({
           _count: true,
           _avg: { rating: true },
-          where: { user: { isDemo: false }, recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } } },
+          where: {
+            user: { isDemo: false },
+            feedbackType: { in: ["MENTORSHIP_USEFULNESS", "CONNECTION_USEFULNESS"] },
+          },
         })
       : Promise.resolve({ _count: 0, _avg: { rating: 0 } }),
     typeof prisma.flightReconnect?.count === "function"

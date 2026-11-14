@@ -28,11 +28,8 @@ export async function GET(request) {
       }),
       prisma.feedback.findMany({
         where: {
+          feedbackType: "MATCH_RELEVANCE",
           user: { isDemo: false },
-          OR: [
-            { recommendationId: { not: null }, recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } } },
-            { mentorshipRequest: { is: { status: "ACCEPTED", completedAt: { not: null }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } } } },
-          ],
           OR: [{ rating: { gte: 4 } }, { rating: { lte: 2 } }],
         },
         select: { rating: true, modelFeatures: true, createdAt: true },
