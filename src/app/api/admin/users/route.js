@@ -2,10 +2,19 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { adminApiErrorResponse } from "@/lib/admin-api-error";
 
 // GET /api/admin/users
 // Lists every user with their verification/suspension status. Admin-only.
 export async function GET() {
+  try {
+    return await getAdminUsers();
+  } catch (error) {
+    return adminApiErrorResponse("Admin users", error);
+  }
+}
+
+async function getAdminUsers() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {

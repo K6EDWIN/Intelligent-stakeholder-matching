@@ -6,7 +6,7 @@ import { Icon } from "./KQIcons";
 
 export function KQLogo({ compact = false, light = false }) {
   return (
-    <Link href="/" className="logo inline-flex items-center gap-3">
+    <Link href="/" className={`logo inline-flex items-center gap-3 ${light ? "logo-light" : ""}`}>
       <span className="logo-mark flex items-center justify-center w-9 h-9 rounded-xl bg-[#c8102e] text-white font-bold shadow-md">
         <span>KQ</span>
       </span>

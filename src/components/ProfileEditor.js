@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import KQAppShell from "@/components/KQAppShell";
 import { Button, Avatar } from "@/components/KQBrand";
 import { Icon, GoogleIcon } from "@/components/KQIcons";
+import { readApiResponse } from "@/lib/read-api-response";
 import {
   AVAILABILITY_DAYS,
   buildAvailabilityText,
@@ -150,31 +151,28 @@ export default function ProfileEditor({ adminWorkspace = false, standalone = fal
           fetch("/api/profile"),
         ]);
 
-        const metaData = await metaRes.json();
+        const metaData = await readApiResponse(metaRes, "Could not load profile options");
         setMeta(metaData);
 
-        if (profileRes.ok) {
-          const { profile } = await profileRes.json();
-          setAvailabilityDraft(createAvailabilityDraft(profile.availability || ""));
-          setForm((f) => ({
-            ...f,
-            fullName: profile.fullName || "",
-            bio: profile.bio || "",
-            department: profile.department || "",
-            professionalBackground: profile.professionalBackground || "",
-            trainingHistory: profile.trainingHistory || "",
-            careerGoals: profile.careerGoals || "",
-            mentorshipNeeds: profile.mentorshipNeeds || "",
-            mentorshipRole: profile.mentorshipRole || "",
-            availability: profile.availability || "",
-            isPublic: profile.isPublic ?? true,
-            skillIds: profile.skillIds || [],
-            interestIds: profile.interestIds || [],
-            seekingTopicIds: profile.seekingTopicIds || [],
-            offeringTopicIds: profile.offeringTopicIds || [],
-          }));
-        }
-
+        const { profile } = await readApiResponse(profileRes, "Could not load your profile");
+        setAvailabilityDraft(createAvailabilityDraft(profile.availability || ""));
+        setForm((f) => ({
+          ...f,
+          fullName: profile.fullName || "",
+          bio: profile.bio || "",
+          department: profile.department || "",
+          professionalBackground: profile.professionalBackground || "",
+          trainingHistory: profile.trainingHistory || "",
+          careerGoals: profile.careerGoals || "",
+          mentorshipNeeds: profile.mentorshipNeeds || "",
+          mentorshipRole: profile.mentorshipRole || "",
+          availability: profile.availability || "",
+          isPublic: profile.isPublic ?? true,
+          skillIds: profile.skillIds || [],
+          interestIds: profile.interestIds || [],
+          seekingTopicIds: profile.seekingTopicIds || [],
+          offeringTopicIds: profile.offeringTopicIds || [],
+        }));
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -236,7 +234,7 @@ export default function ProfileEditor({ adminWorkspace = false, standalone = fal
         body: JSON.stringify(form),
       });
 
-      const data = await res.json();
+      const data = await readApiResponse(res, "Could not save your profile");
       setSaving(false);
 
       if (!res.ok) {
@@ -257,7 +255,7 @@ export default function ProfileEditor({ adminWorkspace = false, standalone = fal
     setError("");
     try {
       const response = await fetch("/api/account", { method: "DELETE" });
-      const data = await response.json();
+      const data = await readApiResponse(response, "Could not delete your account");
       if (!response.ok) throw new Error(data.error || "Could not delete account");
       try {
         if (avatarStorageKey) localStorage.removeItem(avatarStorageKey);

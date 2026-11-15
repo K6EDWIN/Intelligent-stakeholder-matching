@@ -2,10 +2,19 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { adminApiErrorResponse } from "@/lib/admin-api-error";
 
 // GET /api/admin/stats
 // Basic platform stats for the admin dashboard. Admin-only.
 export async function GET() {
+  try {
+    return await getAdminStats();
+  } catch (error) {
+    return adminApiErrorResponse("Admin statistics", error);
+  }
+}
+
+async function getAdminStats() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id) {
