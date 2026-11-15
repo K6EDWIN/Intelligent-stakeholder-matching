@@ -32,6 +32,23 @@ function formatAuditDetail(value) {
   return String(value);
 }
 
+async function readApiJson(response, fallbackMessage) {
+  const responseText = await response.text();
+  let data = null;
+  try {
+    data = responseText ? JSON.parse(responseText) : null;
+  } catch {
+    // Report a useful request error below instead of leaking a JSON parser error.
+  }
+  if (!response.ok) {
+    throw new Error(data?.error || `${fallbackMessage} (HTTP ${response.status})`);
+  }
+  if (!data || typeof data !== "object") {
+    throw new Error(`${fallbackMessage}: the server returned an empty or invalid response.`);
+  }
+  return data;
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -204,8 +221,7 @@ export default function AdminPage() {
     setReportsError("");
     try {
       const response = await fetch("/api/admin/reports");
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not load reports");
+      const data = await readApiJson(response, "Could not load reports");
       setReports(data.reports || []);
     } catch (loadError) {
       setReportsError(loadError.message || "Could not load reports");
@@ -229,8 +245,7 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reportId: report.id, action }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not review report");
+      const data = await readApiJson(response, "Could not review report");
       await loadReports();
     } catch (actionError) {
       setReportsError(actionError.message || "Could not review report");
@@ -704,10 +719,10 @@ export default function AdminPage() {
 
         {activeTab === "reports" && (
           <section className="space-y-4">
-            {reportsError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{reportsError}</p>}
+            {reportsError && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800"><span>{reportsError}</span><Button size="sm" variant="secondary" onClick={loadReports} disabled={reportsLoading}>{reportsLoading ? "Retrying…" : "Retry"}</Button></div>}
             {reportsLoading ? (
               <div className="card p-8 text-center text-sm text-slate-500">Loading community reports...</div>
-            ) : reports.length === 0 ? (
+            ) : reportsError ? null : reports.length === 0 ? (
               <div className="card p-10 text-center text-sm text-slate-500">There are no open community reports.</div>
             ) : reports.map((report) => (
               <article key={report.id} className="card p-5">

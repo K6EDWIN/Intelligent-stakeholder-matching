@@ -6,6 +6,19 @@ import { logActivity } from "@/lib/audit-log";
 
 const ACTIONS = ["DISMISS", "SUSPEND_USER", "HIDE_CONTENT"];
 
+function reportsFailure(error) {
+  console.error("Could not load community reports:", error);
+  const schemaMismatch = ["P2021", "P2022"].includes(error?.code)
+    || ["42P01", "42703"].includes(error?.meta?.code)
+    || /relation .* does not exist|column .* does not exist/i.test(error?.message || "");
+  return NextResponse.json({
+    error: schemaMismatch
+      ? "Community reports are unavailable because the database migration has not been applied."
+      : "Could not load community reports. Please try again.",
+    code: schemaMismatch ? "REPORTS_SCHEMA_OUT_OF_DATE" : "REPORTS_LOAD_FAILED",
+  }, { status: 500 });
+}
+
 export async function GET(request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -16,31 +29,35 @@ export async function GET(request) {
   if (!["OPEN", "ACTIONED", "DISMISSED", "ALL"].includes(status)) {
     return NextResponse.json({ error: "Invalid report status" }, { status: 400 });
   }
-  const reports = await prisma.report.findMany({
-    where: status === "ALL" ? {} : { status },
-    include: {
-      reporter: { select: { id: true, isDeleted: true, profile: { select: { fullName: true } } } },
-      moderator: { select: { id: true, profile: { select: { fullName: true } } } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
-  const reportsWithTargets = await Promise.all(reports.map(async (report) => {
-    let target = null;
-    if (report.targetType === "USER") {
-      const user = await prisma.user.findUnique({
-        where: { id: report.targetId },
-        select: { isDeleted: true, profile: { select: { fullName: true } } },
-      });
-      target = user?.isDeleted ? "Deleted member" : user?.profile?.fullName || null;
-    } else if (report.targetType === "OPPORTUNITY") {
-      target = (await prisma.opportunity.findUnique({ where: { id: report.targetId }, select: { title: true } }))?.title || null;
-    } else {
-      target = (await prisma.event.findUnique({ where: { id: report.targetId }, select: { title: true } }))?.title || null;
-    }
-    return { ...report, targetLabel: target };
-  }));
-  return NextResponse.json({ reports: reportsWithTargets });
+  try {
+    const reports = await prisma.report.findMany({
+      where: status === "ALL" ? {} : { status },
+      include: {
+        reporter: { select: { id: true, isDeleted: true, profile: { select: { fullName: true } } } },
+        moderator: { select: { id: true, profile: { select: { fullName: true } } } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
+    const reportsWithTargets = await Promise.all(reports.map(async (report) => {
+      let target = null;
+      if (report.targetType === "USER") {
+        const user = await prisma.user.findUnique({
+          where: { id: report.targetId },
+          select: { isDeleted: true, profile: { select: { fullName: true } } },
+        });
+        target = user?.isDeleted ? "Deleted member" : user?.profile?.fullName || null;
+      } else if (report.targetType === "OPPORTUNITY") {
+        target = (await prisma.opportunity.findUnique({ where: { id: report.targetId }, select: { title: true } }))?.title || null;
+      } else {
+        target = (await prisma.event.findUnique({ where: { id: report.targetId }, select: { title: true } }))?.title || null;
+      }
+      return { ...report, targetLabel: target };
+    }));
+    return NextResponse.json({ reports: reportsWithTargets });
+  } catch (error) {
+    return reportsFailure(error);
+  }
 }
 
 export async function PATCH(request) {
