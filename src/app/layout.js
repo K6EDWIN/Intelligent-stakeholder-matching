@@ -9,7 +9,7 @@ export const metadata = {
   description: "Hybrid recommendation system for mentorship and networking",
 };
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children, profile }) {
   return (
     <html
       lang="en"
@@ -19,6 +19,7 @@ export default function RootLayout({ children }) {
         <Providers>
           <Nav />
           {children}
+          {profile}
         </Providers>
       </body>
     </html>

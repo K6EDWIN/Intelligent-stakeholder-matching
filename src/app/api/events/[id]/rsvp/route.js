@@ -16,7 +16,7 @@ export async function POST(request, { params }) {
   const { id } = await params;
 
   const event = await prisma.event.findUnique({ where: { id } });
-  if (!event) {
+  if (!event || event.isHidden) {
     return NextResponse.json({ error: "Event not found" }, { status: 404 });
   }
 

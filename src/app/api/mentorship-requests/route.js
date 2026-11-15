@@ -25,12 +25,12 @@ export async function GET() {
 
   const [sent, received] = await Promise.all([
     prisma.mentorshipRequest.findMany({
-      where: { senderId: session.user.id, receiver: { is: { isDemo: false } } },
+      where: { senderId: session.user.id, receiver: { is: { isDemo: false, isDeleted: false } } },
       include: { receiver: { select: COUNTERPART_SELECT }, feedback: { where: { userId: session.user.id }, select: { id: true, rating: true } } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.mentorshipRequest.findMany({
-      where: { receiverId: session.user.id, sender: { is: { isDemo: false } } },
+      where: { receiverId: session.user.id, sender: { is: { isDemo: false, isDeleted: false } } },
       include: { sender: { select: COUNTERPART_SELECT }, feedback: { where: { userId: session.user.id }, select: { id: true, rating: true } } },
       orderBy: { createdAt: "desc" },
     }),
@@ -93,18 +93,18 @@ export async function POST(request) {
       },
     }),
     prisma.mentorshipRequest.findMany({
-      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } },
       select: { senderId: true, receiverId: true },
     }),
     prisma.connectionRequest.findMany({
-      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } },
       select: { senderId: true, receiverId: true },
     }),
   ]);
   if (!receiver) {
     return NextResponse.json({ error: "Recipient not found" }, { status: 404 });
   }
-  if (receiver.isDemo || receiver.role === "ADMIN") {
+  if (receiver.isDemo || receiver.isDeleted || receiver.role === "ADMIN") {
     return NextResponse.json({ error: "Administrator accounts are not available for mentorship matching" }, { status: 403 });
   }
   if (!isEligibleMentorshipMatch(senderProfile, receiver.profile)) {

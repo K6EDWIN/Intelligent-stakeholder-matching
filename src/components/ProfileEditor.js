@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import KQAppShell from "@/components/KQAppShell";
 import { Button, Avatar } from "@/components/KQBrand";
@@ -20,7 +20,7 @@ const ROLE_OPTIONS = [
   { value: "BOTH", label: "Open to Both (Mentor & Mentee)" },
 ];
 
-export default function ProfileEditor({ adminWorkspace = false }) {
+export default function ProfileEditor({ adminWorkspace = false, standalone = false }) {
   const { status, data: session } = useSession();
   const router = useRouter();
   const isAdmin = session?.user?.role === "ADMIN";
@@ -45,6 +45,7 @@ export default function ProfileEditor({ adminWorkspace = false }) {
   const [availabilityDraft, setAvailabilityDraft] = useState(() => createAvailabilityDraft(""));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [avatarSrc, setAvatarSrc] = useState(null);
@@ -250,10 +251,30 @@ export default function ProfileEditor({ adminWorkspace = false }) {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("Delete your account? Your profile will be anonymized, and this action cannot be undone.")) return;
+    setDeletingAccount(true);
+    setError("");
+    try {
+      const response = await fetch("/api/account", { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not delete account");
+      try {
+        if (avatarStorageKey) localStorage.removeItem(avatarStorageKey);
+      } catch {
+        // Local avatar cleanup is best effort; server-side account deletion has already succeeded.
+      }
+      await signOut({ callbackUrl: "/login" });
+    } catch (deleteError) {
+      setError(deleteError.message || "Could not delete account");
+      setDeletingAccount(false);
+    }
+  };
+
   if (status === "loading" || loading) {
     if (status === "authenticated" && isAdmin && !adminWorkspace) return null;
 
-    const Shell = adminWorkspace ? Fragment : KQAppShell;
+    const Shell = adminWorkspace || standalone ? Fragment : KQAppShell;
     return (
       <Shell>
         <div className="app-page">
@@ -268,7 +289,7 @@ export default function ProfileEditor({ adminWorkspace = false }) {
 
   if (isAdmin && !adminWorkspace) return null;
 
-  const Shell = adminWorkspace ? Fragment : KQAppShell;
+  const Shell = adminWorkspace || standalone ? Fragment : KQAppShell;
   return (
     <Shell>
       <div className="app-page max-w-5xl">
@@ -729,6 +750,23 @@ export default function ProfileEditor({ adminWorkspace = false }) {
             </Button>
           </div>
         </form>
+        {!isAdmin && (
+          <section className="card mb-8 border-red-200 p-6 sm:p-8">
+            <h2 className="text-base font-bold text-red-900">Delete account</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+              This permanently removes your sign-in access and anonymizes your profile. Personal details in authored posts and sent messages are removed where possible; records needed to preserve other members&apos; activity are retained without your profile identity.
+            </p>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={deletingAccount}
+              onClick={handleDeleteAccount}
+              className="mt-4 border-red-300 text-red-800 hover:bg-red-50"
+            >
+              {deletingAccount ? "Deleting account..." : "Delete my account"}
+            </Button>
+          </section>
+        )}
       </div>
     </Shell>
   );

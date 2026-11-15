@@ -17,11 +17,11 @@ export async function GET() {
   const userId = session.user.id;
   const [connections, mentorships] = await Promise.all([
     prisma.connectionRequest.findMany({
-      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } }, OR: [{ senderId: userId }, { receiverId: userId }] },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } }, OR: [{ senderId: userId }, { receiverId: userId }] },
       select: { senderId: true, receiverId: true },
     }),
     prisma.mentorshipRequest.findMany({
-      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } }, OR: [{ senderId: userId }, { receiverId: userId }] },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } }, OR: [{ senderId: userId }, { receiverId: userId }] },
       select: { senderId: true, receiverId: true },
     }),
   ]);
@@ -36,8 +36,8 @@ export async function GET() {
   const conversations = await prisma.conversation.findMany({
     where: {
       OR: [
-        { participantOneId: userId, participantTwo: { is: { isDemo: false } } },
-        { participantTwoId: userId, participantOne: { is: { isDemo: false } } },
+        { participantOneId: userId, participantTwo: { is: { isDemo: false, isDeleted: false } } },
+        { participantTwoId: userId, participantOne: { is: { isDemo: false, isDeleted: false } } },
       ],
     },
     include: {

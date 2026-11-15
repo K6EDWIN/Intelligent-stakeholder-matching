@@ -8,14 +8,15 @@ export async function GET() {
     const liveMemberWhere = {
       isVerified: true,
       isSuspended: false,
+      isDeleted: false,
       isDemo: false,
       role: { not: "ADMIN" },
       profile: { is: { isPublic: true } },
     };
     const liveRelationshipWhere = {
       status: "ACCEPTED",
-      sender: { is: { isDemo: false } },
-      receiver: { is: { isDemo: false } },
+      sender: { is: { isDemo: false, isDeleted: false } },
+      receiver: { is: { isDemo: false, isDeleted: false } },
     };
     const [members, acceptedMentorships, acceptedConnections] = await Promise.all([
       prisma.user.count({ where: liveMemberWhere }),

@@ -12,6 +12,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:performance": "node scripts/performance-smoke.mjs",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "node prisma/seed.cjs",

@@ -7,13 +7,14 @@ import { useEffect, useState } from "react";
 import { KQLogo, Avatar } from "./KQBrand";
 import { Icon } from "./KQIcons";
 import { ViewModeToggle } from "./ViewMode";
+import { profilePathForRole } from "@/lib/profile-navigation";
 
 export default function KQAppShell({ children }) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
-  const profileHref = session?.user?.role === "ADMIN" ? "/admin/profile" : "/profile";
+  const profileHref = profilePathForRole(session?.user?.role);
 
   useEffect(() => {
     if (!session?.user?.id) return undefined;
