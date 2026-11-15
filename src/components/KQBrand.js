@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Icon } from "./KQIcons";
 
 export function KQLogo({ compact = false, light = false }) {
   return (
-    <Link href="/" className={`logo inline-flex items-center gap-3 ${light ? "logo-light" : ""}`}>
-      <span className="logo-mark flex items-center justify-center w-9 h-9 rounded-xl bg-[#c8102e] text-white font-bold shadow-md">
-        <span>KQ</span>
-      </span>
+    <Link href="/" className={`logo inline-flex items-center gap-3 ${light ? "logo-light" : ""}`} aria-label="KQ PrideConnect home">
+      <Image src="/prideconnect-mark.svg" alt={compact ? "KQ PrideConnect" : ""} width={38} height={38} className="logo-mark" unoptimized />
       {!compact && (
         <span className="logo-copy flex flex-col leading-tight">
           <b className={`text-sm font-bold tracking-tight ${light ? "text-white" : "text-[#071626]"}`}>
