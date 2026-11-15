@@ -39,18 +39,10 @@ export default function AdminProfileShell({ children }) {
       </header>
 
       <nav className="admin-profile-nav" aria-label="Administrator navigation">
-        <Link href="/admin" className="admin-profile-nav-link">
-          <Icon name="dashboard" size={15} />
-          <span>Operations console</span>
-        </Link>
         <span className="admin-profile-nav-current" aria-current="page">
           <Icon name="profile" size={15} />
           <span>Administrator profile</span>
         </span>
-        <Link href="/recommendations" className="admin-profile-nav-link">
-          <Icon name="sparkles" size={15} />
-          <span>Stakeholder portal</span>
-        </Link>
       </nav>
 
       <main className="admin-profile-main">{children}</main>

@@ -10,6 +10,7 @@ import { getAdaptivePredictions } from "@/lib/hosted-ml";
 import { diversifyRankedCandidates } from "@/lib/profile-vectors";
 import { getMlUserKey } from "@/lib/ml-sync-auth";
 import { isEligibleMentorshipMatch } from "@/lib/matching-eligibility";
+import { adminApiErrorResponse } from "@/lib/admin-api-error";
 
 // Helper: Discounted Cumulative Gain
 function computeDCG(relevanceList) {
@@ -607,9 +608,6 @@ export async function GET(req) {
 
     return NextResponse.json({ benchmark });
   } catch (err) {
-    return NextResponse.json(
-      { error: "Evaluation calculation error: " + err.message },
-      { status: 500 }
-    );
+    return adminApiErrorResponse("Admin evaluation", err);
   }
 }

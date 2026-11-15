@@ -7,6 +7,7 @@ import Link from "next/link";
 import KQAppShell from "@/components/KQAppShell";
 import { Button, Avatar } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
+import { readApiResponse } from "@/lib/read-api-response";
 
 const ROLE_LABELS = {
   ALUMNI: "Pride Centre Alumni",
@@ -15,15 +16,6 @@ const ROLE_LABELS = {
   FREQUENT_FLYER: "Frequent Flyer",
   ADMIN: "Administrator",
 };
-
-const POPULAR_ROUTES = [
-  { code: "KQ 102", from: "NBO", to: "LHR", label: "Nairobi ➔ London Heathrow" },
-  { code: "KQ 116", from: "NBO", to: "AMS", label: "Nairobi ➔ Amsterdam Schiphol" },
-  { code: "KQ 504", from: "NBO", to: "ACC", label: "Nairobi ➔ Accra Kotoka" },
-  { code: "KQ 600", from: "NBO", to: "MBA", label: "Nairobi ➔ Mombasa Moi" },
-  { code: "KQ 760", from: "NBO", to: "JNB", label: "Nairobi ➔ Johannesburg" },
-  { code: "KQ 310", from: "NBO", to: "DXB", label: "Nairobi ➔ Dubai Int'l" },
-];
 
 function getYesterdayInNairobi() {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -44,9 +36,9 @@ export default function FlightReconnectPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [flightNumber, setFlightNumber] = useState("KQ 102");
-  const [origin, setOrigin] = useState("NBO");
-  const [destination, setDestination] = useState("LHR");
+  const [flightNumber, setFlightNumber] = useState("");
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
   const [travelDate, setTravelDate] = useState("");
   const [maxTravelDate] = useState(getYesterdayInNairobi);
   const [consentToShare, setConsentToShare] = useState(false);
@@ -73,11 +65,7 @@ export default function FlightReconnectPage() {
   const refreshData = async () => {
     try {
       const res = await fetch("/api/flight-reconnect");
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Could not load flight reconnect data");
-        return;
-      }
+      const data = await readApiResponse(res, "Could not load your flight data");
       setMyFlights(data.myFlights || []);
       setMatches(data.matches || []);
     } catch (err) {
@@ -89,8 +77,8 @@ export default function FlightReconnectPage() {
     if (status !== "authenticated") return;
     let isCurrent = true;
 
-    fetch("/api/flight-reconnect")
-      .then((res) => res.json())
+    fetch("/api/flight-reconnect", { cache: "no-store" })
+      .then((res) => readApiResponse(res, "Could not load your flight data"))
       .then((data) => {
         if (!isCurrent) return;
         if (data.error) {
@@ -112,12 +100,6 @@ export default function FlightReconnectPage() {
     };
   }, [status]);
 
-  const handleApplyPreset = (r) => {
-    setFlightNumber(r.code.toUpperCase());
-    setOrigin(r.from);
-    setDestination(r.to);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setPosting(true);
@@ -137,19 +119,15 @@ export default function FlightReconnectPage() {
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Failed to log completed flight");
-      } else {
-        setPostSuccess(consentToShare
-          ? "Completed flight saved. It will appear to other members only when they also opt in to exact-flight matching."
-          : "Completed flight saved privately. You can enable peer matching from your trip list at any time.");
-        setTravelDate("");
-        setConsentToShare(false);
-        await refreshData();
-      }
+      await readApiResponse(res, "Could not save this completed flight");
+      setPostSuccess(consentToShare
+        ? "Completed flight saved. It will appear to other members only when they also opt in to exact-flight matching."
+        : "Completed flight saved privately. You can enable peer matching from your trip list at any time.");
+      setTravelDate("");
+      setConsentToShare(false);
+      await refreshData();
     } catch (err) {
-      setError("Could not save this flight. Check your connection and try again.");
+      setError(err.message || "Could not save this flight. Check your connection and try again.");
     } finally {
       setPosting(false);
     }
@@ -164,8 +142,7 @@ export default function FlightReconnectPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ consentToShare: !flight.consentToShare }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not update sharing consent");
+      await readApiResponse(res, "Could not update sharing consent");
       await refreshData();
     } catch (err) {
       setError(err.message || "Could not update sharing consent");
@@ -180,8 +157,7 @@ export default function FlightReconnectPage() {
     setError("");
     try {
       const res = await fetch(`/api/flight-reconnect/${flight.id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not remove this trip");
+      await readApiResponse(res, "Could not remove this trip");
       await refreshData();
     } catch (err) {
       setError(err.message || "Could not remove this trip");
@@ -206,17 +182,13 @@ export default function FlightReconnectPage() {
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        setHandshakeError(data.error || "Failed to send connection request");
-      } else {
-        setHandshakeSuccess("Request sent. You’ll see its status here, and the recipient will be notified.");
-        await refreshData();
-        setTimeout(() => {
-          setSelectedPeer(null);
-          setHandshakeSuccess("");
-        }, 1600);
-      }
+      await readApiResponse(res, "Could not send the connection request");
+      setHandshakeSuccess("Request sent. You’ll see its status here, and the recipient will be notified.");
+      await refreshData();
+      setTimeout(() => {
+        setSelectedPeer(null);
+        setHandshakeSuccess("");
+      }, 1600);
     } catch (err) {
       setHandshakeError("Could not send the request. Check your connection and try again.");
     } finally {
@@ -295,29 +267,6 @@ export default function FlightReconnectPage() {
               </div>
             </div>
 
-            {/* Quick Presets */}
-            <div className="space-y-1.5">
-              <span className="text-xs font-semibold text-slate-500">
-                Quick-fill examples — confirm these match your completed trip:
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                {POPULAR_ROUTES.map((r) => (
-                  <button
-                    key={r.code}
-                    type="button"
-                    onClick={() => handleApplyPreset(r)}
-                    className={`px-2.5 py-1 rounded text-xs font-semibold transition border cursor-pointer ${
-                      flightNumber === r.code && origin === r.from
-                        ? "bg-[#c8102e] text-white border-[#c8102e]"
-                        : "bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-400"
-                    }`}
-                  >
-                    {r.code} ({r.from}➔{r.to})
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-3.5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
@@ -327,10 +276,10 @@ export default function FlightReconnectPage() {
                   <input
                     value={flightNumber}
                     onChange={(e) => setFlightNumber(e.target.value.toUpperCase())}
-                    placeholder="e.g. KQ 102"
+                    placeholder="Enter flight number"
                     maxLength={8}
                     pattern="KQ\s?\d{1,4}[A-Za-z]?"
-                    title="Enter a Kenya Airways flight number, such as KQ 102"
+                    title="Enter the completed Kenya Airways flight number"
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs sm:text-sm font-semibold outline-none focus:bg-white focus:border-[#c8102e]"
                     required
                   />
@@ -343,7 +292,7 @@ export default function FlightReconnectPage() {
                   <input
                     value={origin}
                     onChange={(e) => setOrigin(e.target.value.toUpperCase())}
-                    placeholder="NBO"
+                    placeholder="Origin code"
                     maxLength={3}
                     pattern="[A-Za-z]{3}"
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs sm:text-sm font-semibold outline-none focus:bg-white focus:border-[#c8102e]"
@@ -358,7 +307,7 @@ export default function FlightReconnectPage() {
                   <input
                     value={destination}
                     onChange={(e) => setDestination(e.target.value.toUpperCase())}
-                    placeholder="LHR"
+                    placeholder="Destination code"
                     maxLength={3}
                     pattern="[A-Za-z]{3}"
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-xs sm:text-sm font-semibold outline-none focus:bg-white focus:border-[#c8102e]"
@@ -454,8 +403,7 @@ export default function FlightReconnectPage() {
                       key={flight.id}
                       className="rounded-xl bg-slate-50 border border-slate-200 p-3.5 space-y-3"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex min-w-0 items-start gap-3">
                           <div className="w-11 h-11 rounded-lg bg-[#0e2740] text-white flex flex-col items-center justify-center font-bold shrink-0">
                             <b className="text-xs leading-none">{day}</b>
                             <small className="text-[9px] uppercase font-bold text-[#c59b27]">{month}</small>
@@ -469,11 +417,10 @@ export default function FlightReconnectPage() {
                             </b>
                             <small className="text-xs text-slate-500">Travel date: {month} {day}, {year}</small>
                           </div>
-                        </div>
-                        <span className={`shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full border text-[10px] font-semibold ${flight.consentToShare && canMatch ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-slate-100 border-slate-200 text-slate-600"}`}>
-                          {flight.consentToShare && canMatch ? "Visible to exact-flight matches" : canMatch ? "Private" : "Not matchable"}
-                        </span>
                       </div>
+                      <span className={`inline-flex max-w-full whitespace-normal break-words leading-snug items-center gap-1 self-start px-2 py-1 rounded-full border text-[10px] font-semibold ${flight.consentToShare && canMatch ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "bg-slate-100 border-slate-200 text-slate-600"}`}>
+                        {flight.consentToShare && canMatch ? "Visible to exact-flight matches" : canMatch ? "Private" : "Not matchable"}
+                      </span>
                       {!canMatch && <p className="text-xs text-amber-800">This older trip has no structured flight details. Delete it and log it again to enable exact-flight matching.</p>}
                       <div className="flex flex-wrap justify-end gap-2 border-t border-slate-200 pt-3">
                         <button

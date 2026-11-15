@@ -134,6 +134,17 @@ h6 {
   text-transform: uppercase;
 }
 
+/* The shared brand mark is used on both light and dark surfaces. The base
+   wordmark selector is more specific than utility classes, so set the light
+   variant explicitly to keep it legible on dark headers and sidebars. */
+.logo.logo-light .logo-copy b {
+  color: #ffffff;
+}
+
+.logo.logo-light .logo-copy small {
+  color: #cbd5e1;
+}
+
 /* Button Component System */
 .btn {
   display: inline-flex;

@@ -195,6 +195,10 @@
   max-width: none;
   padding: clamp(18px, 3vw, 40px) clamp(12px, 3vw, 40px) 56px;
 }
+html[data-view-mode="modern"] .standalone-profile {
+  background: #071626;
+  color: #f8fafc;
+}
 html[data-view-mode="modern"] .admin-profile-workspace {
   background: #071626;
   color: #f8fafc;

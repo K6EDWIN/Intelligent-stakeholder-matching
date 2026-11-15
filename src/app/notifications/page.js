@@ -7,6 +7,7 @@ import Link from "next/link";
 import KQAppShell from "@/components/KQAppShell";
 import { Button } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
+import { readApiResponse } from "@/lib/read-api-response";
 
 export default function NotificationsPage() {
   const { status } = useSession();
@@ -22,8 +23,7 @@ export default function NotificationsPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/notifications", { cache: "no-store" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not load notifications");
+      const data = await readApiResponse(res, "Could not load notifications");
       setItems(data.notifications || []);
     } catch (loadError) {
       setError(loadError.message || "Could not load notifications. Try again.");
@@ -45,8 +45,7 @@ export default function NotificationsPage() {
     setActionNotice("");
     try {
       const response = await fetch("/api/notifications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not mark this notification as read");
+      await readApiResponse(response, "Could not mark this notification as read");
       setItems((prev) => prev.map((item) => item.id === id ? { ...item, readAt: new Date().toISOString() } : item));
       setActionNotice("Notification marked as read.");
       window.dispatchEvent(new Event("notifications-updated"));
@@ -65,8 +64,7 @@ export default function NotificationsPage() {
     setActionNotice("");
     try {
       const response = await fetch("/api/notifications", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ markAll: true }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not mark notifications as read");
+      await readApiResponse(response, "Could not mark notifications as read");
       setItems((prev) => prev.map((item) => ({ ...item, readAt: item.readAt || new Date().toISOString() })));
       setActionNotice("All notifications marked as read.");
       window.dispatchEvent(new Event("notifications-updated"));

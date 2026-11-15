@@ -32,6 +32,23 @@ function formatAuditDetail(value) {
   return String(value);
 }
 
+async function readApiJson(response, fallbackMessage) {
+  const responseText = await response.text();
+  let data = null;
+  try {
+    data = responseText ? JSON.parse(responseText) : null;
+  } catch {
+    // Report a useful request error below instead of leaking a JSON parser error.
+  }
+  if (!response.ok) {
+    throw new Error(data?.error || `${fallbackMessage} (HTTP ${response.status})`);
+  }
+  if (!data || typeof data !== "object") {
+    throw new Error(`${fallbackMessage}: the server returned an empty or invalid response.`);
+  }
+  return data;
+}
+
 export default function AdminPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -120,9 +137,9 @@ export default function AdminPage() {
           fetch("/api/admin/evaluation"),
         ]);
         const [statsData, usersData, evalData] = await Promise.all([
-          statsRes.json(),
-          usersRes.json(),
-          evalRes.json(),
+          readApiJson(statsRes, "Could not load admin statistics"),
+          readApiJson(usersRes, "Could not load stakeholder accounts"),
+          readApiJson(evalRes, "Could not load model evaluation"),
         ]);
 
         if (!statsRes.ok || !usersRes.ok) {
@@ -162,13 +179,11 @@ export default function AdminPage() {
         });
         if (!simDepartmentsLoaded.current) query.set("includeDepartments", "true");
         const res = await fetch(`/api/admin/simulation-users?${query}`, { signal: controller.signal });
-        const data = await res.json();
-        if (res.ok) {
-          setSimUserOptions(data.users || []);
-          setSimUsersTotal(data.total || 0);
-          setSimDepartments(data.departments || []);
-          simDepartmentsLoaded.current = true;
-        }
+        const data = await readApiJson(res, "Could not load members for simulation");
+        setSimUserOptions(data.users || []);
+        setSimUsersTotal(data.total || 0);
+        setSimDepartments(data.departments || []);
+        simDepartmentsLoaded.current = true;
       } catch (err) {
         if (err.name !== "AbortError") setSimError(err.message);
       } finally {
@@ -182,8 +197,7 @@ export default function AdminPage() {
     setAdminAccessLoading(true);
     try {
       const response = await fetch("/api/admin/invitations");
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not load administrator access");
+      const data = await readApiJson(response, "Could not load administrator access");
       setAdminAccess(data);
       setAdminInviteError("");
     } catch (err) {
@@ -204,8 +218,7 @@ export default function AdminPage() {
     setReportsError("");
     try {
       const response = await fetch("/api/admin/reports");
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not load reports");
+      const data = await readApiJson(response, "Could not load reports");
       setReports(data.reports || []);
     } catch (loadError) {
       setReportsError(loadError.message || "Could not load reports");
@@ -229,8 +242,7 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ reportId: report.id, action }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not review report");
+      const data = await readApiJson(response, "Could not review report");
       await loadReports();
     } catch (actionError) {
       setReportsError(actionError.message || "Could not review report");
@@ -248,8 +260,7 @@ export default function AdminPage() {
       try {
         const query = new URLSearchParams({ page: String(auditPage), pageSize: "25", actor: auditActor, q: auditSearch });
         const response = await fetch(`/api/admin/audit-logs?${query}`, { signal: controller.signal });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Could not load the audit log");
+        const data = await readApiJson(response, "Could not load the audit log");
         setAuditLogs(data);
       } catch (err) {
         if (err.name !== "AbortError") setAuditError(err.message || "Could not load the audit log");
@@ -271,8 +282,7 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: adminInviteEmail }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not send the administrator invitation");
+      const data = await readApiJson(response, "Could not send the administrator invitation");
       setAdminInviteMessage(data.message);
       setAdminInviteEmail("");
       await loadAdminAccess();
@@ -290,8 +300,7 @@ export default function AdminPage() {
       const response = await fetch(action === "revoke"
         ? `/api/admin/invitations/${userId}`
         : `/api/admin/admins/${userId}`, { method: "DELETE" });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not update administrator access");
+      const data = await readApiJson(response, "Could not update administrator access");
       setAdminInviteMessage(action === "revoke"
         ? "Invitation revoked. Its setup link can no longer activate administrator access."
         : `Administrator access removed. The account returned to ${ROLE_LABELS[data.restoredRole] || data.restoredRole}.`);
@@ -335,14 +344,9 @@ export default function AdminPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
       });
-      const data = await res.json();
+      const data = await readApiJson(res, "Could not complete that action");
 
       setPendingUserId(null);
-
-      if (!res.ok) {
-        showToast(data.error || "Could not complete that action.", "error");
-        return;
-      }
 
       setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, ...data.user } : u)));
       showToast(
@@ -369,14 +373,8 @@ export default function AdminPage() {
 
     try {
       const res = await fetch(`/api/admin/evaluation?simulateUserId=${targetId}`);
-      const data = await res.json();
+      const data = await readApiJson(res, "Could not run recommendation simulation");
       setSimulating(false);
-
-      if (!res.ok) {
-        setSimError(data.error || "Could not run recommendation simulation");
-        return;
-      }
-
       setSimulationData(data.simulation);
     } catch (err) {
       setSimulating(false);
@@ -640,7 +638,6 @@ export default function AdminPage() {
         <div className="admin-sidebar-footer">
           <Link href="/recommendations" className="admin-sidebar-link"><Icon name="sparkles" size={15} /> Stakeholder Portal</Link>
           <Link href="/admin/profile" className="admin-sidebar-link"><Icon name="profile" size={15} /> Admin Profile</Link>
-          <div className="admin-sidebar-layout"><span>Layout</span><ViewModeToggle compact /></div>
           <button type="button" className="admin-sidebar-link" onClick={() => signOut({ callbackUrl: "/login" })}><Icon name="logout" size={15} /> Log out</button>
         </div>
       </nav>
@@ -704,10 +701,10 @@ export default function AdminPage() {
 
         {activeTab === "reports" && (
           <section className="space-y-4">
-            {reportsError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{reportsError}</p>}
+            {reportsError && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800"><span>{reportsError}</span><Button size="sm" variant="secondary" onClick={loadReports} disabled={reportsLoading}>{reportsLoading ? "Retrying…" : "Retry"}</Button></div>}
             {reportsLoading ? (
               <div className="card p-8 text-center text-sm text-slate-500">Loading community reports...</div>
-            ) : reports.length === 0 ? (
+            ) : reportsError ? null : reports.length === 0 ? (
               <div className="card p-10 text-center text-sm text-slate-500">There are no open community reports.</div>
             ) : reports.map((report) => (
               <article key={report.id} className="card p-5">
