@@ -13,11 +13,12 @@ function createMailer() {
   });
 }
 
-export async function sendAppEmail({ to, subject, html, text }) {
+export async function sendAppEmail({ to, bcc, subject, html, text }) {
   const mailer = createMailer();
   return mailer.sendMail({
     from: `KQ PrideConnect <${GMAIL_SENDER}>`,
     to,
+    ...(bcc?.length ? { bcc } : {}),
     subject,
     html,
     text,
