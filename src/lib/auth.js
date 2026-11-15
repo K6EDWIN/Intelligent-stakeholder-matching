@@ -18,18 +18,8 @@ export const authOptions = {
         .trim();
 
       return googleClientId && googleClientSecret
-        ? [
-            GoogleProvider({
-              clientId: googleClientId,
-              clientSecret: googleClientSecret,
-            }),
-          ]
-        : [
-            GoogleProvider({
-              clientId: googleClientId || "placeholder_client_id",
-              clientSecret: googleClientSecret || "placeholder_secret",
-            }),
-          ];
+        ? [GoogleProvider({ clientId: googleClientId, clientSecret: googleClientSecret })]
+        : [];
     })(),
     CredentialsProvider({
       name: "Credentials",
@@ -38,12 +28,15 @@ export const authOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        const email = typeof credentials?.email === "string"
+          ? credentials.email.trim().toLowerCase()
+          : "";
+        if (!email || !credentials?.password) {
           throw new Error("Email and password are required");
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
         });
 
         if (!user) {
@@ -52,6 +45,10 @@ export const authOptions = {
 
         if (process.env.NODE_ENV === "production" && user.isDemo) {
           throw new Error("Demonstration accounts cannot sign in to the live service.");
+        }
+
+        if (!user.passwordHash) {
+          throw new Error("This account uses Google sign-in. Continue with Google.");
         }
 
         const isValid = await bcrypt.compare(

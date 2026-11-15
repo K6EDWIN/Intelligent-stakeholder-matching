@@ -23,6 +23,7 @@ export default function RequestsPage() {
   const [mentorship, setMentorship] = useState({ sent: [], received: [] });
   const [connections, setConnections] = useState({ sent: [], received: [] });
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   // Rating & Feedback State
   const [ratingTarget, setRatingTarget] = useState(null);
@@ -30,6 +31,10 @@ export default function RequestsPage() {
   const [feedbackComment, setFeedbackComment] = useState("");
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [feedbackSuccess, setFeedbackSuccess] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [actionNotice, setActionNotice] = useState("");
+  const [pendingRequestId, setPendingRequestId] = useState(null);
+  const [ratingError, setRatingError] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -38,6 +43,7 @@ export default function RequestsPage() {
   }, [status, router]);
 
   const refreshRequests = async () => {
+    setLoadError("");
     try {
       const [mRes, cRes] = await Promise.all([
         fetch("/api/mentorship-requests"),
@@ -47,10 +53,12 @@ export default function RequestsPage() {
       const mData = await mRes.json();
       const cData = await cRes.json();
 
-      if (mRes.ok) setMentorship(mData);
-      if (cRes.ok) setConnections(cData);
+      if (!mRes.ok || !cRes.ok) throw new Error(mData.error || cData.error || "Could not refresh requests.");
+      setMentorship(mData);
+      setConnections(cData);
       setLoading(false);
-    } catch {
+    } catch (error) {
+      setLoadError(error.message || "Could not refresh requests. Try again.");
       setLoading(false);
     }
   };
@@ -67,12 +75,14 @@ export default function RequestsPage() {
         const mData = await mRes.json();
         const cData = await cRes.json();
         if (!isCurrent) return;
-        if (mRes.ok) setMentorship(mData);
-        if (cRes.ok) setConnections(cData);
+        if (!mRes.ok || !cRes.ok) throw new Error(mData.error || cData.error || "Could not load requests.");
+        setMentorship(mData);
+        setConnections(cData);
         setLoading(false);
       })
-      .catch(() => {
+      .catch((error) => {
         if (!isCurrent) return;
+        setLoadError(error.message || "Could not load requests. Try again.");
         setLoading(false);
       });
 
@@ -87,6 +97,9 @@ export default function RequestsPage() {
         ? `/api/mentorship-requests/${id}`
         : `/api/connection-requests/${id}`;
 
+    setActionError("");
+    setActionNotice("");
+    setPendingRequestId(id);
     try {
       const res = await fetch(endpoint, {
         method: "PATCH",
@@ -95,20 +108,26 @@ export default function RequestsPage() {
       });
 
       if (res.ok) {
+        setActionNotice(newStatus === "ACCEPTED" ? "Request accepted." : "Request declined.");
         if (newStatus === "ACCEPTED" && kind === "connection") {
           setRatingTarget({ id, kind, role: "Partner" });
         }
-        refreshRequests();
+        await refreshRequests();
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to respond");
+        setActionError(data.error || "Could not update this request. Please try again.");
       }
-    } catch (err) {
-      alert("Error: " + err.message);
+    } catch {
+      setActionError("We could not reach the server. Check your connection and try again.");
+    } finally {
+      setPendingRequestId(null);
     }
   };
 
   const handleCompleteMentorship = async (req, name) => {
+    setActionError("");
+    setActionNotice("");
+    setPendingRequestId(req.id);
     try {
       const response = await fetch(`/api/mentorship-requests/${req.id}`, {
         method: "PATCH",
@@ -117,19 +136,22 @@ export default function RequestsPage() {
       });
       const data = await response.json();
       if (!response.ok) {
-        alert(data.error || "Could not mark mentorship complete");
+        setActionError(data.error || "Could not mark mentorship complete. Please try again.");
         return;
       }
       await refreshRequests();
       setRatingTarget({ id: req.id, kind: "mentorship", name });
-    } catch (error) {
-      alert("Could not mark mentorship complete: " + error.message);
+    } catch {
+      setActionError("We could not reach the server. Check your connection and try again.");
+    } finally {
+      setPendingRequestId(null);
     }
   };
 
   const handleRateSubmit = async () => {
     if (!ratingTarget) return;
     setSubmittingFeedback(true);
+    setRatingError("");
 
     try {
       const res = await fetch("/api/feedback", {
@@ -153,10 +175,10 @@ export default function RequestsPage() {
         }, 1600);
       } else {
         const data = await res.json();
-        alert(data.error || "Could not save rating");
+        setRatingError(data.error || "Could not save your rating. Please try again.");
       }
-    } catch (err) {
-      alert("Error: " + err.message);
+    } catch {
+      setRatingError("We could not reach the server. Check your connection and try again.");
     } finally {
       setSubmittingFeedback(false);
     }
@@ -231,6 +253,10 @@ export default function RequestsPage() {
           </Button>
         </div>
 
+        {actionError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{actionError}</div>}
+        {loadError && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"><span>{loadError}</span><Button size="sm" variant="secondary" onClick={() => { setLoading(true); refreshRequests(); }}>Try again</Button></div>}
+        {actionNotice && <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{actionNotice}</div>}
+
         {/* Tab Switcher */}
         <div className="flex bg-slate-100 p-1 rounded-lg max-w-sm border border-slate-200">
           <button
@@ -292,7 +318,7 @@ export default function RequestsPage() {
         </div>
 
         {/* Tab 1: Pending Received Requests */}
-        {activeTab === "pending" && (
+        {!loadError && activeTab === "pending" && (
           <div className="space-y-4">
             {pendingList.length === 0 ? (
               <div className="card p-12 text-center text-slate-500 space-y-2">
@@ -346,18 +372,20 @@ export default function RequestsPage() {
                       <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
                         <button
                           type="button"
+                          disabled={pendingRequestId === req.id}
                           onClick={() => handleRespond(req.kind, req.id, "ACCEPTED")}
                           className="flex-1 btn btn-primary text-xs py-2 rounded-md"
                         >
                           <Icon name="check" size={14} />
-                          <span>Accept Request</span>
+                          <span>{pendingRequestId === req.id ? "Updating…" : "Accept Request"}</span>
                         </button>
                         <button
                           type="button"
+                          disabled={pendingRequestId === req.id}
                           onClick={() => handleRespond(req.kind, req.id, "DECLINED")}
                           className="btn btn-secondary text-xs py-2 px-4 rounded-md"
                         >
-                          Decline
+                          {pendingRequestId === req.id ? "Updating…" : "Decline"}
                         </button>
                       </div>
                     </div>
@@ -369,7 +397,7 @@ export default function RequestsPage() {
         )}
 
         {/* Tab 2: Sent Requests */}
-        {activeTab === "sent" && (
+        {!loadError && activeTab === "sent" && (
           <div className="space-y-4">
             {sentList.length === 0 ? (
               <div className="card p-12 text-center text-slate-500 space-y-2">
@@ -436,7 +464,7 @@ export default function RequestsPage() {
         )}
 
         {/* Tab 3: Active Connections */}
-        {activeTab === "active" && (
+        {!loadError && activeTab === "active" && (
           <div className="space-y-4">
             {activeConnectionsList.length === 0 ? (
               <div className="card p-12 text-center text-slate-500 space-y-2">
@@ -490,7 +518,8 @@ export default function RequestsPage() {
                               onClick={() => req.completedAt
                                 ? setRatingTarget({ id: req.id, kind: "mentorship", name })
                                 : handleCompleteMentorship(req, name)}
-                              className="btn btn-secondary text-xs py-2 w-full rounded-md"
+                              disabled={pendingRequestId === req.id}
+                              className="btn btn-secondary text-xs py-2 w-full rounded-md disabled:cursor-wait disabled:opacity-60"
                             >
                               <Icon name={req.completedAt ? "star" : "check"} size={14} className="text-[#c59b27]" />
                               <span>{req.completedAt ? "Rate mentorship usefulness" : "Mark mentorship complete & rate"}</span>
@@ -522,12 +551,16 @@ export default function RequestsPage() {
             onClick={() => setRatingTarget(null)}
           >
             <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="request-feedback-title"
               className="bg-white rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl border border-slate-200 text-center relative"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 type="button"
                 onClick={() => setRatingTarget(null)}
+                aria-label="Close feedback dialog"
                 className="absolute top-4 right-4 p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
               >
                 <Icon name="close" size={16} />
@@ -538,7 +571,7 @@ export default function RequestsPage() {
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-slate-900">
+                <h3 id="request-feedback-title" className="text-lg font-bold text-slate-900">
                   {ratingTarget.kind === "mentorship" ? "Rate this mentorship" : "Rate Connection Quality"}
                 </h3>
                 <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
@@ -562,6 +595,7 @@ export default function RequestsPage() {
                         key={star}
                         type="button"
                         onClick={() => setSelectedStars(star)}
+                        aria-pressed={star === selectedStars}
                         className="p-1 transition cursor-pointer"
                         aria-label={`Rate ${star} stars`}
                       >
@@ -575,6 +609,8 @@ export default function RequestsPage() {
                       </button>
                     ))}
                   </div>
+
+                  {ratingError && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-left text-xs text-red-800">{ratingError}</p>}
 
                   <textarea
                     rows={3}

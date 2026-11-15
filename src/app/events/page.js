@@ -22,7 +22,9 @@ export default function EventsPage() {
   });
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState("");
+  const [postNotice, setPostNotice] = useState("");
   const [rsvpPendingId, setRsvpPendingId] = useState(null);
+  const [rsvpError, setRsvpError] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -64,6 +66,7 @@ export default function EventsPage() {
     e.preventDefault();
     setPosting(true);
     setPostError("");
+    setPostNotice("");
 
     try {
       const res = await fetch("/api/events", {
@@ -92,6 +95,7 @@ export default function EventsPage() {
         ].sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate))
       );
       setForm({ title: "", description: "", location: "", eventDate: "" });
+      setPostNotice("Event scheduled successfully.");
     } catch (err) {
       setPosting(false);
       setPostError(err.message);
@@ -100,6 +104,7 @@ export default function EventsPage() {
 
   const toggleRsvp = async (eventId, currentlyJoined) => {
     setRsvpPendingId(eventId);
+    setRsvpError("");
 
     try {
       const res = await fetch(`/api/events/${eventId}/rsvp`, {
@@ -108,7 +113,11 @@ export default function EventsPage() {
 
       setRsvpPendingId(null);
 
-      if (!res.ok) return;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setRsvpError(data.error || "Could not update your RSVP. Please try again.");
+        return;
+      }
 
       setEvents((prev) =>
         prev.map((e) =>
@@ -122,6 +131,8 @@ export default function EventsPage() {
         )
       );
     } catch {
+      setRsvpError("We could not reach the server. Check your connection and try again.");
+    } finally {
       setRsvpPendingId(null);
     }
   };
@@ -172,11 +183,12 @@ export default function EventsPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="event-title" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Event Title
                   </label>
                   <input
                     name="title"
+                    id="event-title"
                     placeholder="e.g. B787 Dreamliner Systems Masterclass"
                     value={form.title}
                     onChange={handleChange}
@@ -186,11 +198,12 @@ export default function EventsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="event-description" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Description
                   </label>
                   <textarea
                     name="description"
+                    id="event-description"
                     placeholder="Agenda, keynote speakers, and learning objectives..."
                     value={form.description}
                     onChange={handleChange}
@@ -201,11 +214,12 @@ export default function EventsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="event-location" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Location / Platform
                   </label>
                   <input
                     name="location"
+                    id="event-location"
                     placeholder="e.g. Pride Centre Auditorium, Nairobi (or Teams link)"
                     value={form.location}
                     onChange={handleChange}
@@ -215,12 +229,13 @@ export default function EventsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="event-date" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Date &amp; Time
                   </label>
                   <input
                     type="datetime-local"
                     name="eventDate"
+                    id="event-date"
                     value={form.eventDate}
                     onChange={handleChange}
                     className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e] transition text-slate-800"
@@ -229,10 +244,11 @@ export default function EventsPage() {
                 </div>
 
                 {postError && (
-                  <p className="text-red-700 text-xs bg-red-50 border border-red-200 p-2.5 rounded-lg">
+                  <p role="alert" className="text-red-700 text-xs bg-red-50 border border-red-200 p-2.5 rounded-lg">
                     {postError}
                   </p>
                 )}
+                {postNotice && <p role="status" className="text-emerald-800 text-xs bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg">{postNotice}</p>}
 
                 <Button
                   type="submit"
@@ -253,6 +269,8 @@ export default function EventsPage() {
                 Upcoming Community Events ({events.length})
               </span>
             </div>
+
+            {rsvpError && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{rsvpError}</p>}
 
             {error ? (
               <p className="text-red-600 text-sm">{error}</p>
@@ -290,7 +308,7 @@ export default function EventsPage() {
                           </div>
                         </div>
                         <Tag gold={e.isJoined} className="shrink-0">
-                          {e.participantCount} {e.participantCount === 1 ? "Attending" : "Attending"}
+                          {e.participantCount} {e.participantCount === 1 ? "attendee" : "attendees"}
                         </Tag>
                       </div>
 

@@ -31,6 +31,7 @@ export default function DirectoryPage() {
   const [meta, setMeta] = useState({ skills: [], interests: [] });
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState({
     role: "",
@@ -55,8 +56,8 @@ export default function DirectoryPage() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
-
-    async function load() {
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
       const params = new URLSearchParams();
       if (filters.role) params.set("role", filters.role);
       if (filters.skill) params.set("skill", filters.skill);
@@ -64,31 +65,26 @@ export default function DirectoryPage() {
       if (filters.q) params.set("q", filters.q);
 
       try {
-        const res = await fetch(`/api/directory?${params.toString()}`);
+        setLoading(true);
+        setError("");
+        const res = await fetch(`/api/directory?${params.toString()}`, { signal: controller.signal });
         const data = await res.json();
-
-        if (!res.ok) {
-          setError(data.error || "Could not load directory");
-          setLoading(false);
-          return;
-        }
-
+        if (!res.ok) throw new Error(data.error || "Could not load directory");
         setProfiles(data.profiles || []);
-        setLoading(false);
       } catch (err) {
-        setError(err.message);
-        setLoading(false);
+        if (err.name !== "AbortError") setError(err.message || "Could not load directory. Try again.");
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
       }
-    }
-
-    load();
-  }, [status, filters]);
+    }, filters.q ? 250 : 0);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [status, filters, reloadKey]);
 
   const handleFilterChange = (key, val) => {
     setFilters((prev) => ({ ...prev, [key]: val }));
   };
 
-  if (status === "loading" || loading) {
+  if (status === "loading" || (loading && !profiles.length)) {
     return (
       <KQAppShell>
         <div className="max-w-7xl mx-auto px-6 py-24 text-center">
@@ -138,6 +134,7 @@ export default function DirectoryPage() {
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
               />
               <input
+                aria-label="Search members"
                 placeholder="Search by name, department, or keyword..."
                 value={filters.q}
                 onChange={(e) => handleFilterChange("q", e.target.value)}
@@ -148,6 +145,7 @@ export default function DirectoryPage() {
             {/* Role Filter */}
             <div className="lg:col-span-3">
               <select
+                aria-label="Filter by stakeholder role"
                 value={filters.role}
                 onChange={(e) => handleFilterChange("role", e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] text-slate-700"
@@ -163,6 +161,7 @@ export default function DirectoryPage() {
             {/* Skill Filter */}
             <div className="lg:col-span-2">
               <select
+                aria-label="Filter by skill"
                 value={filters.skill}
                 onChange={(e) => handleFilterChange("skill", e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] text-slate-700"
@@ -179,6 +178,7 @@ export default function DirectoryPage() {
             {/* Interest Filter */}
             <div className="lg:col-span-2">
               <select
+                aria-label="Filter by interest area"
                 value={filters.interest}
                 onChange={(e) => handleFilterChange("interest", e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] text-slate-700"
@@ -209,8 +209,11 @@ export default function DirectoryPage() {
           </div>
         </div>
 
+        {error && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"><span>{error}</span><Button size="sm" variant="secondary" onClick={() => setReloadKey((key) => key + 1)}>Try again</Button></div>}
+        {loading && profiles.length > 0 && <p role="status" className="text-sm text-slate-500">Updating results…</p>}
+
         {/* Directory Grid */}
-        {profiles.length === 0 ? (
+        {!error && profiles.length === 0 ? (
           <div className="card p-12 text-center text-slate-500 space-y-2">
             <div className="w-12 h-12 mx-auto rounded-full bg-slate-100 text-slate-400 flex items-center justify-center">
               <Icon name="search" size={22} />
@@ -220,7 +223,7 @@ export default function DirectoryPage() {
               No profiles matched your filter criteria. Try clearing the search query or domain filters.
             </p>
           </div>
-        ) : (
+        ) : !error && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {profiles.map((p) => (
               <article key={p.userId} className="card p-6 flex flex-col justify-between space-y-5">
