@@ -5,8 +5,8 @@ import Providers from "./providers";
 import Nav from "@/components/Nav";
 
 export const metadata = {
-  title: "Intelligent Stakeholder Matching",
-  description: "Hybrid recommendation system for mentorship and networking",
+  title: "PrideConnect | Kenya Airways Community Network",
+  description: "Discover mentors, professional peers, events, and opportunities with PrideConnect.",
 };
 
 export default function RootLayout({ children, profile }) {
