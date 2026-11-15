@@ -2995,1272 +2995,11 @@ html[data-view-mode="modern"] .auth-page .text-emerald-700 {
   color: #83e3bd !important;
 }
 
-/* Modern workspace refresh based on the supplied UI prototype.
-   Keep this presentation scoped to the authenticated product workspace so
-   the public landing page and Classic mode keep their existing designs. */
-html[data-view-mode="modern"] {
-  --modern-hue: 350;
-  --modern-ink: #f3f5f8;
-  --modern-panel: #ffffff;
-  --modern-line: #e3e8ef;
-  --modern-copy: #17263b;
-  --modern-muted: #64748b;
-  color-scheme: light;
-  background: #f3f5f8;
-}
-
-html[data-view-mode="modern"] body {
-  background: #f3f5f8 !important;
-  color: #17263b !important;
-}
-
-html[data-view-mode="modern"] body::before {
-  display: none !important;
-}
-
-html[data-view-mode="modern"] .shell,
-html[data-view-mode="modern"] .shell-main,
-html[data-view-mode="modern"] .shell-main>main {
-  background: #f3f5f8 !important;
-  color: #17263b;
-}
-
-html[data-view-mode="modern"] .sidebar {
-  display: flex;
-  width: 248px;
-  padding: 24px 15px 16px;
-  background: #0b1b2d !important;
-  border-right: 1px solid #162b40;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
-html[data-view-mode="modern"] .sidebar .logo {
-  width: 100%;
-  min-height: 62px;
-  padding: 0 7px 18px;
-  border-bottom: 1px solid rgba(255, 255, 255, .1);
-}
-
-html[data-view-mode="modern"] .sidebar .logo::after {
-  display: none;
-}
-
-html[data-view-mode="modern"] .sidebar .logo-mark {
-  flex: 0 0 auto;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  color: #fff;
-  background: #c8102e;
-  box-shadow: none;
-}
-
-html[data-view-mode="modern"] .sidebar .logo-copy b {
-  color: #fff !important;
-}
-
-html[data-view-mode="modern"] .sidebar .logo-copy small {
-  color: #9aaabd !important;
-  letter-spacing: .045em;
-}
-
-html[data-view-mode="modern"] .sidebar nav {
-  overflow-y: auto;
-  padding: 9px 0;
-  scrollbar-width: thin;
-  scrollbar-color: #304357 transparent;
-}
-
-html[data-view-mode="modern"] .sidebar-nav-heading {
-  padding: 17px 10px 6px;
-  color: #8292a5;
-  font-size: 10px;
-  letter-spacing: .13em;
-}
-
-html[data-view-mode="modern"] .sidebar-nav-item {
-  min-height: 43px;
-  margin: 2px 0;
-  padding: 0 11px;
-  gap: 11px;
-  color: #c0cbd7;
-  border: 0;
-  border-radius: 9px;
-  transition: background-color .16s ease, color .16s ease;
-}
-
-html[data-view-mode="modern"] .sidebar-nav-item svg {
-  color: #91a0b1;
-}
-
-html[data-view-mode="modern"] .sidebar-nav-item.active {
-  color: #fff;
-  background: rgba(200, 16, 46, .2);
-  box-shadow: inset 3px 0 #e3223a;
-}
-
-html[data-view-mode="modern"] .sidebar-nav-item.active svg {
-  color: #ff8291;
-}
-
-html[data-view-mode="modern"] .sidebar-nav-item:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, .07);
-  transform: none;
-}
-
-html[data-view-mode="modern"] .sidebar-nav-item .nav-badge {
-  background: rgba(255, 255, 255, .12);
-  color: #d7e0e9;
-}
-
-html[data-view-mode="modern"] .sidebar-profile {
-  border-color: rgba(255, 255, 255, .1);
-}
-
-html[data-view-mode="modern"] .shell-main {
-  width: calc(100% - 248px);
-  margin-left: 248px;
-}
-
-html[data-view-mode="modern"] .app-header {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  height: 66px;
-  padding-inline: clamp(20px, 3vw, 44px);
-  background: rgba(255, 255, 255, .94) !important;
-  border-color: #e3e8ef;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, .025);
-  backdrop-filter: blur(14px);
-}
-
-html[data-view-mode="modern"] .app-header>div:first-child {
-  color: #64748b !important;
-}
-
-html[data-view-mode="modern"] .app-header .text-slate-300 {
-  color: #c7d0db !important;
-}
-
-html[data-view-mode="modern"] .header-right {
-  gap: 8px;
-}
-
-html[data-view-mode="modern"] .header-right .view-mode-toggle {
-  margin-right: 5px;
-  background: #f2f4f7;
-  border-color: #e3e8ef;
-  color: #64748b;
-}
-
-html[data-view-mode="modern"] .header-right .view-mode-option.selected {
-  color: #fff;
-  background: #0e2740;
-  box-shadow: none;
-}
-
-html[data-view-mode="modern"] .icon-btn {
-  color: #43546b;
-  border-radius: 9px;
-}
-
-html[data-view-mode="modern"] .icon-btn:hover {
-  color: #0e2740;
-  background: #f2f5f8;
-  border-color: #e3e8ef;
-}
-
-html[data-view-mode="modern"] .app-page {
-  width: 100%;
-  max-width: 1440px;
-  padding: 34px clamp(22px, 3.2vw, 48px) 64px;
-  color: #17263b;
-}
-
-html[data-view-mode="modern"] .app-page h1 {
-  color: #10243a !important;
-  font-size: clamp(1.8rem, 2.6vw, 2.35rem);
-  line-height: 1.12;
-  letter-spacing: -.045em;
-}
-
-html[data-view-mode="modern"] .app-page h2,
-html[data-view-mode="modern"] .app-page h3,
-html[data-view-mode="modern"] .app-page h4 {
-  color: #17304a !important;
-  letter-spacing: -.025em;
-}
-
-html[data-view-mode="modern"] .app-page p,
-html[data-view-mode="modern"] .app-page label {
-  color: #627187;
-}
-
-html[data-view-mode="modern"] .app-page .text-slate-950,
-html[data-view-mode="modern"] .app-page .text-slate-900,
-html[data-view-mode="modern"] .app-page .text-slate-800,
-html[data-view-mode="modern"] .app-page .text-slate-700,
-html[data-view-mode="modern"] .app-page .text-slate-600 {
-  color: #26384e !important;
-}
-
-html[data-view-mode="modern"] .app-page .text-slate-500 {
-  color: #68788d !important;
-}
-
-html[data-view-mode="modern"] .app-page .text-slate-400 {
-  color: #8794a5 !important;
-}
-
-html[data-view-mode="modern"] .app-page .bg-white,
-html[data-view-mode="modern"] .app-page .card {
-  background: #fff !important;
-}
-
-html[data-view-mode="modern"] .app-page .bg-slate-50,
-html[data-view-mode="modern"] .app-page .bg-slate-100,
-html[data-view-mode="modern"] .app-page .bg-slate-200 {
-  background: #f5f7fa !important;
-}
-
-html[data-view-mode="modern"] .app-page .border-slate-50,
-html[data-view-mode="modern"] .app-page .border-slate-100,
-html[data-view-mode="modern"] .app-page .border-slate-200,
-html[data-view-mode="modern"] .app-page .border-slate-300 {
-  border-color: #e3e8ef !important;
-}
-
-html[data-view-mode="modern"] .app-page .card,
-html[data-view-mode="modern"] .app-page [class*="rounded-xl"],
-html[data-view-mode="modern"] .app-page [class*="rounded-2xl"] {
-  border-color: #e3e8ef;
-  box-shadow: 0 2px 8px rgba(20, 39, 61, .035);
-}
-
-html[data-view-mode="modern"] .app-page .card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 8px 22px rgba(20, 39, 61, .07);
-  transform: translateY(-1px);
-}
-
-html[data-view-mode="modern"] .app-page input,
-html[data-view-mode="modern"] .app-page select,
-html[data-view-mode="modern"] .app-page textarea {
-  color: #17263b !important;
-  background: #fff !important;
-  border-color: #d9e1ea !important;
-  border-radius: 9px;
-  color-scheme: light;
-}
-
-html[data-view-mode="modern"] .app-page input::placeholder,
-html[data-view-mode="modern"] .app-page textarea::placeholder {
-  color: #8996a7 !important;
-}
-
-html[data-view-mode="modern"] .app-page input:focus,
-html[data-view-mode="modern"] .app-page select:focus,
-html[data-view-mode="modern"] .app-page textarea:focus {
-  border-color: #bd2940 !important;
-  box-shadow: 0 0 0 3px rgba(200, 16, 46, .1);
-  outline: none;
-}
-
-html[data-view-mode="modern"] .app-page input[type="range"],
-html[data-view-mode="modern"] .app-page input[type="checkbox"],
-html[data-view-mode="modern"] .app-page input[type="radio"] {
-  accent-color: #c8102e;
-}
-
-html[data-view-mode="modern"] .btn {
-  min-height: 40px;
-  border-radius: 8px;
-  box-shadow: none;
-}
-
-html[data-view-mode="modern"] .btn-primary {
-  color: #fff;
-  background: #c8102e;
-  border-color: #c8102e;
-}
-
-html[data-view-mode="modern"] .btn-primary:hover {
-  background: #a90f29;
-  border-color: #a90f29;
-  transform: none;
-}
-
-html[data-view-mode="modern"] .btn-secondary {
-  color: #18324d;
-  background: #fff;
-  border-color: #d9e1ea;
-}
-
-html[data-view-mode="modern"] .btn-secondary:hover,
-html[data-view-mode="modern"] .btn-ghost:hover {
-  background: #f5f7fa;
-  border-color: #cbd5e1;
-}
-
-html[data-view-mode="modern"] .btn-ghost {
-  color: #42546b;
-}
-
-html[data-view-mode="modern"] .tag-crimson {
-  color: #a4142d;
-  background: #fff0f2;
-  border-color: #f3cbd2;
-}
-
-html[data-view-mode="modern"] .messages-panel {
-  min-height: min(72vh, 780px);
-  background: #fff !important;
-  border-color: #dfe5ec !important;
-  box-shadow: 0 4px 18px rgba(20, 39, 61, .05);
-}
-
-html[data-view-mode="modern"] .messages-list {
-  background: #fff !important;
-  border-color: #e3e8ef !important;
-}
-
-html[data-view-mode="modern"] .messages-list-heading,
-html[data-view-mode="modern"] .messages-thread-header,
-html[data-view-mode="modern"] .messages-composer {
-  background: #fff !important;
-  border-color: #e3e8ef !important;
-}
-
-html[data-view-mode="modern"] .messages-thread {
-  background: #f7f8fa !important;
-}
-
-html[data-view-mode="modern"] .messages-thread-history {
-  background: #f7f8fa !important;
-}
-
-html[data-view-mode="modern"] .messages-conversation-row {
-  color: #26384e;
-  border-color: #edf0f4 !important;
-  background: #fff;
-}
-
-html[data-view-mode="modern"] .messages-conversation-row:hover {
-  background: #f7f8fa !important;
-}
-
-html[data-view-mode="modern"] .messages-conversation-row.is-active {
-  color: #17263b;
-  background: #fff1f3 !important;
-  box-shadow: inset 3px 0 #c8102e;
-}
-
-html[data-view-mode="modern"] .messages-conversation-row strong,
-html[data-view-mode="modern"] .messages-conversation-row.is-active strong {
-  color: #17263b !important;
-}
-
-html[data-view-mode="modern"] .messages-conversation-row small {
-  color: #7b899b !important;
-}
-
-html[data-view-mode="modern"] .messages-bubble-mine {
-  color: #fff !important;
-  background: #0e2740 !important;
-  border: 0;
-}
-
-html[data-view-mode="modern"] .messages-bubble-theirs {
-  color: #26384e !important;
-  background: #fff !important;
-  border-color: #e1e6ed !important;
-}
-
-html[data-view-mode="modern"] .messages-alert {
-  color: #8e1a2b !important;
-  background: #fff1f2 !important;
-  border-color: #f2cbd1 !important;
-}
-
-html[data-view-mode="modern"] .messages-composer textarea {
-  background: #fff !important;
-}
-
-html[data-view-mode="modern"] .app-page .bg-red-50,
-html[data-view-mode="modern"] .app-page .bg-red-100,
-html[data-view-mode="modern"] .app-page .bg-rose-50,
-html[data-view-mode="modern"] .app-page .bg-rose-100,
-html[data-view-mode="modern"] .app-page [class*="bg-red-50/"],
-html[data-view-mode="modern"] .app-page [class*="bg-rose-50/"] {
-  background: #fff1f2 !important;
-  border-color: #f3cbd2 !important;
-}
-
-html[data-view-mode="modern"] .app-page .bg-amber-50,
-html[data-view-mode="modern"] .app-page .bg-yellow-50,
-html[data-view-mode="modern"] .app-page [class*="bg-amber-50/"] {
-  background: #fff8e8 !important;
-  border-color: #f2dfb3 !important;
-}
-
-html[data-view-mode="modern"] .app-page .bg-emerald-50,
-html[data-view-mode="modern"] .app-page .bg-green-50,
-html[data-view-mode="modern"] .app-page [class*="bg-emerald-50/"],
-html[data-view-mode="modern"] .app-page [class*="bg-green-50/"] {
-  background: #eaf8f2 !important;
-  border-color: #c8e9dc !important;
-}
-
-html[data-view-mode="modern"] .app-page .bg-blue-50,
-html[data-view-mode="modern"] .app-page .bg-indigo-50,
-html[data-view-mode="modern"] .app-page .bg-purple-50,
-html[data-view-mode="modern"] .app-page [class*="bg-blue-50/"],
-html[data-view-mode="modern"] .app-page [class*="bg-indigo-50/"],
-html[data-view-mode="modern"] .app-page [class*="bg-purple-50/"] {
-  background: #eef4fb !important;
-  border-color: #d5e1f0 !important;
-}
-
-html[data-view-mode="modern"] .app-page .text-red-600,
-html[data-view-mode="modern"] .app-page .text-red-700,
-html[data-view-mode="modern"] .app-page .text-red-800,
-html[data-view-mode="modern"] .app-page .text-rose-600,
-html[data-view-mode="modern"] .app-page .text-rose-700,
-html[data-view-mode="modern"] .app-page .text-rose-800,
-html[data-view-mode="modern"] .app-page [class*="text-[#b10e28]"],
-html[data-view-mode="modern"] .app-page [class*="text-[#bb162b]"],
-html[data-view-mode="modern"] .app-page [class*="text-[#c8102e]"] {
-  color: #a4142d !important;
-}
-
-html[data-view-mode="modern"] .app-page .text-amber-700,
-html[data-view-mode="modern"] .app-page .text-amber-800,
-html[data-view-mode="modern"] .app-page .text-amber-900,
-html[data-view-mode="modern"] .app-page .text-yellow-700,
-html[data-view-mode="modern"] .app-page .text-yellow-800,
-html[data-view-mode="modern"] .app-page .text-yellow-900 {
-  color: #815d11 !important;
-}
-
-html[data-view-mode="modern"] .app-page .text-emerald-600,
-html[data-view-mode="modern"] .app-page .text-emerald-700,
-html[data-view-mode="modern"] .app-page .text-emerald-800,
-html[data-view-mode="modern"] .app-page .text-green-600,
-html[data-view-mode="modern"] .app-page .text-green-700,
-html[data-view-mode="modern"] .app-page .text-green-800 {
-  color: #08734f !important;
-}
-
-html[data-view-mode="modern"] .app-page .text-blue-700,
-html[data-view-mode="modern"] .app-page .text-blue-800,
-html[data-view-mode="modern"] .app-page .text-indigo-700,
-html[data-view-mode="modern"] .app-page .text-indigo-800,
-html[data-view-mode="modern"] .app-page .text-purple-700,
-html[data-view-mode="modern"] .app-page .text-purple-800 {
-  color: #285b89 !important;
-}
-
-/* Admin console uses the same paper, ink and KQ crimson roles as the member workspace. */
-html[data-view-mode="modern"] .admin-console {
-  min-height: 100vh;
-  color: #17263b !important;
-  background: #f3f5f8 !important;
-}
-
-html[data-view-mode="modern"] .admin-console>header {
-  color: #fff !important;
-  background: #0b1b2d !important;
-  border-color: #20354a !important;
-  box-shadow: 0 2px 8px rgba(11, 27, 45, .12);
-  backdrop-filter: none;
-}
-
-html[data-view-mode="modern"] .admin-console>header .admin-header-inner {
-  max-width: 1600px !important;
-  padding-inline: clamp(18px, 3vw, 40px) !important;
-}
-
-html[data-view-mode="modern"] .admin-header-brand h1 {
-  color: #fff !important;
-}
-
-html[data-view-mode="modern"] .admin-header-brand .logo-mark {
-  border-radius: 11px;
-  background: #c8102e;
-  box-shadow: none;
-}
-
-html[data-view-mode="modern"] .admin-header-brand .logo-copy b {
-  color: #fff !important;
-}
-
-html[data-view-mode="modern"] .admin-header-brand .logo-copy small {
-  color: #9aaabd !important;
-}
-
-html[data-view-mode="modern"] .admin-console>header .admin-tabs {
-  border-color: rgba(255, 255, 255, .12) !important;
-}
-
-html[data-view-mode="modern"] .admin-console>header .admin-tabs>button {
-  min-height: 50px;
-  color: #b8c4d1 !important;
-  background: transparent !important;
-  border-bottom-color: transparent !important;
-}
-
-html[data-view-mode="modern"] .admin-console>header .admin-tabs>button:hover {
-  color: #fff !important;
-  background: rgba(255, 255, 255, .05) !important;
-}
-
-html[data-view-mode="modern"] .admin-console>header .admin-tabs>button.border-\[\#c8102e\] {
-  color: #fff !important;
-  background: rgba(255, 255, 255, .07) !important;
-  border-bottom-color: #e3223a !important;
-}
-
-html[data-view-mode="modern"] .admin-console>header .admin-tabs>button .text-\[\#c8102e\] {
-  color: #ff8291 !important;
-}
-
-html[data-view-mode="modern"] .admin-console>header .admin-tabs .bg-emerald-900\/80 {
-  color: #b9f1d8 !important;
-  background: rgba(8, 115, 79, .38) !important;
-}
-
-html[data-view-mode="modern"] .admin-console>header .admin-tabs .bg-slate-800 {
-  color: #d7e0e9 !important;
-  background: rgba(255, 255, 255, .12) !important;
-}
-
-html[data-view-mode="modern"] .admin-console>header a,
-html[data-view-mode="modern"] .admin-console>header button:not(.admin-tabs button) {
-  border-color: rgba(255, 255, 255, .2) !important;
-}
-
-html[data-view-mode="modern"] .admin-console>header .view-mode-toggle {
-  color: #b9c5d1;
-  background: rgba(255, 255, 255, .08);
-  border-color: rgba(255, 255, 255, .18);
-}
-
-html[data-view-mode="modern"] .admin-console>header .view-mode-option.selected {
-  color: #0e2740;
-  background: #fff;
-}
-
-html[data-view-mode="modern"] .admin-console>header~div.bg-white {
-  background: #fff !important;
-  border-color: #e3e8ef !important;
-}
-
-html[data-view-mode="modern"] .admin-console>header~div.bg-white h2 {
-  color: #10243a !important;
-}
-
-html[data-view-mode="modern"] .admin-console>header~div.bg-white p,
-html[data-view-mode="modern"] .admin-console>header~div.bg-white .text-slate-500 {
-  color: #64748b !important;
-}
-
-html[data-view-mode="modern"] .admin-console>header~div.bg-white .text-slate-900,
-html[data-view-mode="modern"] .admin-console>header~div.bg-white [class*="text-[#0e2740]"] {
-  color: #17304a !important;
-}
-
-html[data-view-mode="modern"] .admin-console main {
-  color: #26384e;
-}
-
-html[data-view-mode="modern"] .admin-console main .bg-white,
-html[data-view-mode="modern"] .admin-console main .card {
-  color: #26384e !important;
-  background: #fff !important;
-  border-color: #e3e8ef !important;
-  box-shadow: 0 2px 8px rgba(20, 39, 61, .035);
-}
-
-html[data-view-mode="modern"] .admin-console main .bg-slate-50,
-html[data-view-mode="modern"] .admin-console main .bg-slate-100,
-html[data-view-mode="modern"] .admin-console main .bg-slate-200 {
-  color: #42546b !important;
-  background: #f5f7fa !important;
-}
-
-html[data-view-mode="modern"] .admin-console main [class*="border-slate-"] {
-  border-color: #e3e8ef !important;
-}
-
-html[data-view-mode="modern"] .admin-console main h1,
-html[data-view-mode="modern"] .admin-console main h2,
-html[data-view-mode="modern"] .admin-console main h3,
-html[data-view-mode="modern"] .admin-console main h4 {
-  color: #17304a !important;
-}
-
-html[data-view-mode="modern"] .admin-console main .text-slate-950,
-html[data-view-mode="modern"] .admin-console main .text-slate-900,
-html[data-view-mode="modern"] .admin-console main .text-slate-800,
-html[data-view-mode="modern"] .admin-console main .text-slate-700,
-html[data-view-mode="modern"] .admin-console main .text-slate-600 {
-  color: #26384e !important;
-}
-
-html[data-view-mode="modern"] .admin-console main .text-slate-500 {
-  color: #68788d !important;
-}
-
-html[data-view-mode="modern"] .admin-console main .text-slate-400 {
-  color: #8794a5 !important;
-}
-
-html[data-view-mode="modern"] .admin-console main input,
-html[data-view-mode="modern"] .admin-console main select,
-html[data-view-mode="modern"] .admin-console main textarea {
-  color: #17263b !important;
-  background: #fff !important;
-  border-color: #d9e1ea !important;
-  color-scheme: light;
-}
-
-html[data-view-mode="modern"] .admin-console main table {
-  color: #26384e !important;
-}
-
-html[data-view-mode="modern"] .admin-console main thead {
-  background: #f5f7fa !important;
-}
-
-html[data-view-mode="modern"] .admin-console main tbody tr:hover {
-  background: #f7f9fb !important;
-}
-
-html[data-view-mode="modern"] .admin-console main .text-emerald-700,
-html[data-view-mode="modern"] .admin-console main .text-emerald-800 {
-  color: #08734f !important;
-}
-
-html[data-view-mode="modern"] .admin-console main .text-indigo-700,
-html[data-view-mode="modern"] .admin-console main .text-purple-900 {
-  color: #285b89 !important;
-}
-
-html[data-view-mode="modern"] .admin-console main .text-amber-800,
-html[data-view-mode="modern"] .admin-console main .text-amber-900 {
-  color: #815d11 !important;
-}
-
-@media (max-width: 1024px) {
-  html[data-view-mode="modern"] .sidebar {
-    display: none !important;
-  }
-
-  html[data-view-mode="modern"] .shell-main {
-    width: 100%;
-    margin-left: 0;
-  }
-
-  html[data-view-mode="modern"] .mobile-brand {
-    display: flex !important;
-  }
-
-  html[data-view-mode="modern"] .app-header {
-    padding-inline: 18px;
-  }
-}
-
-@media (max-width: 760px) {
-  html[data-view-mode="modern"] .sidebar {
-    display: none !important;
-  }
-
-  html[data-view-mode="modern"] .shell-main {
-    width: 100%;
-    margin-left: 0;
-    padding-top: 0;
-  }
-
-  html[data-view-mode="modern"] .app-header {
-    height: 62px;
-    padding-inline: 13px;
-  }
-
-  html[data-view-mode="modern"] .mobile-brand {
-    display: flex !important;
-    gap: 8px;
-  }
-
-  html[data-view-mode="modern"] .mobile-brand .logo-mark {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    background: #c8102e;
-    box-shadow: none;
-  }
-
-  html[data-view-mode="modern"] .mobile-brand .logo-copy {
-    display: none;
-  }
-
-  html[data-view-mode="modern"] .mobile-brand select {
-    max-width: min(54vw, 220px);
-    color: #26384e !important;
-    background: #f5f7fa !important;
-    border-color: #e3e8ef !important;
-  }
-
-  html[data-view-mode="modern"] .header-right {
-    gap: 4px;
-  }
-
-  html[data-view-mode="modern"] .header-right .view-mode-toggle {
-    margin-right: 0;
-  }
-
-  html[data-view-mode="modern"] .view-mode-option {
-    padding: 7px 8px;
-    font-size: 10px;
-  }
-
-  html[data-view-mode="modern"] .app-page {
-    padding: 25px 15px 42px;
-  }
-
-  html[data-view-mode="modern"] .app-page h1 {
-    font-size: clamp(1.65rem, 8vw, 2.1rem);
-  }
-
-  html[data-view-mode="modern"] .messages-panel {
-    min-height: 68vh;
-  }
-
-  html[data-view-mode="modern"] .admin-console>header .admin-header-inner {
-    padding-inline: 14px !important;
-  }
-
-  html[data-view-mode="modern"] .admin-console>header .admin-header-actions {
-    justify-content: flex-start;
-  }
-
-  html[data-view-mode="modern"] .admin-console>header .admin-tabs {
-    margin-inline: -14px;
-    padding-inline: 14px;
-  }
-}
-
-/* Modern workspace: retain the former dark rose-violet palette and apply it
-   to the cleaner layout from the supplied prototype. */
-html[data-view-mode="modern"] {
-  --modern-hue: 350;
-  --modern-ink: #090a0f;
-  --modern-panel: rgba(24,25,34,.96);
-  --modern-line: rgba(255,255,255,.12);
-  --modern-copy: #f8f5f3;
-  --modern-muted: #aaa8b3;
-  color-scheme: dark;
-  background: #090a0f;
-}
-html[data-view-mode="modern"] body { background: #090a0f !important; color: var(--modern-copy) !important; }
-html[data-view-mode="modern"] body::before {
-  display: block !important;
-  background:
-    radial-gradient(ellipse at 76% 18%,hsl(var(--modern-hue) 85% 58% / .16),transparent 35rem),
-    radial-gradient(ellipse at 13% 88%,hsl(calc(var(--modern-hue) + 66) 85% 56% / .09),transparent 33rem),
-    linear-gradient(145deg,#101017 0%,#090a0f 56%,#0c0b12 100%);
-}
-html[data-view-mode="modern"] .shell,
-html[data-view-mode="modern"] .shell-main,
-html[data-view-mode="modern"] .shell-main>main { background: transparent !important; color: var(--modern-copy); }
-html[data-view-mode="modern"] .sidebar {
-  display: flex; width: 248px; padding: 24px 15px 16px;
-  background: linear-gradient(180deg,rgba(15,16,23,.98),rgba(12,13,19,.96)) !important;
-  border-right: 1px solid var(--modern-line); box-shadow: 16px 0 44px rgba(0,0,0,.18); backdrop-filter: blur(20px);
-}
-html[data-view-mode="modern"] .sidebar .logo { width: 100%; min-height: 62px; padding: 0 7px 18px; border-bottom: 1px solid var(--modern-line); }
-html[data-view-mode="modern"] .sidebar .logo::after { display: none; }
-html[data-view-mode="modern"] .sidebar .logo-mark { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 12px; background: #c8102e; box-shadow: 0 6px 18px #c8102e40; }
-html[data-view-mode="modern"] .sidebar .logo-copy b { color: #fff !important; }
-html[data-view-mode="modern"] .sidebar .logo-copy small { color: #9a99a5 !important; letter-spacing: .045em; }
-html[data-view-mode="modern"] .sidebar nav { overflow-y: auto; padding: 9px 0; scrollbar-width: thin; scrollbar-color: #343440 transparent; }
-html[data-view-mode="modern"] .sidebar-nav-heading { padding: 17px 10px 6px; color: #807e8b; font-size: 10px; letter-spacing: .14em; }
-html[data-view-mode="modern"] .sidebar-nav-item { min-height: 43px; margin: 2px 0; padding: 0 11px; gap: 11px; color: #c0bdc9; border: 0; border-radius: 10px; transition: background-color .16s ease,color .16s ease; }
-html[data-view-mode="modern"] .sidebar-nav-item svg { color: #9693a0; }
-html[data-view-mode="modern"] .sidebar-nav-item.active { color: #fff; background: linear-gradient(100deg,hsl(var(--modern-hue) 76% 50% / .23),rgba(255,255,255,.025)); box-shadow: inset 3px 0 hsl(var(--modern-hue) 90% 65%); }
-html[data-view-mode="modern"] .sidebar-nav-item.active svg { color: hsl(var(--modern-hue) 90% 72%); }
-html[data-view-mode="modern"] .sidebar-nav-item:hover { color: #fff; background: rgba(255,255,255,.07); transform: none; }
-html[data-view-mode="modern"] .sidebar-nav-item .nav-badge { color: #d6d2dd; background: rgba(255,255,255,.1); }
-html[data-view-mode="modern"] .sidebar-profile { border-color: var(--modern-line); }
-html[data-view-mode="modern"] .shell-main { width: calc(100% - 248px); margin-left: 248px; }
-html[data-view-mode="modern"] .app-header {
-  position: sticky; top: 0; z-index: 30; height: 66px; padding-inline: clamp(20px,3vw,44px);
-  color: #cbc8d1; background: rgba(12,13,19,.88) !important; border-color: var(--modern-line);
-  box-shadow: 0 1px 2px rgba(0,0,0,.16); backdrop-filter: blur(18px);
-}
-html[data-view-mode="modern"] .app-header>div:first-child { color: #aaa8b3 !important; }
-html[data-view-mode="modern"] .app-header .text-slate-300 { color: #777581 !important; }
-html[data-view-mode="modern"] .header-right { gap: 8px; }
-html[data-view-mode="modern"] .header-right .view-mode-toggle { margin-right: 5px; color: #aaa8b3; background: rgba(255,255,255,.07); border-color: var(--modern-line); }
-html[data-view-mode="modern"] .header-right .view-mode-option.selected { color: #fff; background: hsl(var(--modern-hue) 78% 52%); box-shadow: 0 4px 18px hsl(var(--modern-hue) 80% 48% / .25); }
-html[data-view-mode="modern"] .icon-btn { color: #d1ced7; border-radius: 9px; }
-html[data-view-mode="modern"] .icon-btn:hover { color: #fff; background: rgba(255,255,255,.07); border-color: var(--modern-line); }
-html[data-view-mode="modern"] .app-page { width: 100%; max-width: 1440px; padding: 34px clamp(22px,3.2vw,48px) 64px; color: var(--modern-copy); }
-html[data-view-mode="modern"] .app-page h1 { color: #fbf8f6 !important; font-size: clamp(1.9rem,2.7vw,2.45rem); line-height: 1.1; letter-spacing: -.05em; }
-html[data-view-mode="modern"] .app-page h2,
-html[data-view-mode="modern"] .app-page h3,
-html[data-view-mode="modern"] .app-page h4 { color: #f6f2f4 !important; letter-spacing: -.03em; }
-html[data-view-mode="modern"] .app-page p,
-html[data-view-mode="modern"] .app-page label { color: var(--modern-muted); }
-html[data-view-mode="modern"] .app-page .text-slate-950,
-html[data-view-mode="modern"] .app-page .text-slate-900,
-html[data-view-mode="modern"] .app-page .text-slate-800,
-html[data-view-mode="modern"] .app-page .text-slate-700,
-html[data-view-mode="modern"] .app-page .text-slate-600 { color: #dedbe3 !important; }
-html[data-view-mode="modern"] .app-page .text-slate-500 { color: #aaa8b3 !important; }
-html[data-view-mode="modern"] .app-page .text-slate-400 { color: #8d8b98 !important; }
-html[data-view-mode="modern"] .app-page .bg-white,
-html[data-view-mode="modern"] .app-page .card { color: var(--modern-copy) !important; background: var(--modern-panel) !important; }
-html[data-view-mode="modern"] .app-page .bg-slate-50,
-html[data-view-mode="modern"] .app-page .bg-slate-100,
-html[data-view-mode="modern"] .app-page .bg-slate-200 { background: rgba(255,255,255,.055) !important; }
-html[data-view-mode="modern"] .app-page .border-slate-50,
-html[data-view-mode="modern"] .app-page .border-slate-100,
-html[data-view-mode="modern"] .app-page .border-slate-200,
-html[data-view-mode="modern"] .app-page .border-slate-300 { border-color: var(--modern-line) !important; }
-html[data-view-mode="modern"] .app-page .card,
-html[data-view-mode="modern"] .app-page [class*="rounded-xl"],
-html[data-view-mode="modern"] .app-page [class*="rounded-2xl"] { border-color: var(--modern-line); box-shadow: 0 12px 36px rgba(0,0,0,.14); }
-html[data-view-mode="modern"] .app-page .card:hover { border-color: hsl(var(--modern-hue) 70% 66% / .5); box-shadow: 0 18px 48px rgba(0,0,0,.22); transform: translateY(-2px); }
-html[data-view-mode="modern"] .app-page input,
-html[data-view-mode="modern"] .app-page select,
-html[data-view-mode="modern"] .app-page textarea { color: #f5f1f4 !important; background: rgba(255,255,255,.055) !important; border-color: var(--modern-line) !important; border-radius: 10px; color-scheme: dark; }
-html[data-view-mode="modern"] .app-page input::placeholder,
-html[data-view-mode="modern"] .app-page textarea::placeholder { color: #85828e !important; }
-html[data-view-mode="modern"] .app-page input:focus,
-html[data-view-mode="modern"] .app-page select:focus,
-html[data-view-mode="modern"] .app-page textarea:focus { border-color: hsl(var(--modern-hue) 80% 65%) !important; box-shadow: 0 0 0 3px hsl(var(--modern-hue) 80% 55% / .15); outline: none; }
-html[data-view-mode="modern"] .app-page input[type="range"],
-html[data-view-mode="modern"] .app-page input[type="checkbox"],
-html[data-view-mode="modern"] .app-page input[type="radio"] { accent-color: hsl(var(--modern-hue) 78% 58%); }
-html[data-view-mode="modern"] .btn { min-height: 40px; border-radius: 9px; box-shadow: none; }
-html[data-view-mode="modern"] .btn-primary { color: #fff; background: hsl(var(--modern-hue) 78% 52%); border-color: hsl(var(--modern-hue) 78% 52%); box-shadow: 0 8px 24px hsl(var(--modern-hue) 80% 48% / .22); }
-html[data-view-mode="modern"] .btn-primary:hover { background: hsl(var(--modern-hue) 82% 60%); border-color: hsl(var(--modern-hue) 82% 60%); transform: translateY(-1px); }
-html[data-view-mode="modern"] .btn-secondary,
-html[data-view-mode="modern"] .btn-ghost { color: #e8e4ec; background: rgba(255,255,255,.055); border-color: var(--modern-line); }
-html[data-view-mode="modern"] .btn-secondary:hover,
-html[data-view-mode="modern"] .btn-ghost:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.2); }
-html[data-view-mode="modern"] .tag-crimson { color: #ff9cab; background: hsl(var(--modern-hue) 70% 45% / .14); border-color: hsl(var(--modern-hue) 80% 60% / .24); }
-html[data-view-mode="modern"] .messages-panel { background: rgba(18,19,27,.96) !important; border-color: var(--modern-line) !important; box-shadow: 0 22px 64px rgba(0,0,0,.28); }
-html[data-view-mode="modern"] .messages-list,
-html[data-view-mode="modern"] .messages-list-heading,
-html[data-view-mode="modern"] .messages-thread-header,
-html[data-view-mode="modern"] .messages-composer { color: #dedbe3; background: rgba(18,19,27,.96) !important; border-color: var(--modern-line) !important; }
-html[data-view-mode="modern"] .messages-thread,
-html[data-view-mode="modern"] .messages-thread-history { background: #101117 !important; }
-html[data-view-mode="modern"] .messages-conversation-row { color: #dedbe3; background: transparent; border-color: var(--modern-line) !important; }
-html[data-view-mode="modern"] .messages-conversation-row:hover { background: rgba(255,255,255,.05) !important; }
-html[data-view-mode="modern"] .messages-conversation-row.is-active { background: hsl(var(--modern-hue) 76% 50% / .16) !important; box-shadow: inset 3px 0 hsl(var(--modern-hue) 90% 65%); }
-html[data-view-mode="modern"] .messages-conversation-row strong { color: #f8f5f3 !important; }
-html[data-view-mode="modern"] .messages-conversation-row small { color: #9794a1 !important; }
-html[data-view-mode="modern"] .messages-bubble-mine { color: #fff !important; background: linear-gradient(135deg,#253956,hsl(var(--modern-hue) 54% 34%)) !important; border: 1px solid hsl(var(--modern-hue) 90% 72% / .22); }
-html[data-view-mode="modern"] .messages-bubble-theirs { color: #f1edf2 !important; background: rgba(255,255,255,.075) !important; border-color: var(--modern-line) !important; }
-html[data-view-mode="modern"] .messages-alert { color: #ffb1bb !important; background: rgba(237,64,90,.12) !important; border-color: rgba(237,64,90,.28) !important; }
-html[data-view-mode="modern"] .messages-composer textarea { color: #f5f1f4 !important; background: rgba(255,255,255,.055) !important; }
-html[data-view-mode="modern"] .app-page [class*="bg-[#0e2740]"] h1,
-html[data-view-mode="modern"] .app-page [class*="bg-[#0e2740]"] h2,
-html[data-view-mode="modern"] .app-page [class*="bg-[#0e2740]"] h3,
-html[data-view-mode="modern"] .app-page [class*="bg-[#0e2740]"] p,
-html[data-view-mode="modern"] .app-page [class*="bg-[#0e2740]"] .text-white { color: #fff !important; }
-html[data-view-mode="modern"] .app-page [class*="bg-[#0e2740]"] .text-slate-200 { color: #e2e8f0 !important; }
-html[data-view-mode="modern"] .app-page .btn-secondary.text-white { color: #fff !important; background: rgba(255,255,255,.12) !important; border-color: rgba(255,255,255,.28) !important; }
-html[data-view-mode="modern"] .app-page .bg-red-50,
-html[data-view-mode="modern"] .app-page .bg-red-100,
-html[data-view-mode="modern"] .app-page .bg-rose-50,
-html[data-view-mode="modern"] .app-page .bg-rose-100,
-html[data-view-mode="modern"] .app-page [class*="bg-red-50/"],
-html[data-view-mode="modern"] .app-page [class*="bg-rose-50/"] { background: rgba(237,64,90,.13) !important; border-color: rgba(237,64,90,.24) !important; }
-html[data-view-mode="modern"] .app-page .bg-amber-50,
-html[data-view-mode="modern"] .app-page .bg-yellow-50,
-html[data-view-mode="modern"] .app-page [class*="bg-amber-50/"] { background: rgba(245,182,74,.12) !important; border-color: rgba(245,182,74,.24) !important; }
-html[data-view-mode="modern"] .app-page .bg-emerald-50,
-html[data-view-mode="modern"] .app-page .bg-green-50,
-html[data-view-mode="modern"] .app-page [class*="bg-emerald-50/"],
-html[data-view-mode="modern"] .app-page [class*="bg-green-50/"] { background: rgba(43,190,139,.12) !important; border-color: rgba(43,190,139,.24) !important; }
-html[data-view-mode="modern"] .app-page .bg-blue-50,
-html[data-view-mode="modern"] .app-page .bg-indigo-50,
-html[data-view-mode="modern"] .app-page .bg-purple-50,
-html[data-view-mode="modern"] .app-page [class*="bg-blue-50/"],
-html[data-view-mode="modern"] .app-page [class*="bg-indigo-50/"],
-html[data-view-mode="modern"] .app-page [class*="bg-purple-50/"] { background: rgba(105,131,255,.12) !important; border-color: rgba(105,131,255,.24) !important; }
-html[data-view-mode="modern"] .app-page .text-red-600,
-html[data-view-mode="modern"] .app-page .text-red-700,
-html[data-view-mode="modern"] .app-page .text-red-800,
-html[data-view-mode="modern"] .app-page .text-rose-600,
-html[data-view-mode="modern"] .app-page .text-rose-700,
-html[data-view-mode="modern"] .app-page .text-rose-800,
-html[data-view-mode="modern"] .app-page [class*="text-[#b10e28]"],
-html[data-view-mode="modern"] .app-page [class*="text-[#bb162b]"],
-html[data-view-mode="modern"] .app-page [class*="text-[#c8102e]"] { color: #ff9cab !important; }
-html[data-view-mode="modern"] .app-page .text-amber-700,
-html[data-view-mode="modern"] .app-page .text-amber-800,
-html[data-view-mode="modern"] .app-page .text-amber-900,
-html[data-view-mode="modern"] .app-page .text-yellow-700,
-html[data-view-mode="modern"] .app-page .text-yellow-800,
-html[data-view-mode="modern"] .app-page .text-yellow-900 { color: #f4ce83 !important; }
-html[data-view-mode="modern"] .app-page .text-emerald-600,
-html[data-view-mode="modern"] .app-page .text-emerald-700,
-html[data-view-mode="modern"] .app-page .text-emerald-800,
-html[data-view-mode="modern"] .app-page .text-green-600,
-html[data-view-mode="modern"] .app-page .text-green-700,
-html[data-view-mode="modern"] .app-page .text-green-800 { color: #83e3bd !important; }
-html[data-view-mode="modern"] .app-page .text-blue-700,
-html[data-view-mode="modern"] .app-page .text-blue-800,
-html[data-view-mode="modern"] .app-page .text-indigo-700,
-html[data-view-mode="modern"] .app-page .text-indigo-800,
-html[data-view-mode="modern"] .app-page .text-purple-700,
-html[data-view-mode="modern"] .app-page .text-purple-800,
-html[data-view-mode="modern"] .app-page [class*="text-[#0e2740]"],
-html[data-view-mode="modern"] .app-page [class*="text-[#182231]"] { color: #b7c9ff !important; }
-
-/* Modern admin dashboard: the four console sections live in a persistent rail. */
-html[data-view-mode="modern"] .admin-console { min-height: 100vh; color: #f3eff5 !important; background: #090a0f !important; font-family: var(--font-sans); }
-html[data-view-mode="modern"] .admin-console>header {
-  position: sticky; top: 0; z-index: 50; min-height: 82px; color: #fff !important;
-  background: rgba(12,13,19,.96) !important; border-color: var(--modern-line) !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,.24); backdrop-filter: blur(20px);
-}
-html[data-view-mode="modern"] .admin-console>header .admin-header-inner { width: 100%; max-width: 1920px !important; padding-inline: clamp(18px,3vw,44px) !important; }
-html[data-view-mode="modern"] .admin-header-top { display: flex !important; min-height: 82px; height: auto !important; padding-block: 10px; gap: 20px; }
-html[data-view-mode="modern"] .admin-header-brand { min-width: 0; flex: 1 1 auto; gap: 15px; }
-html[data-view-mode="modern"] .admin-header-brand .logo { min-width: 0; }
-html[data-view-mode="modern"] .admin-header-brand .logo-mark { width: 40px; height: 40px; border-radius: 12px; background: #c8102e; box-shadow: 0 6px 18px #c8102e40; }
-html[data-view-mode="modern"] .admin-header-brand .logo-copy b { color: #fff !important; }
-html[data-view-mode="modern"] .admin-header-brand .logo-copy small { color: #9a99a5 !important; }
-html[data-view-mode="modern"] .admin-header-brand>div:last-child { min-width: 0; max-width: 420px; }
-html[data-view-mode="modern"] .admin-header-brand h1 { max-width: none; overflow: visible; color: #fff !important; font-size: clamp(13px,1.2vw,17px) !important; line-height: 1.2 !important; }
-html[data-view-mode="modern"] .admin-header-brand>div:last-child>div { color: #ff8291 !important; background: rgba(237,64,90,.12) !important; border-color: rgba(237,64,90,.24) !important; }
-html[data-view-mode="modern"] .admin-header-actions { width: auto; min-width: 0; flex: 0 0 auto; flex-wrap: nowrap; justify-content: flex-end; gap: 8px !important; }
-html[data-view-mode="modern"] .admin-header-actions>* { white-space: nowrap; }
-html[data-view-mode="modern"] .admin-header-actions>a,
-html[data-view-mode="modern"] .admin-header-actions>button { min-height: 38px; padding: 0 11px; color: #ddd9e2 !important; background: rgba(255,255,255,.055) !important; border-color: var(--modern-line) !important; border-radius: 10px; font-size: 11px; }
-html[data-view-mode="modern"] .admin-header-actions>a:hover,
-html[data-view-mode="modern"] .admin-header-actions>button:hover { background: rgba(255,255,255,.1) !important; color: #fff !important; }
-html[data-view-mode="modern"] .admin-header-actions .view-mode-toggle { color: #aaa8b3; background: rgba(255,255,255,.07); border-color: var(--modern-line); }
-html[data-view-mode="modern"] .admin-header-actions .view-mode-option.selected { color: #fff; background: hsl(var(--modern-hue) 78% 52%); }
-html[data-view-mode="modern"] .admin-header-actions>div.hidden.lg\:flex { color: #68d6ae !important; background: rgba(20,156,111,.1) !important; border-color: rgba(20,156,111,.26) !important; }
-html[data-view-mode="modern"] .admin-console>header .admin-tabs {
-  position: fixed; z-index: 40; top: 82px; bottom: 0; left: 0; display: flex;
-  width: 258px; min-height: 0; margin: 0; padding: 17px 13px 24px;
-  flex-direction: column; align-items: stretch; gap: 5px !important;
-  overflow-x: hidden; overflow-y: auto; color: #c2bfca; background: #11121a;
-  border: 0 !important; border-right: 1px solid var(--modern-line) !important;
-  box-shadow: 12px 0 36px rgba(0,0,0,.18); scrollbar-width: thin; scrollbar-color: #3a3945 transparent;
-}
-html[data-view-mode="modern"] .admin-console>header .admin-tabs::before { content: "ADMIN WORKSPACE"; display: block; padding: 4px 12px 13px; color: #85818f; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
-html[data-view-mode="modern"] .admin-console>header .admin-tabs>button {
-  display: flex; width: 100%; min-height: 49px; flex: 0 0 auto; justify-content: flex-start;
-  padding: 0 12px; gap: 10px; color: #bbb8c4 !important; background: transparent !important;
-  border: 1px solid transparent !important; border-radius: 10px; text-align: left;
-  text-transform: none; letter-spacing: 0; font-size: 11px; line-height: 1.35; white-space: normal;
-  transition: background .16s ease,color .16s ease,border-color .16s ease;
-}
-html[data-view-mode="modern"] .admin-console>header .admin-tabs>button:hover { color: #fff !important; background: rgba(255,255,255,.06) !important; }
-html[data-view-mode="modern"] .admin-console>header .admin-tabs>button.border-\[\#c8102e\] { color: #fff !important; background: linear-gradient(100deg,hsl(var(--modern-hue) 76% 50% / .22),rgba(255,255,255,.03)) !important; border-color: rgba(237,64,90,.2) !important; box-shadow: inset 3px 0 hsl(var(--modern-hue) 90% 65%); }
-html[data-view-mode="modern"] .admin-console>header .admin-tabs>button .text-\[\#c8102e\] { color: #ff8291 !important; }
-html[data-view-mode="modern"] .admin-console>header .admin-tabs>button .bg-emerald-900\/80 { color: #b9f1d8 !important; background: rgba(8,115,79,.38) !important; }
-html[data-view-mode="modern"] .admin-console>header .admin-tabs>button .bg-slate-800 { color: #d7d1df !important; background: rgba(255,255,255,.1) !important; }
-html[data-view-mode="modern"] .admin-console>header .admin-tabs>button:focus-visible { outline: 2px solid #ff8291; outline-offset: 2px; }
-html[data-view-mode="modern"] .admin-console>header~div.bg-white {
-  width: calc(100% - 258px); margin-left: 258px; color: #dedbe3 !important;
-  background: rgba(20,21,29,.94) !important; border-color: var(--modern-line) !important;
-}
-html[data-view-mode="modern"] .admin-console>header~div.bg-white>div { max-width: 1600px; padding-inline: clamp(22px,3vw,48px); }
-html[data-view-mode="modern"] .admin-console>header~div.bg-white h2 { color: #fbf8f6 !important; font-size: clamp(1.35rem,2vw,1.85rem); letter-spacing: -.045em; }
-html[data-view-mode="modern"] .admin-console>header~div.bg-white p,
-html[data-view-mode="modern"] .admin-console>header~div.bg-white .text-slate-500 { color: #aaa8b3 !important; }
-html[data-view-mode="modern"] .admin-console>header~div.bg-white .text-slate-900,
-html[data-view-mode="modern"] .admin-console>header~div.bg-white [class*="text-[#0e2740]"] { color: #dedbe3 !important; }
-html[data-view-mode="modern"] .admin-console>header~div.bg-white .bg-slate-50 { color: #dedbe3 !important; background: rgba(255,255,255,.055) !important; border-color: var(--modern-line) !important; }
-html[data-view-mode="modern"] .admin-console main { width: calc(100% - 258px) !important; max-width: none !important; margin-left: 258px; padding: 30px clamp(22px,3vw,48px) 64px; color: #dedbe3; }
-html[data-view-mode="modern"] .admin-console main .bg-white,
-html[data-view-mode="modern"] .admin-console main .card { color: #dedbe3 !important; background: rgba(24,25,34,.96) !important; border-color: var(--modern-line) !important; border-radius: 17px; box-shadow: 0 12px 36px rgba(0,0,0,.16); }
-html[data-view-mode="modern"] .admin-console main [class*="rounded-xl"],
-html[data-view-mode="modern"] .admin-console main [class*="rounded-2xl"] { border-color: var(--modern-line); }
-html[data-view-mode="modern"] .admin-console main .bg-slate-50,
-html[data-view-mode="modern"] .admin-console main .bg-slate-100,
-html[data-view-mode="modern"] .admin-console main .bg-slate-200 { color: #d8d4de !important; background: rgba(255,255,255,.055) !important; }
-html[data-view-mode="modern"] .admin-console main [class*="border-slate-"] { border-color: var(--modern-line) !important; }
-html[data-view-mode="modern"] .admin-console main h1,
-html[data-view-mode="modern"] .admin-console main h2,
-html[data-view-mode="modern"] .admin-console main h3,
-html[data-view-mode="modern"] .admin-console main h4 { color: #f6f2f4 !important; letter-spacing: -.03em; }
-html[data-view-mode="modern"] .admin-console main .text-slate-950,
-html[data-view-mode="modern"] .admin-console main .text-slate-900,
-html[data-view-mode="modern"] .admin-console main .text-slate-800,
-html[data-view-mode="modern"] .admin-console main .text-slate-700,
-html[data-view-mode="modern"] .admin-console main .text-slate-600 { color: #dedbe3 !important; }
-html[data-view-mode="modern"] .admin-console main .text-slate-500 { color: #aaa8b3 !important; }
-html[data-view-mode="modern"] .admin-console main .text-slate-400 { color: #8d8b98 !important; }
-html[data-view-mode="modern"] .admin-console main [class*="text-[#0e2740]"] { color: #b7c9ff !important; }
-html[data-view-mode="modern"] .admin-console main [class*="text-[#c8102e]"] { color: #ff9cab !important; }
-html[data-view-mode="modern"] .admin-console main .text-emerald-600,
-html[data-view-mode="modern"] .admin-console main .text-emerald-700,
-html[data-view-mode="modern"] .admin-console main .text-emerald-800 { color: #83e3bd !important; }
-html[data-view-mode="modern"] .admin-console main .text-indigo-700,
-html[data-view-mode="modern"] .admin-console main .text-indigo-900,
-html[data-view-mode="modern"] .admin-console main .text-purple-900 { color: #c2b2ff !important; }
-html[data-view-mode="modern"] .admin-console main .text-amber-700,
-html[data-view-mode="modern"] .admin-console main .text-amber-800,
-html[data-view-mode="modern"] .admin-console main .text-amber-900 { color: #f4ce83 !important; }
-html[data-view-mode="modern"] .admin-console main input,
-html[data-view-mode="modern"] .admin-console main select,
-html[data-view-mode="modern"] .admin-console main textarea { color: #f5f1f4 !important; background: rgba(255,255,255,.055) !important; border-color: var(--modern-line) !important; color-scheme: dark; }
-html[data-view-mode="modern"] .admin-console main table { color: #dedbe3 !important; }
-html[data-view-mode="modern"] .admin-console main thead { background: rgba(255,255,255,.055) !important; }
-html[data-view-mode="modern"] .admin-console main tbody tr:hover { background: rgba(255,255,255,.045) !important; }
-html[data-view-mode="modern"] .admin-console main .bg-red-50,
-html[data-view-mode="modern"] .admin-console main .bg-red-100 { color: #ffb1bb !important; background: rgba(237,64,90,.12) !important; border-color: rgba(237,64,90,.26) !important; }
-html[data-view-mode="modern"] .admin-console main .btn { min-height: 39px; border-radius: 9px; }
-html[data-view-mode="modern"] .admin-console main .btn-primary { color: #fff; background: hsl(var(--modern-hue) 78% 52%); border-color: hsl(var(--modern-hue) 78% 52%); }
-html[data-view-mode="modern"] .admin-console main .btn-secondary,
-html[data-view-mode="modern"] .admin-console main .btn-ghost { color: #e8e4ec; background: rgba(255,255,255,.055); border-color: var(--modern-line); }
-@media (max-width: 1024px) {
-  html[data-view-mode="modern"] .sidebar { display: none !important; }
-  html[data-view-mode="modern"] .shell-main { width: 100%; margin-left: 0; }
-  html[data-view-mode="modern"] .mobile-brand { display: flex !important; }
-  html[data-view-mode="modern"] .app-header { padding-inline: 18px; }
-  html[data-view-mode="modern"] .admin-console>header .admin-tabs { position: static; z-index: auto; width: auto; min-height: 50px; margin: 0 -18px; padding: 6px 18px; flex-direction: row; gap: 5px !important; overflow-x: auto; background: transparent; border: 0 !important; border-top: 1px solid var(--modern-line) !important; box-shadow: none; }
-  html[data-view-mode="modern"] .admin-console>header .admin-tabs::before { display: none; }
-  html[data-view-mode="modern"] .admin-console>header .admin-tabs>button { width: max-content; min-width: max-content; min-height: 40px; padding-inline: 10px; }
-  html[data-view-mode="modern"] .admin-console>header~div.bg-white,
-  html[data-view-mode="modern"] .admin-console main { width: 100% !important; margin-left: 0; }
-  html[data-view-mode="modern"] .admin-console main { padding: 26px 24px 56px; }
-}
-@media (max-width: 640px) {
-  html[data-view-mode="modern"] .app-page { padding: 24px 15px 42px; }
-  html[data-view-mode="modern"] .app-page h1 { font-size: clamp(1.65rem,8vw,2.1rem); }
-  html[data-view-mode="modern"] .messages-panel { min-height: 68vh; }
-  html[data-view-mode="modern"] .admin-console>header .admin-header-inner { padding-inline: 14px !important; }
-  html[data-view-mode="modern"] .admin-header-top { display: flex !important; flex-wrap: wrap; gap: 10px; padding-block: 10px; }
-  html[data-view-mode="modern"] .admin-header-brand { width: 100%; flex: 1 1 100%; }
-  html[data-view-mode="modern"] .admin-header-brand .logo-copy small { max-width: 170px; font-size: 8px; }
-  html[data-view-mode="modern"] .admin-header-actions { width: 100%; flex: 1 1 100%; justify-content: flex-start; }
-  html[data-view-mode="modern"] .admin-header-actions>div.hidden.lg\:flex { display: none; }
-  html[data-view-mode="modern"] .admin-console>header .admin-tabs { margin-inline: -14px; padding-inline: 14px; }
-  html[data-view-mode="modern"] .admin-console>header~div.bg-white>div { padding-inline: 16px; }
-  html[data-view-mode="modern"] .admin-console main { padding: 22px 15px 44px; }
-}
-
-/* Admin console alignment and shared dashboard components. */
-.admin-console .admin-header-inner,
-.admin-console>div.bg-white>div,
-.admin-console main {
-  width: 100%;
-  max-width: none;
-}
-
-.admin-console .admin-header-inner { padding-inline: clamp(18px, 2.6vw, 42px) !important; }
-.admin-console>header { backdrop-filter: none; }
-.admin-console .admin-tabs { min-height: 54px; padding-inline: clamp(18px, 2.6vw, 42px); }
-.admin-console .admin-page-heading { flex-direction: column; align-items: flex-start; }
-.admin-console .admin-info-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  width: fit-content;
-  max-width: 100%;
-  padding: 10px 13px;
-  border: 1px solid #dbe3ec;
-  border-radius: 10px;
-  color: #475569;
-  background: #f1f5f9;
-  font-size: 12px;
-  line-height: 1.5;
-}
-.admin-console .admin-info-banner::before {
-  content: "i";
-  display: inline-flex;
-  flex: 0 0 17px;
-  width: 17px;
-  height: 17px;
-  align-items: center;
-  justify-content: center;
-  margin-top: 1px;
-  border: 1px solid currentColor;
-  border-radius: 50%;
-  font-size: 11px;
-  font-weight: 700;
-}
-.admin-console .admin-kpi-grid>div { min-width: 0; min-height: 150px; }
-.admin-console .admin-kpi-grid>div>div:first-child { min-height: 20px; }
-.admin-console .admin-kpi-value { color: #0e2740 !important; }
-.admin-console .admin-kpi-baseline { display: block; margin-top: 7px; color: #64748b; font-size: 10px; line-height: 1.4; }
-.admin-console .admin-included-count { max-width: 100%; text-align: center; white-space: normal; }
-.admin-console .admin-engine-status { flex: 0 0 auto; white-space: nowrap; }
-.admin-console .admin-product-label {
-  margin-bottom: 3px;
-  color: #93a4b8;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .12em;
-  line-height: 1.2;
-  text-transform: uppercase;
-}
-.admin-console .admin-classic-menu { position: relative; display: none; }
-.admin-console .admin-classic-menu>summary {
-  display: flex; min-height: 40px; align-items: center; gap: 9px; padding: 4px 10px;
-  color: #e2e8f0; border: 1px solid rgba(255,255,255,.18); border-radius: 10px;
-  cursor: pointer; list-style: none; font-size: 12px; font-weight: 650;
-}
-.admin-console .admin-classic-menu>summary::-webkit-details-marker { display: none; }
-.admin-console .admin-classic-menu-popover {
-  position: absolute; z-index: 60; top: calc(100% + 8px); right: 0; display: grid; min-width: 210px;
-  gap: 4px; padding: 8px; color: #0f172a; background: #fff; border: 1px solid #dbe3ec;
-  border-radius: 12px; box-shadow: 0 16px 42px rgba(3,17,31,.2);
-}
-.admin-console .admin-classic-menu-popover>a,
-.admin-console .admin-classic-menu-popover>button { display: flex; padding: 10px; border: 0; border-radius: 7px; background: transparent; color: inherit; text-align: left; font-size: 12px; }
-.admin-console .admin-classic-menu-popover>a:hover,
-.admin-console .admin-classic-menu-popover>button:hover { background: #f1f5f9; }
-.admin-console .admin-classic-menu-layout { display: grid; gap: 7px; padding: 8px 10px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b; }
-.admin-console .admin-sidebar-brand,
-.admin-console .admin-sidebar-footer { display: none; }
-.admin-loading-screen {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  min-height: 100svh;
-  background: #071729;
-}
-.admin-loading-screen::before {
-  position: absolute;
-  z-index: -2;
-  inset: 0;
-  content: "";
-  background-image:
-    linear-gradient(90deg, #071729 0%, rgba(7, 23, 41, .88) 28%, rgba(7, 23, 41, .5) 68%, rgba(7, 23, 41, .35) 100%),
-    linear-gradient(0deg, rgba(7, 23, 41, .62), rgba(7, 23, 41, .1)),
-    url("https://images.unsplash.com/photo-1565444007614-6b38c78224df?auto=format&fit=crop&w=2200&q=88");
-  background-position: center, center, center 52%;
-  background-size: cover;
-  animation: pc-photo-arrive 1.1s ease-out both;
-}
-.admin-loading-screen::after {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  content: "";
-  pointer-events: none;
-  background-image: linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
-  background-size: 76px 76px;
-  mask-image: linear-gradient(90deg,#000,transparent 80%);
-}
-.admin-loading-content { padding: 34px; border: 1px solid rgba(255,255,255,.14); border-radius: 20px; background: rgba(7,23,41,.54); backdrop-filter: blur(10px); }
-
-/* The modern sidebar is a sibling of the masthead so its fixed rail is not
-   clipped by the masthead's backdrop-filter stacking context. */
-html[data-view-mode="modern"] .admin-console { background: #0b0d14 !important; font-family: var(--font-sans); }
-html[data-view-mode="modern"] .admin-console>header { position: sticky; top: 0; z-index: 50; }
-html[data-view-mode="modern"] .admin-console .admin-header-brand { display: none; }
-html[data-view-mode="modern"] .admin-console .admin-header-top { display: flex; justify-content: flex-end; }
-html[data-view-mode="modern"] .admin-console .admin-header-actions .admin-view-toggle,
-html[data-view-mode="modern"] .admin-console .admin-header-actions .admin-portal-link,
-html[data-view-mode="modern"] .admin-console .admin-header-actions .admin-signout,
-html[data-view-mode="modern"] .admin-console .admin-classic-menu { display: none; }
-html[data-view-mode="modern"] .admin-console .admin-sidebar-brand { display: block; padding: 2px 10px 18px; border-bottom: 1px solid rgba(255,255,255,.1); margin-bottom: 8px; }
-html[data-view-mode="modern"] .admin-console .admin-sidebar-brand .logo-copy small { color: #aeb8c7 !important; }
-html[data-view-mode="modern"] .admin-console .admin-sidebar-footer { display: grid; gap: 5px; margin-top: auto; padding: 14px 7px 0; border-top: 1px solid rgba(255,255,255,.1); }
-html[data-view-mode="modern"] .admin-console .admin-sidebar-link { display: flex; min-height: 40px; align-items: center; gap: 10px; padding: 0 10px; color: #c1cbd8; background: none; border: 0; border-radius: 8px; text-align: left; text-decoration: none; font: inherit; font-size: 12px; cursor: pointer; }
-html[data-view-mode="modern"] .admin-console .admin-sidebar-link:hover { color: #fff; background: rgba(255,255,255,.07); }
-html[data-view-mode="modern"] .admin-console .admin-sidebar-layout { display: grid; gap: 6px; padding: 8px 10px; color: #aeb8c7; font-size: 11px; }
-html[data-view-mode="modern"] .admin-console .admin-header-inner { max-width: none !important; padding-inline: clamp(18px, 2.6vw, 42px) !important; }
-html[data-view-mode="modern"] .admin-console .admin-header-top { min-height: 82px; height: auto !important; padding-block: 12px; }
-html[data-view-mode="modern"] .admin-console .admin-tabs {
-  position: fixed; z-index: 45; top: 82px; bottom: 0; left: 0;
-  display: flex; width: 258px; min-height: 0; margin: 0; padding: 20px 13px 24px;
-  flex-direction: column; align-items: stretch; gap: 5px !important; overflow: auto;
-  color: #c2bfca; background: #11151f; border: 0 !important;
-  border-right: 1px solid rgba(255,255,255,.1) !important;
-  box-shadow: 12px 0 36px rgba(0,0,0,.2); scrollbar-width: thin;
-}
-html[data-view-mode="modern"] .admin-console .admin-tabs::before { content: "ADMIN WORKSPACE"; display: block; padding: 4px 12px 13px; color: #9aa9bc; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
-html[data-view-mode="modern"] .admin-console .admin-tabs>button {
-  display: flex; width: 100%; min-height: 49px; flex: 0 0 auto; justify-content: flex-start;
-  padding: 0 12px; gap: 10px; color: #c1cbd8 !important; background: transparent !important;
-  border: 1px solid transparent !important; border-radius: 10px; text-align: left;
-  text-transform: none; letter-spacing: 0; font-size: 12px; line-height: 1.35; white-space: normal;
-}
-html[data-view-mode="modern"] .admin-console .admin-tabs>button:hover { color: #fff !important; background: rgba(255,255,255,.06) !important; }
-html[data-view-mode="modern"] .admin-console .admin-tabs>button.border-\[\#c8102e\] { color: #fff !important; background: rgba(200,16,46,.16) !important; border-color: rgba(255,255,255,.08) !important; box-shadow: inset 3px 0 #e32235; }
-html[data-view-mode="modern"] .admin-console .admin-tabs>button .text-\[\#c8102e\] { color: #ff9aa8 !important; }
-html[data-view-mode="modern"] .admin-console>header~div.bg-white { width: calc(100% - 258px); margin-left: 258px; background: #121722 !important; border-color: rgba(255,255,255,.1) !important; }
-html[data-view-mode="modern"] .admin-console>header~div.bg-white>div { max-width: none; padding-inline: clamp(22px, 3vw, 48px); }
-html[data-view-mode="modern"] .admin-console>header~div.bg-white h2 { color: #f4f6fa !important; font-size: clamp(1.35rem, 2vw, 1.85rem); letter-spacing: -.04em; }
-html[data-view-mode="modern"] .admin-console>header~div.bg-white p,
-html[data-view-mode="modern"] .admin-console>header~div.bg-white .text-slate-500 { color: #aeb8c7 !important; }
-html[data-view-mode="modern"] .admin-console main { width: calc(100% - 258px) !important; max-width: none !important; margin-left: 258px; padding: 30px clamp(22px, 3vw, 48px) 64px; color: #dce4ef; }
-html[data-view-mode="modern"] .admin-console .admin-info-banner { color: #c4d1df; background: rgba(255,255,255,.045); border-color: rgba(255,255,255,.12); }
-html[data-view-mode="modern"] .admin-console .admin-kpi-value { color: #f3f6fa !important; }
-html[data-view-mode="modern"] .admin-console .admin-kpi-baseline { color: #9daabd; }
-html[data-view-mode="modern"] .admin-console .admin-kpi-grid>div { background: #151b27 !important; border-color: rgba(255,255,255,.12) !important; border-radius: 14px; box-shadow: none; }
-html[data-view-mode="modern"] .admin-console .admin-product-label { color: #a8b5c7; }
-html[data-view-mode="modern"] .admin-console .admin-engine-status { color: #91dfbf !important; background: rgba(18,132,91,.16) !important; border-color: rgba(92,206,157,.24) !important; }
-html[data-view-mode="modern"] .admin-console .admin-sidebar-brand .logo-mark { background: #c8102e; }
-html[data-view-mode="modern"] .admin-console .admin-kpi-grid>div .text-slate-500 { color: #aeb8c7 !important; }
-html[data-view-mode="modern"] .admin-console .admin-included-count { color: #e8c981 !important; background: rgba(176,126,29,.13) !important; border-color: rgba(235,193,93,.22) !important; }
-html[data-view-mode="classic"] .admin-console .admin-header-actions .admin-view-toggle,
-html[data-view-mode="classic"] .admin-console .admin-header-actions .admin-portal-link,
-html[data-view-mode="classic"] .admin-console .admin-header-actions .admin-profile-link,
-html[data-view-mode="classic"] .admin-console .admin-header-actions .admin-signout { display: none; }
-html[data-view-mode="classic"] .admin-console .admin-classic-menu { display: block; }
-html[data-view-mode="classic"] .admin-console .admin-tabs { justify-content: flex-start; gap: 6px; color: #e2e8f0; background: #071626; border-color: rgba(255,255,255,.12); }
-html[data-view-mode="classic"] .admin-console .admin-tabs>button { text-transform: none; letter-spacing: 0; }
-html[data-view-mode="classic"] .admin-console .admin-product-label { color: #64748b; }
-@media (min-width: 1025px) {
-  html[data-view-mode="classic"] .admin-console .admin-header-top { grid-template-columns: minmax(0,1fr) auto !important; }
-  html[data-view-mode="classic"] .admin-console .admin-header-brand { width: auto; flex-basis: auto; }
-  html[data-view-mode="classic"] .admin-console .admin-header-actions { width: auto; justify-content: flex-end; }
-  html[data-view-mode="modern"] .admin-console .admin-header-actions { width: auto; }
-}
-@media (min-width: 1200px) {
-  .admin-console .admin-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-@media (max-width: 900px) {
-  html[data-view-mode="modern"] .admin-console .admin-tabs { position: static; width: auto; min-height: 50px; margin: 0; padding: 6px 18px; flex-direction: row; gap: 5px !important; overflow-x: auto; background: #10151e; border: 0 !important; border-top: 1px solid rgba(255,255,255,.1) !important; box-shadow: none; }
-  html[data-view-mode="modern"] .admin-console .admin-tabs::before { display: none; }
-  html[data-view-mode="modern"] .admin-console .admin-tabs>button { width: max-content; min-width: max-content; min-height: 42px; padding-inline: 12px; }
-  html[data-view-mode="modern"] .admin-console .admin-sidebar-brand,
-  html[data-view-mode="modern"] .admin-console .admin-sidebar-footer { display: none; }
-  html[data-view-mode="modern"] .admin-console .admin-header-brand { display: flex; }
-  html[data-view-mode="modern"] .admin-console .admin-header-top { display: flex; justify-content: space-between; }
-  html[data-view-mode="modern"] .admin-console .admin-header-actions .admin-view-toggle,
-  html[data-view-mode="modern"] .admin-console .admin-header-actions .admin-portal-link,
-  html[data-view-mode="modern"] .admin-console .admin-header-actions .admin-signout { display: inline-flex; }
-  html[data-view-mode="modern"] .admin-console .admin-classic-menu { display: none; }
-  html[data-view-mode="modern"] .admin-console>header~div.bg-white,
-  html[data-view-mode="modern"] .admin-console main { width: 100% !important; margin-left: 0; }
-}
-@media (max-width: 640px) {
-  .admin-console .admin-header-top { align-items: flex-start; flex-direction: column; gap: 12px; }
-  .admin-console .admin-header-actions { width: 100%; flex-wrap: wrap; gap: 8px; }
-  .admin-console .admin-engine-status { font-size: 10px; }
-  .admin-console .admin-tabs { margin-inline: 0; padding-inline: 14px; }
-  .admin-console>div.bg-white>div { padding-inline: 16px; }
-  .admin-console main { padding: 22px 15px 44px; }
-  .admin-console .admin-kpi-grid>div { min-height: 130px; }
-  .admin-console .admin-included-count { width: 100%; }
-  html[data-view-mode="modern"] .admin-console main { padding: 22px 15px 44px; }
-}
-
-
-
 /* ========================================================================== */
-/* COHESIVE THEME SYSTEM (Classic Light & Modern Dark Executive Command)     */
+/* UNIFIED THEME SYSTEM: CLASSIC (Light Aviation) & MODERN (Dark Command)     */
 /* ========================================================================== */
 
-/* --- 1. Top-Right ViewMode Toggle (Unified Styling) --- */
+/* --- 1. Top-Right ViewMode Toggle (Unified Across All Headers) --- */
 .view-mode-toggle {
   display: inline-flex !important;
   align-items: center !important;
@@ -4269,6 +3008,7 @@ html[data-view-mode="classic"] .admin-console .admin-product-label { color: #647
   cursor: pointer !important;
   transition: all 0.2s ease !important;
   gap: 2px !important;
+  flex-shrink: 0 !important;
 }
 
 html[data-view-mode="classic"] .view-mode-toggle {
@@ -4307,7 +3047,7 @@ html[data-view-mode="modern"] .view-mode-option.selected {
   box-shadow: 0 1px 4px rgba(200, 16, 46, 0.4) !important;
 }
 
-/* --- 2. Uniform Sidebar Rail (Always Uniform Across Pages) --- */
+/* --- 2. Member Sidebar Rail (KQAppShell) --- */
 .sidebar {
   position: fixed !important;
   top: 0 !important;
@@ -4357,13 +3097,164 @@ html[data-view-mode="modern"] .view-mode-option.selected {
   padding: 10px !important;
 }
 
-/* --- 3. CLASSIC MODE (Crisp Light Theme - High Contrast, No Whited-out Text) --- */
+/* --- 3. Admin Console Navigation & Layout (Uniform Left Rail Across Modes) --- */
+.admin-console > header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 40 !important;
+  background: #071626 !important;
+  border-bottom: 1px solid #1e3a5f !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
+}
+.admin-console .admin-header-brand {
+  display: flex !important;
+  align-items: center !important;
+}
+.admin-console .admin-header-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+.admin-console .admin-header-actions .admin-view-toggle,
+.admin-console .admin-view-toggle {
+  display: inline-flex !important;
+}
+.admin-console .admin-header-actions .admin-portal-link,
+.admin-console .admin-header-actions .admin-profile-link,
+.admin-console .admin-header-actions .admin-signout {
+  display: inline-flex !important;
+}
+.admin-console .admin-classic-menu {
+  display: none !important;
+}
+
+.admin-console .admin-tabs {
+  position: fixed !important;
+  z-index: 35 !important;
+  top: 72px !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  display: flex !important;
+  width: 258px !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 20px 13px 24px !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 5px !important;
+  overflow-y: auto !important;
+  color: #cbd5e1 !important;
+  background: #071626 !important;
+  border: 0 !important;
+  border-right: 1px solid #1e3a5f !important;
+}
+.admin-console .admin-tabs::before {
+  content: "ADMIN WORKSPACE";
+  display: block !important;
+  padding: 4px 12px 13px !important;
+  color: #8da4be !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: .14em !important;
+}
+.admin-console .admin-tabs > button {
+  display: flex !important;
+  width: 100% !important;
+  min-height: 46px !important;
+  flex: 0 0 auto !important;
+  justify-content: flex-start !important;
+  padding: 0 12px !important;
+  color: #cbd5e1 !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: 9px !important;
+  text-align: left !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  white-space: normal !important;
+  transition: all 0.15s ease !important;
+}
+.admin-console .admin-tabs > button:hover {
+  background: #102b45 !important;
+  color: #ffffff !important;
+}
+.admin-console .admin-tabs > button[class*="border-[#c8102e]"] {
+  background: rgba(200, 16, 46, 0.22) !important;
+  border-left: 3px solid #e11d3f !important;
+  color: #ffffff !important;
+}
+.admin-console .admin-tabs > button[class*="border-[#c8102e]"] .text-\[\#c8102e\] {
+  color: #ff9cab !important;
+}
+.admin-console .admin-sidebar-footer {
+  margin-top: auto !important;
+  padding-top: 14px !important;
+  border-top: 1px solid #1e3a5f !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+}
+.admin-console .admin-sidebar-footer .admin-sidebar-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 12px !important;
+  color: #94a3b8 !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  transition: all 0.15s ease !important;
+}
+.admin-console .admin-sidebar-footer .admin-sidebar-link:hover {
+  color: #ffffff !important;
+  background: #102b45 !important;
+}
+
+.admin-console > header ~ div.bg-white,
+.admin-console main {
+  width: calc(100% - 258px) !important;
+  max-width: none !important;
+  margin-left: 258px !important;
+}
+.admin-console > header ~ div.bg-white > div {
+  max-width: none !important;
+  padding-inline: clamp(22px, 3vw, 48px) !important;
+}
+.admin-console main {
+  padding: 30px clamp(22px, 3vw, 48px) 64px !important;
+}
+
+@media (max-width: 900px) {
+  .admin-console .admin-tabs {
+    position: sticky !important;
+    top: auto !important;
+    bottom: auto !important;
+    width: 100% !important;
+    min-height: 54px !important;
+    padding: 6px 14px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    overflow-x: auto !important;
+    border-top: 1px solid #1e3a5f !important;
+    border-right: 0 !important;
+  }
+  .admin-console .admin-tabs::before { display: none !important; }
+  .admin-console .admin-tabs > button { width: max-content !important; min-width: max-content !important; min-height: 40px !important; }
+  .admin-console > header ~ div.bg-white,
+  .admin-console main { width: 100% !important; margin-left: 0 !important; }
+  .admin-console main { padding: 22px 18px 48px !important; }
+}
+
+/* --- 4. CLASSIC MODE (Light Aviation Theme - High Contrast, Never Greyed Out) --- */
 html[data-view-mode="classic"] {
   color-scheme: light;
 }
 html[data-view-mode="classic"] body,
 html[data-view-mode="classic"] .shell,
-html[data-view-mode="classic"] .shell-main>main {
+html[data-view-mode="classic"] .shell-main > main {
   background-color: #f8fafc !important;
   color: #0f172a !important;
 }
@@ -4373,209 +3264,112 @@ html[data-view-mode="classic"] .app-header {
   color: #0f172a !important;
 }
 html[data-view-mode="classic"] .app-page .card,
-html[data-view-mode="classic"] .app-page article {
+html[data-view-mode="classic"] .app-page article,
+html[data-view-mode="classic"] .app-page .bg-white {
   background-color: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
+  border-color: #e2e8f0 !important;
   color: #0f172a !important;
+}
+html[data-view-mode="classic"] .admin-console {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+html[data-view-mode="classic"] .admin-console > header ~ div.bg-white {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+html[data-view-mode="classic"] .admin-console > header ~ div.bg-white h2,
+html[data-view-mode="classic"] .admin-console > header ~ div.bg-white h1 {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+}
+html[data-view-mode="classic"] .admin-console > header ~ div.bg-white p,
+html[data-view-mode="classic"] .admin-console > header ~ div.bg-white .text-slate-500 {
+  color: #475569 !important;
+}
+html[data-view-mode="classic"] .admin-console main .card,
+html[data-view-mode="classic"] .admin-console main .bg-white,
+html[data-view-mode="classic"] .admin-console main .admin-kpi-grid > div {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+html[data-view-mode="classic"] .admin-kpi-value {
+  color: #0f172a !important;
+}
+html[data-view-mode="classic"] .admin-kpi-baseline {
+  color: #64748b !important;
 }
 html[data-view-mode="classic"] .app-page h1,
 html[data-view-mode="classic"] .app-page h2,
 html[data-view-mode="classic"] .app-page h3,
-html[data-view-mode="classic"] .app-page h4 {
+html[data-view-mode="classic"] .app-page h4,
+html[data-view-mode="classic"] .admin-console main h1,
+html[data-view-mode="classic"] .admin-console main h2,
+html[data-view-mode="classic"] .admin-console main h3,
+html[data-view-mode="classic"] .admin-console main h4 {
   color: #0f172a !important;
   font-weight: 700 !important;
 }
-html[data-view-mode="classic"] .app-page p,
-html[data-view-mode="classic"] .app-page .text-slate-500 {
-  color: #475569 !important;
+html[data-view-mode="classic"] .app-page p {
+  color: #334155 !important;
 }
-/* Ensure Atmospheric Command Header text remains bright white */
+
+/* Atmospheric Command Header preserves crisp white on dark gradient */
 html[data-view-mode="classic"] .app-page section[class*="bg-gradient"] h1,
 html[data-view-mode="classic"] .app-page section[class*="bg-gradient"] h2,
 html[data-view-mode="classic"] .app-page section[class*="bg-gradient"] p,
-html[data-view-mode="classic"] .app-page section[class*="bg-gradient"] span {
+html[data-view-mode="classic"] .app-page section[class*="bg-gradient"] span.text-white {
   color: #ffffff !important;
 }
 
-/* --- 4. MODERN MODE (Dark Executive Operations - Image 5) --- */
-html[data-view-mode="modern"] {
-  color-scheme: dark;
+/* Classic Mode Contrast Elevators - eliminate washed-out grey text */
+html[data-view-mode="classic"] .text-slate-400,
+html[data-view-mode="classic"] [class*="text-slate-400"],
+html[data-view-mode="classic"] .text-gray-400,
+html[data-view-mode="classic"] [class*="text-gray-400"] {
+  color: #64748b !important;
 }
-html[data-view-mode="modern"] body,
-html[data-view-mode="modern"] .shell,
-html[data-view-mode="modern"] .shell-main,
-html[data-view-mode="modern"] .shell-main>main,
-html[data-view-mode="modern"] .admin-console {
-  background-color: #071626 !important;
-  color: #f8fafc !important;
+html[data-view-mode="classic"] .text-slate-500,
+html[data-view-mode="classic"] [class*="text-slate-500"],
+html[data-view-mode="classic"] .text-gray-500,
+html[data-view-mode="classic"] [class*="text-gray-500"] {
+  color: #475569 !important;
 }
-html[data-view-mode="modern"] .app-header {
-  background-color: #071626 !important;
-  border-bottom: 1px solid #1e3a5f !important;
-  color: #f8fafc !important;
-}
-html[data-view-mode="modern"] .app-header > div:first-child span {
-  color: #cbd5e1 !important;
-}
-html[data-view-mode="modern"] .app-page .card,
-html[data-view-mode="modern"] .app-page article,
-html[data-view-mode="modern"] .admin-console .card,
-html[data-view-mode="modern"] .admin-console .bg-white,
-html[data-view-mode="modern"] .admin-console>header~div.bg-white {
-  background-color: #0c1f33 !important;
-  border-color: #1e3a5f !important;
-  color: #f8fafc !important;
-}
-html[data-view-mode="modern"] .app-page h1,
-html[data-view-mode="modern"] .app-page h2,
-html[data-view-mode="modern"] .app-page h3,
-html[data-view-mode="modern"] .app-page h4,
-html[data-view-mode="modern"] .admin-console h1,
-html[data-view-mode="modern"] .admin-console h2,
-html[data-view-mode="modern"] .admin-console h3,
-html[data-view-mode="modern"] .admin-console h4 {
-  color: #ffffff !important;
-}
-html[data-view-mode="modern"] .app-page p,
-html[data-view-mode="modern"] .app-page .text-slate-500,
-html[data-view-mode="modern"] .admin-console .text-slate-500,
-html[data-view-mode="modern"] .admin-console .text-slate-400 {
-  color: #94a3b8 !important;
-}
-html[data-view-mode="modern"] .app-page .text-slate-900,
-html[data-view-mode="modern"] .app-page .text-slate-800,
-html[data-view-mode="modern"] .app-page .text-slate-700,
-html[data-view-mode="modern"] .admin-console .text-slate-900,
-html[data-view-mode="modern"] .admin-console .text-slate-800,
-html[data-view-mode="modern"] .admin-console .text-slate-700 {
-  color: #f1f5f9 !important;
-}
-html[data-view-mode="modern"] .app-page .bg-slate-50,
-html[data-view-mode="modern"] .app-page .bg-slate-100,
-html[data-view-mode="modern"] .admin-console .bg-slate-50,
-html[data-view-mode="modern"] .admin-console .bg-slate-100 {
-  background-color: #071626 !important;
-  border-color: #1e3a5f !important;
-  color: #f1f5f9 !important;
-}
-html[data-view-mode="modern"] .app-page input,
-html[data-view-mode="modern"] .app-page select,
-html[data-view-mode="modern"] .app-page textarea,
-html[data-view-mode="modern"] .admin-console input,
-html[data-view-mode="modern"] .admin-console select,
-html[data-view-mode="modern"] .admin-console textarea {
-  background-color: #071626 !important;
-  border-color: #1e3a5f !important;
-  color: #ffffff !important;
-}
-html[data-view-mode="modern"] .app-page input:focus,
-html[data-view-mode="modern"] .app-page select:focus,
-html[data-view-mode="modern"] .app-page textarea:focus,
-html[data-view-mode="modern"] .admin-console input:focus,
-html[data-view-mode="modern"] .admin-console select:focus,
-html[data-view-mode="modern"] .admin-console textarea:focus {
-  border-color: #c8102e !important;
-  box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.3) !important;
+html[data-view-mode="classic"] .text-slate-600,
+html[data-view-mode="classic"] [class*="text-slate-600"] {
+  color: #334155 !important;
 }
 
-/* Ensure Admin tabs are horizontal and never warp into a side rail */
-.admin-tabs {
-  position: static !important;
-  width: 100% !important;
-  display: flex !important;
-  flex-direction: row !important;
-  margin: 0 !important;
-  padding: 4px 16px !important;
-  overflow-x: auto !important;
-  background-color: #071626 !important;
-  border-top: 1px solid #1e3a5f !important;
-  border-bottom: 1px solid #1e3a5f !important;
-}
-.admin-tabs::before {
-  display: none !important;
-}
-.admin-sidebar-brand,
-.admin-sidebar-footer {
-  display: none !important;
-}
-
-/* Final contrast and layout pass: keep the same rails, change the surface mode. */
+/* --- 5. MODERN MODE (Dark Executive Operations - User Image 5) --- */
 html[data-view-mode="modern"] {
   color-scheme: dark;
   --modern-night: #071626;
   --modern-panel: #0c1f33;
   --modern-panel-raised: #102b45;
   --modern-edge: #1e3a5f;
-  --modern-copy: #f1f5f9;
-  --modern-subtle: #c1cede;
-  --modern-dim: #9aabc0;
+  --modern-copy: #f8fafc;
+  --modern-subtle: #cbd5e1;
+  --modern-dim: #94a3b8;
   --modern-red: #c8102e;
 }
 html[data-view-mode="modern"] body,
 html[data-view-mode="modern"] .shell,
 html[data-view-mode="modern"] .shell-main,
 html[data-view-mode="modern"] .shell-main > main,
-html[data-view-mode="modern"] .admin-console,
-html[data-view-mode="modern"] .admin-console main,
-html[data-view-mode="modern"] .home-page,
-html[data-view-mode="modern"] .login-page,
-html[data-view-mode="modern"] .register-page {
-  color: var(--modern-copy) !important;
-  background: var(--modern-night) !important;
-}
-html[data-view-mode="modern"] .app-page {
-  color: var(--modern-copy) !important;
-  background: transparent !important;
-}
-html[data-view-mode="modern"] .app-page h1,
-html[data-view-mode="modern"] .app-page h2,
-html[data-view-mode="modern"] .app-page h3,
-html[data-view-mode="modern"] .app-page h4,
-html[data-view-mode="modern"] .admin-console main h1,
-html[data-view-mode="modern"] .admin-console main h2,
-html[data-view-mode="modern"] .admin-console main h3,
-html[data-view-mode="modern"] .admin-console main h4 {
-  color: #fff !important;
-  font-family: var(--font-heading);
-}
-html[data-view-mode="modern"] .app-page p,
-html[data-view-mode="modern"] .app-page label,
-html[data-view-mode="modern"] .app-page .text-slate-500,
-html[data-view-mode="modern"] .app-page .text-slate-600,
-html[data-view-mode="modern"] .app-page .text-slate-400,
-html[data-view-mode="modern"] .app-page .text-gray-500,
-html[data-view-mode="modern"] .admin-console main .text-slate-500,
-html[data-view-mode="modern"] .admin-console main .text-slate-400 {
-  color: var(--modern-subtle) !important;
-}
-html[data-view-mode="modern"] .app-page .text-slate-950,
-html[data-view-mode="modern"] .app-page .text-slate-900,
-html[data-view-mode="modern"] .app-page .text-slate-800,
-html[data-view-mode="modern"] .app-page .text-slate-700,
-html[data-view-mode="modern"] .app-page .text-gray-900,
-html[data-view-mode="modern"] .app-page .text-gray-800,
-html[data-view-mode="modern"] .app-page .text-gray-700,
-html[data-view-mode="modern"] .app-page [class*="text-[#071626]"],
-html[data-view-mode="modern"] .app-page [class*="text-[#0e2740]"],
-html[data-view-mode="modern"] .app-page [class*="text-[#182231]"],
-html[data-view-mode="modern"] .admin-console main .text-slate-950,
-html[data-view-mode="modern"] .admin-console main .text-slate-900,
-html[data-view-mode="modern"] .admin-console main .text-slate-800,
-html[data-view-mode="modern"] .admin-console main .text-slate-700,
-html[data-view-mode="modern"] .admin-console main .text-slate-600 {
+html[data-view-mode="modern"] .admin-console {
+  background-color: var(--modern-night) !important;
   color: var(--modern-copy) !important;
 }
-html[data-view-mode="modern"] .shell-main main .text-gray-900,
-html[data-view-mode="modern"] .shell-main main .text-gray-800,
-html[data-view-mode="modern"] .shell-main main .text-gray-700,
-html[data-view-mode="modern"] .shell-main main .text-slate-950,
-html[data-view-mode="modern"] .shell-main main .text-slate-900,
-html[data-view-mode="modern"] .shell-main main .text-slate-800,
-html[data-view-mode="modern"] .shell-main main .text-slate-700 { color: var(--modern-copy) !important; }
-html[data-view-mode="modern"] .shell-main main .text-gray-500,
-html[data-view-mode="modern"] .shell-main main .text-gray-600,
-html[data-view-mode="modern"] .shell-main main .text-slate-500,
-html[data-view-mode="modern"] .shell-main main .text-slate-600 { color: var(--modern-subtle) !important; }
+html[data-view-mode="modern"] .app-header {
+  background-color: var(--modern-night) !important;
+  border-bottom: 1px solid var(--modern-edge) !important;
+  color: var(--modern-copy) !important;
+}
+html[data-view-mode="modern"] .app-header > div:first-child span {
+  color: #cbd5e1 !important;
+}
 html[data-view-mode="modern"] .app-page .card,
 html[data-view-mode="modern"] .app-page article,
 html[data-view-mode="modern"] .app-page .bg-white,
@@ -4588,275 +3382,139 @@ html[data-view-mode="modern"] .admin-console main [class*="bg-white/"] {
   color: var(--modern-copy) !important;
   background-color: var(--modern-panel) !important;
   border-color: var(--modern-edge) !important;
-  box-shadow: 0 10px 28px rgba(0,0,0,.16);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25) !important;
 }
+html[data-view-mode="modern"] .admin-console > header ~ div.bg-white {
+  background-color: var(--modern-panel) !important;
+  border-color: var(--modern-edge) !important;
+  color: var(--modern-copy) !important;
+}
+html[data-view-mode="modern"] .admin-console > header ~ div.bg-white h2,
+html[data-view-mode="modern"] .admin-console > header ~ div.bg-white h1 {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+}
+html[data-view-mode="modern"] .admin-console > header ~ div.bg-white p,
+html[data-view-mode="modern"] .admin-console > header ~ div.bg-white .text-slate-500 {
+  color: var(--modern-dim) !important;
+}
+html[data-view-mode="modern"] .admin-console main .admin-kpi-grid > div {
+  background-color: var(--modern-panel) !important;
+  border-color: var(--modern-edge) !important;
+}
+html[data-view-mode="modern"] .admin-kpi-value {
+  color: #ffffff !important;
+}
+html[data-view-mode="modern"] .admin-kpi-baseline {
+  color: var(--modern-dim) !important;
+}
+html[data-view-mode="modern"] .app-page h1,
+html[data-view-mode="modern"] .app-page h2,
+html[data-view-mode="modern"] .app-page h3,
+html[data-view-mode="modern"] .app-page h4,
+html[data-view-mode="modern"] .admin-console main h1,
+html[data-view-mode="modern"] .admin-console main h2,
+html[data-view-mode="modern"] .admin-console main h3,
+html[data-view-mode="modern"] .admin-console main h4 {
+  color: #ffffff !important;
+}
+html[data-view-mode="modern"] .app-page p,
+html[data-view-mode="modern"] .admin-console main p {
+  color: var(--modern-subtle) !important;
+}
+
+/* Modern Mode Inversion: Dark Text -> Light Crisp Text */
+html[data-view-mode="modern"] .text-slate-950,
+html[data-view-mode="modern"] .text-slate-900,
+html[data-view-mode="modern"] .text-slate-800,
+html[data-view-mode="modern"] .text-slate-700,
+html[data-view-mode="modern"] .text-gray-900,
+html[data-view-mode="modern"] .text-gray-800,
+html[data-view-mode="modern"] [class*="text-slate-900"],
+html[data-view-mode="modern"] [class*="text-slate-800"],
+html[data-view-mode="modern"] [class*="text-slate-700"],
+html[data-view-mode="modern"] [class*="text-[#071626]"],
+html[data-view-mode="modern"] [class*="text-[#0e2740]"],
+html[data-view-mode="modern"] [class*="text-[#182231]"] {
+  color: var(--modern-copy) !important;
+}
+html[data-view-mode="modern"] .text-slate-500,
+html[data-view-mode="modern"] [class*="text-slate-500"],
+html[data-view-mode="modern"] .text-gray-500,
+html[data-view-mode="modern"] .text-slate-600 {
+  color: var(--modern-subtle) !important;
+}
+html[data-view-mode="modern"] .text-slate-400,
+html[data-view-mode="modern"] [class*="text-slate-400"],
+html[data-view-mode="modern"] .text-gray-400 {
+  color: var(--modern-dim) !important;
+}
+
+/* Modern Mode Inversion: Light Backgrounds -> Dark Containers */
 html[data-view-mode="modern"] .app-page .bg-slate-50,
 html[data-view-mode="modern"] .app-page .bg-slate-100,
 html[data-view-mode="modern"] .app-page .bg-slate-200,
-html[data-view-mode="modern"] .admin-console main .bg-slate-50,
-html[data-view-mode="modern"] .admin-console main .bg-slate-100,
-html[data-view-mode="modern"] .admin-console main .bg-slate-200 {
-  color: var(--modern-subtle) !important;
-  background-color: var(--modern-panel-raised) !important;
-  border-color: var(--modern-edge) !important;
-}
-html[data-view-mode="modern"] .app-page [class*="border-slate-"],
-html[data-view-mode="modern"] .admin-console main [class*="border-slate-"] { border-color: var(--modern-edge) !important; }
-html[data-view-mode="modern"] .app-page input,
-html[data-view-mode="modern"] .app-page select,
-html[data-view-mode="modern"] .app-page textarea,
-html[data-view-mode="modern"] .admin-console main input,
-html[data-view-mode="modern"] .admin-console main select,
-html[data-view-mode="modern"] .admin-console main textarea {
-  color: #fff !important;
-  background-color: #071626 !important;
-  border-color: #294967 !important;
-  color-scheme: dark;
-}
-html[data-view-mode="modern"] .app-page input::placeholder,
-html[data-view-mode="modern"] .app-page textarea::placeholder,
-html[data-view-mode="modern"] .admin-console input::placeholder,
-html[data-view-mode="modern"] .admin-console textarea::placeholder { color: #91a5ba !important; opacity: 1; }
-html[data-view-mode="modern"] .app-page input:focus,
-html[data-view-mode="modern"] .app-page select:focus,
-html[data-view-mode="modern"] .app-page textarea:focus,
-html[data-view-mode="modern"] .admin-console main input:focus,
-html[data-view-mode="modern"] .admin-console main select:focus,
-html[data-view-mode="modern"] .admin-console main textarea:focus {
-  border-color: #f05269 !important;
-  box-shadow: 0 0 0 3px rgba(200,16,46,.24) !important;
-}
-html[data-view-mode="modern"] .app-page .bg-gradient-to-r,
-html[data-view-mode="modern"] .app-page [class*="bg-[#071626]"],
-html[data-view-mode="modern"] .app-page [class*="bg-[#0e2740]"] { color: #fff !important; }
-html[data-view-mode="modern"] .app-page [class*="bg-gradient"] h1,
-html[data-view-mode="modern"] .app-page [class*="bg-gradient"] h2,
-html[data-view-mode="modern"] .app-page [class*="bg-gradient"] p,
-html[data-view-mode="modern"] .app-page [class*="bg-gradient"] span { color: inherit; }
-html[data-view-mode="modern"] .app-page .messages-panel,
-html[data-view-mode="modern"] .app-page .messages-list,
-html[data-view-mode="modern"] .app-page .messages-list-heading,
-html[data-view-mode="modern"] .app-page .messages-thread-header,
-html[data-view-mode="modern"] .app-page .messages-composer { color: var(--modern-copy) !important; background: var(--modern-panel) !important; }
-html[data-view-mode="modern"] .app-page .messages-thread,
-html[data-view-mode="modern"] .app-page .messages-thread-history { background: #091a2b !important; }
-html[data-view-mode="modern"] .app-page .messages-bubble-theirs { color: var(--modern-copy) !important; background: var(--modern-panel-raised) !important; }
-html[data-view-mode="modern"] .app-page .messages-bubble-mine { color: #fff !important; background: var(--modern-red) !important; }
-html[data-view-mode="modern"] .auth-page {
-  color: var(--modern-copy) !important;
-  background: radial-gradient(ellipse at 80% 8%, #12314d 0, #071626 42rem) !important;
-}
-html[data-view-mode="modern"] .auth-page > main > div > section:last-child > div {
-  color: var(--modern-copy) !important;
-  background: #0c1f33 !important;
-  border-color: #1e3a5f !important;
-}
-html[data-view-mode="modern"] .auth-page h2,
-html[data-view-mode="modern"] .auth-page .text-slate-900,
-html[data-view-mode="modern"] .auth-page .text-slate-800,
-html[data-view-mode="modern"] .auth-page .text-slate-700 { color: #f1f5f9 !important; }
-html[data-view-mode="modern"] .auth-page .text-slate-600,
-html[data-view-mode="modern"] .auth-page .text-slate-500 { color: #bdcada !important; }
-html[data-view-mode="modern"] .auth-page .bg-slate-50,
-html[data-view-mode="modern"] .auth-page .bg-slate-100,
-html[data-view-mode="modern"] .auth-page .bg-white { background-color: #102b45 !important; border-color: #294967 !important; }
-html[data-view-mode="modern"] .auth-page input,
-html[data-view-mode="modern"] .auth-page select,
-html[data-view-mode="modern"] .auth-page textarea { color: #fff !important; background: #071626 !important; border-color: #294967 !important; color-scheme: dark; }
-html[data-view-mode="modern"] .auth-page input::placeholder { color: #91a5ba !important; }
-html[data-view-mode="modern"] .auth-page .view-mode-toggle { background: #0c1f33 !important; border-color: #294967 !important; }
-html[data-view-mode="modern"] .auth-page .view-mode-option.selected { color: #fff !important; background: #c8102e !important; }
-
-/* Catch opacity-suffixed utility backgrounds too (for example bg-slate-50/90).
-   Tailwind emits a distinct class for these, so the exact-color overrides above
-   do not match them; that left light cards with light-mode text in Modern. */
 html[data-view-mode="modern"] .app-page [class*="bg-slate-50/"],
 html[data-view-mode="modern"] .app-page [class*="bg-slate-100/"],
-html[data-view-mode="modern"] .app-page [class*="bg-slate-200/"],
-html[data-view-mode="modern"] .app-page .bg-slate-300,
-html[data-view-mode="modern"] .app-page .bg-slate-400,
+html[data-view-mode="modern"] .admin-console main .bg-slate-50,
+html[data-view-mode="modern"] .admin-console main .bg-slate-100,
+html[data-view-mode="modern"] .admin-console main .bg-slate-200,
 html[data-view-mode="modern"] .admin-console main [class*="bg-slate-50/"],
-html[data-view-mode="modern"] .admin-console main [class*="bg-slate-100/"],
-html[data-view-mode="modern"] .admin-console main [class*="bg-slate-200/"],
-html[data-view-mode="modern"] .admin-console main .bg-slate-300,
-html[data-view-mode="modern"] .admin-console main .bg-slate-400 {
+html[data-view-mode="modern"] .admin-console main [class*="bg-slate-100/"] {
   color: var(--modern-copy) !important;
   background-color: var(--modern-panel-raised) !important;
   border-color: var(--modern-edge) !important;
 }
-html[data-view-mode="modern"] .app-page [class*="bg-red-50"],
-html[data-view-mode="modern"] .app-page [class*="bg-rose-50"],
-html[data-view-mode="modern"] .admin-console main [class*="bg-red-50"],
-html[data-view-mode="modern"] .admin-console main [class*="bg-rose-50"] {
-  color: var(--modern-copy) !important;
-  background-color: #3b1b2a !important;
+
+/* Modern Inputs, Selects & Textareas */
+html[data-view-mode="modern"] input,
+html[data-view-mode="modern"] select,
+html[data-view-mode="modern"] textarea {
+  color: #ffffff !important;
+  background-color: var(--modern-night) !important;
+  border-color: var(--modern-edge) !important;
+  color-scheme: dark;
+}
+html[data-view-mode="modern"] input::placeholder,
+html[data-view-mode="modern"] textarea::placeholder {
+  color: var(--modern-dim) !important;
+  opacity: 1;
+}
+html[data-view-mode="modern"] input:focus,
+html[data-view-mode="modern"] select:focus,
+html[data-view-mode="modern"] textarea:focus {
+  border-color: #c8102e !important;
+  box-shadow: 0 0 0 2px rgba(200, 16, 46, 0.3) !important;
+}
+
+/* Modern Borders */
+html[data-view-mode="modern"] [class*="border-slate-"] {
   border-color: var(--modern-edge) !important;
 }
-html[data-view-mode="modern"] .app-page [class*="bg-emerald-50"],
-html[data-view-mode="modern"] .admin-console main [class*="bg-emerald-50"] {
-  color: #d1fae5 !important;
-  background-color: #073c35 !important;
-  border-color: #087f68 !important;
-}
-html[data-view-mode="modern"] .app-page [class*="bg-emerald-200/"],
-html[data-view-mode="modern"] .admin-console main [class*="bg-emerald-200/"] {
-  color: #d1fae5 !important;
-  background-color: #064e3b !important;
-  border-color: #047857 !important;
-}
-html[data-view-mode="modern"] .app-page [class*="bg-amber-50"],
-html[data-view-mode="modern"] .app-page [class*="bg-yellow-50"],
-html[data-view-mode="modern"] .admin-console main [class*="bg-amber-50"],
-html[data-view-mode="modern"] .admin-console main [class*="bg-yellow-50"] {
-  color: #fde68a !important;
-  background-color: #3a301a !important;
-  border-color: #74602a !important;
-}
-html[data-view-mode="modern"] .app-page [class*="bg-blue-50"],
-html[data-view-mode="modern"] .admin-console main [class*="bg-blue-50"] {
-  color: #dbeafe !important;
-  background-color: #123557 !important;
-  border-color: #285783 !important;
-}
-html[data-view-mode="modern"] .app-page [class*="bg-purple-50"],
-html[data-view-mode="modern"] .app-page [class*="bg-violet-50"],
-html[data-view-mode="modern"] .admin-console main [class*="bg-purple-50"],
-html[data-view-mode="modern"] .admin-console main [class*="bg-violet-50"] {
-  color: #ede9fe !important;
-  background-color: #30284b !important;
-  border-color: #574584 !important;
-}
-html[data-view-mode="modern"] .app-page [class~="text-red-600"],
-html[data-view-mode="modern"] .app-page [class~="text-red-700"],
-html[data-view-mode="modern"] .app-page [class~="text-red-800"],
-html[data-view-mode="modern"] .app-page [class~="text-rose-600"],
-html[data-view-mode="modern"] .app-page [class~="text-rose-700"],
-html[data-view-mode="modern"] .app-page [class~="text-rose-800"],
-html[data-view-mode="modern"] .admin-console main [class~="text-red-600"],
-html[data-view-mode="modern"] .admin-console main [class~="text-red-700"],
-html[data-view-mode="modern"] .admin-console main [class~="text-red-800"],
-html[data-view-mode="modern"] .admin-console main [class~="text-rose-600"],
-html[data-view-mode="modern"] .admin-console main [class~="text-rose-700"],
-html[data-view-mode="modern"] .admin-console main [class~="text-rose-800"] { color: #fda4af !important; }
-html[data-view-mode="modern"] .app-page [class~="text-emerald-600"],
-html[data-view-mode="modern"] .app-page [class~="text-emerald-700"],
-html[data-view-mode="modern"] .app-page [class~="text-emerald-800"],
-html[data-view-mode="modern"] .admin-console main [class~="text-emerald-600"],
-html[data-view-mode="modern"] .admin-console main [class~="text-emerald-700"],
-html[data-view-mode="modern"] .admin-console main [class~="text-emerald-800"] { color: #6ee7b7 !important; }
-html[data-view-mode="modern"] .app-page [class~="text-amber-700"],
-html[data-view-mode="modern"] .app-page [class~="text-amber-800"],
-html[data-view-mode="modern"] .app-page [class~="text-amber-900"],
-html[data-view-mode="modern"] .admin-console main [class~="text-amber-700"],
-html[data-view-mode="modern"] .admin-console main [class~="text-amber-800"],
-html[data-view-mode="modern"] .admin-console main [class~="text-amber-900"] { color: #fcd34d !important; }
 
-/* One left-side admin navigation layout in both modes; Modern changes color, not structure. */
-html[data-view-mode="modern"] .admin-console .admin-header-brand { display: flex !important; }
-html[data-view-mode="modern"] .admin-console .admin-header-actions .admin-view-toggle,
-html[data-view-mode="classic"] .admin-console .admin-header-actions .admin-view-toggle { display: inline-flex !important; }
-.admin-console .admin-view-toggle { display: inline-flex !important; }
-.admin-console .admin-classic-menu { display: none !important; }
-.admin-console .admin-tabs {
-  position: fixed !important;
-  z-index: 35;
-  top: 82px;
-  bottom: 0;
-  left: 0;
-  display: flex !important;
-  width: 258px !important;
-  min-height: 0;
-  margin: 0 !important;
-  padding: 20px 13px 24px !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  justify-content: flex-start !important;
-  align-content: flex-start !important;
-  gap: 5px !important;
-  overflow: auto !important;
-  color: #cbd5e1;
-  background: #071626 !important;
-  border: 0 !important;
-  border-right: 1px solid #1e3a5f !important;
+/* Modern Status & Accent Tags */
+html[data-view-mode="modern"] [class*="bg-emerald-50"],
+html[data-view-mode="modern"] [class*="bg-emerald-100"] {
+  color: #6ee7b7 !important;
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
 }
-.admin-console .admin-tabs::before {
-  content: "ADMIN WORKSPACE";
-  display: block !important;
-  padding: 4px 12px 13px;
-  color: #8da4be;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: .14em;
+html[data-view-mode="modern"] [class*="bg-amber-50"],
+html[data-view-mode="modern"] [class*="bg-amber-100"],
+html[data-view-mode="modern"] [class*="bg-yellow-50"] {
+  color: #fcd34d !important;
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
 }
-.admin-console .admin-tabs > button {
-  display: flex;
-  width: 100%;
-  min-height: 46px;
-  flex: 0 0 auto;
-  justify-content: flex-start;
-  padding: 0 12px;
-  color: #cbd5e1 !important;
-  background: transparent !important;
-  border: 1px solid transparent !important;
-  border-radius: 9px;
-  text-align: left;
-  text-transform: none;
-  letter-spacing: 0;
-  font-size: 12px;
-  line-height: 1.4;
-  white-space: normal;
+html[data-view-mode="modern"] [class*="bg-red-50"],
+html[data-view-mode="modern"] [class*="bg-rose-50"] {
+  color: #fda4af !important;
+  background-color: rgba(200, 16, 46, 0.18) !important;
+  border-color: rgba(200, 16, 46, 0.35) !important;
 }
-.admin-console .admin-tabs > button:hover { background: #102b45 !important; color: #fff !important; }
-.admin-console .admin-tabs > button[class*="border-[#c8102e]"] { background: rgba(200,16,46,.2) !important; border-left: 3px solid #e11d3f !important; color: #fff !important; }
-.admin-console .admin-tabs > button[class*="border-[#c8102e]"] .text-\[\#c8102e\] { color: #ff9cab !important; }
-.admin-console > header ~ div.bg-white,
-.admin-console main {
-  width: calc(100% - 258px) !important;
-  max-width: none !important;
-  margin-left: 258px !important;
-}
-.admin-console > header ~ div.bg-white > div { max-width: none !important; padding-inline: clamp(22px, 3vw, 48px) !important; }
-.admin-console > header { color: #fff !important; background: #071626 !important; }
-.admin-console main { padding: 30px clamp(22px, 3vw, 48px) 64px; }
-.admin-console > header ~ div.bg-white { background: #fff; border-color: #dce5f1; }
-html[data-view-mode="modern"] .admin-console > header { background: var(--modern-night) !important; border-color: var(--modern-edge) !important; }
-html[data-view-mode="modern"] .admin-console > header ~ div.bg-white { color: var(--modern-copy) !important; background: var(--modern-panel) !important; border-color: var(--modern-edge) !important; }
-html[data-view-mode="modern"] .admin-console > header ~ div.bg-white h1,
-html[data-view-mode="modern"] .admin-console > header ~ div.bg-white h2,
-html[data-view-mode="modern"] .admin-console > header ~ div.bg-white h3 { color: #fff !important; }
-html[data-view-mode="modern"] .admin-console > header ~ div.bg-white p,
-html[data-view-mode="modern"] .admin-console > header ~ div.bg-white .text-slate-500 { color: var(--modern-subtle) !important; }
-html[data-view-mode="modern"] .admin-console .admin-tabs { background: var(--modern-night) !important; }
-html[data-view-mode="modern"] .admin-console .admin-tabs::before { color: #8da4be; }
-html[data-view-mode="modern"] .admin-console main .admin-kpi-grid > div { background: var(--modern-panel) !important; border-color: var(--modern-edge) !important; }
-html[data-view-mode="modern"] .admin-console .admin-header-actions .admin-view-toggle { color: #cbd5e1 !important; }
-html[data-view-mode="modern"] .admin-console .admin-header-actions .view-mode-option.selected { color: #fff !important; background: var(--modern-red) !important; }
-html[data-view-mode="classic"] .admin-console .admin-tabs { background: #071626 !important; }
-html[data-view-mode="classic"] .admin-console .admin-tabs > button[class*="border-[#c8102e]"] { background: rgba(200,16,46,.18) !important; color: #fff !important; }
-
-@media (max-width: 900px) {
-  .admin-console .admin-tabs {
-    position: sticky !important;
-    top: auto;
-    bottom: auto;
-    width: 100% !important;
-    min-height: 54px;
-    padding: 6px 14px !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    overflow-x: auto !important;
-    border-top: 1px solid #1e3a5f !important;
-    border-right: 0 !important;
-  }
-  .admin-console .admin-tabs::before { display: none !important; }
-  .admin-console .admin-tabs > button { width: max-content; min-width: max-content; min-height: 40px; }
-  .admin-console > header ~ div.bg-white,
-  .admin-console main { width: 100% !important; margin-left: 0 !important; }
-  .admin-console main { padding: 22px 18px 48px; }
-}
-@media (max-width: 640px) {
-  .admin-console .admin-header-actions { align-items: center; }
-  .admin-console .admin-header-actions .admin-view-toggle { order: -1; }
-  .view-mode-toggle.compact .view-mode-option { padding: 6px 9px !important; }
-  .admin-console main { padding: 18px 14px 40px; }
+html[data-view-mode="modern"] [class*="bg-blue-50"],
+html[data-view-mode="modern"] [class*="bg-sky-50"] {
+  color: #7dd3fc !important;
+  background-color: rgba(56, 189, 248, 0.15) !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
 }

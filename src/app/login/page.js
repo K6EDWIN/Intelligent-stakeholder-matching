@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import { signIn, getSession, useSession } from "next-auth/react";
+import { signIn, getProviders, getSession, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { KQLogo, Button } from "@/components/KQBrand";
@@ -22,6 +22,15 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [liveStats, setLiveStats] = useState(null);
+  const [googleAvailable, setGoogleAvailable] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    getProviders()
+      .then((providers) => { if (isMounted) setGoogleAvailable(Boolean(providers?.google)); })
+      .catch(() => { if (isMounted) setGoogleAvailable(false); });
+    return () => { isMounted = false; };
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -201,35 +210,38 @@ function LoginForm() {
                 </div>
               )}
 
-              {/* Google OAuth Button */}
-              <div className="mt-5">
-                <button
-                  type="button"
-                  onClick={handleGoogleSignIn}
-                  className="w-full py-3 px-4 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 flex items-center justify-center gap-3 transition cursor-pointer shadow-xs"
-                >
-                  <GoogleIcon size={18} />
-                  <span>Sign in with Google</span>
-                </button>
-              </div>
+              {googleAvailable && (
+                <>
+                  <div className="mt-5">
+                    <button
+                      type="button"
+                      onClick={handleGoogleSignIn}
+                      className="w-full py-3 px-4 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 flex items-center justify-center gap-3 transition cursor-pointer shadow-xs"
+                    >
+                      <GoogleIcon size={18} />
+                      <span>Sign in with Google</span>
+                    </button>
+                  </div>
 
-              {/* Divider */}
-              <div className="flex items-center gap-3 my-5">
-                <div className="flex-1 h-px bg-slate-200" />
-                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  or sign in with email
-                </span>
-                <div className="flex-1 h-px bg-slate-200" />
-              </div>
+                  <div className="flex items-center gap-3 my-5">
+                    <div className="flex-1 h-px bg-slate-200" />
+                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                      or sign in with email
+                    </span>
+                    <div className="flex-1 h-px bg-slate-200" />
+                  </div>
+                </>
+              )}
 
               {/* Sign In Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label htmlFor="login-email" className="block text-xs font-semibold text-slate-700 mb-1.5">
                     Official Email / Membership ID
                   </label>
                   <input
                     type="email"
+                    id="login-email"
                     placeholder="e.g. pilot@kenya-airways.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -240,7 +252,7 @@ function LoginForm() {
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-semibold text-slate-700">
+                    <label htmlFor="login-password" className="block text-xs font-semibold text-slate-700">
                       Password
                     </label>
                     <button
@@ -254,6 +266,7 @@ function LoginForm() {
                   </div>
                   <input
                     type={showPassword ? "text" : "password"}
+                    id="login-password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

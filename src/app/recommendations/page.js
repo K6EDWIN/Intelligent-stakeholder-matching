@@ -53,6 +53,7 @@ export default function RecommendationsPage() {
   const [requestMessage, setRequestMessage] = useState("");
   const [sendingRequest, setSendingRequest] = useState(false);
   const [feedbackSuccess, setFeedbackSuccess] = useState("");
+  const [requestError, setRequestError] = useState("");
   const [recommendationFeedback, setRecommendationFeedback] = useState({});
   const loggedViews = useRef(new Set());
 
@@ -155,6 +156,7 @@ export default function RecommendationsPage() {
     if (!requestMessage.trim()) return;
     setSendingRequest(true);
     setFeedbackSuccess("");
+    setRequestError("");
 
     try {
       const res = await fetch("/api/mentorship-requests", {
@@ -171,7 +173,7 @@ export default function RecommendationsPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || "Could not send mentorship request");
+        setRequestError(data.error || "Could not send the mentorship request. Please try again.");
         setSendingRequest(false);
         return;
       }
@@ -183,8 +185,8 @@ export default function RecommendationsPage() {
         setSendingRequest(false);
         setFeedbackSuccess("");
       }, 1500);
-    } catch (err) {
-      alert("Failed to send request: " + err.message);
+    } catch {
+      setRequestError("We could not reach the server. Check your connection and try again.");
       setSendingRequest(false);
     }
   }
@@ -671,6 +673,9 @@ export default function RecommendationsPage() {
             onClick={() => setSelectedMatch(null)}
           >
             <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="mentorship-request-title"
               className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-200 relative"
               onClick={(e) => e.stopPropagation()}
             >
@@ -678,6 +683,7 @@ export default function RecommendationsPage() {
               <button
                 type="button"
                 onClick={() => setSelectedMatch(null)}
+                aria-label="Close mentorship request"
                 className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
               >
                 <Icon name="close" size={16} />
@@ -690,7 +696,7 @@ export default function RecommendationsPage() {
                   <span className="text-xs font-semibold text-[#c8102e]">
                     {ROLE_LABELS[selectedMatch.role] || selectedMatch.role}
                   </span>
-                  <h3 className="text-lg font-bold text-slate-900">
+                  <h3 id="mentorship-request-title" className="text-lg font-bold text-slate-900">
                     {selectedMatch.fullName}
                   </h3>
                   <p className="text-xs text-slate-500">
@@ -711,6 +717,12 @@ export default function RecommendationsPage() {
                 <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs rounded-xl flex items-center gap-2">
                   <Icon name="check" size={16} />
                   <span>{feedbackSuccess}</span>
+                </div>
+              )}
+
+              {requestError && (
+                <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-800">
+                  {requestError}
                 </div>
               )}
 
@@ -737,7 +749,7 @@ export default function RecommendationsPage() {
                 <textarea
                   rows={4}
                   value={requestMessage}
-                  onChange={(e) => setRequestMessage(e.target.value)}
+                  onChange={(e) => { setRequestMessage(e.target.value); setRequestError(""); }}
                   placeholder="Introduce yourself, share your current role or aviation aspirations..."
                   className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:bg-white focus:border-[#c8102e] transition resize-none"
                 />

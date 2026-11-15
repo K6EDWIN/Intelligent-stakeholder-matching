@@ -29,6 +29,7 @@ export default function OpportunitiesPage() {
   });
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState("");
+  const [postNotice, setPostNotice] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -70,6 +71,7 @@ export default function OpportunitiesPage() {
     e.preventDefault();
     setPosting(true);
     setPostError("");
+    setPostNotice("");
 
     try {
       const res = await fetch("/api/opportunities", {
@@ -91,6 +93,7 @@ export default function OpportunitiesPage() {
         ...prev,
       ]);
       setForm({ title: "", description: "", type: TYPE_OPTIONS[0] });
+      setPostNotice("Your opportunity has been published.");
     } catch (err) {
       setPosting(false);
       setPostError(err.message);
@@ -143,11 +146,12 @@ export default function OpportunitiesPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="opportunity-title" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Title
                   </label>
                   <input
                     name="title"
+                    id="opportunity-title"
                     placeholder="e.g. Graduate Trainee Flight Dispatcher"
                     value={form.title}
                     onChange={handleChange}
@@ -157,11 +161,12 @@ export default function OpportunitiesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="opportunity-description" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Description
                   </label>
                   <textarea
                     name="description"
+                    id="opportunity-description"
                     placeholder="Details about requirements, station location, and how to apply..."
                     value={form.description}
                     onChange={handleChange}
@@ -172,11 +177,12 @@ export default function OpportunitiesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="opportunity-type" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Opportunity Type
                   </label>
                   <select
                     name="type"
+                    id="opportunity-type"
                     value={form.type}
                     onChange={handleChange}
                     className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e] transition text-slate-800"
@@ -190,10 +196,11 @@ export default function OpportunitiesPage() {
                 </div>
 
                 {postError && (
-                  <p className="text-red-700 text-xs bg-red-50 border border-red-200 p-2.5 rounded-lg">
+                  <p role="alert" className="text-red-700 text-xs bg-red-50 border border-red-200 p-2.5 rounded-lg">
                     {postError}
                   </p>
                 )}
+                {postNotice && <p role="status" className="text-emerald-800 text-xs bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg">{postNotice}</p>}
 
                 <Button
                   type="submit"

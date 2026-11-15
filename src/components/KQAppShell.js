@@ -13,7 +13,6 @@ export default function KQAppShell({ children }) {
   const { data: session } = useSession();
   const pathname = usePathname();
   const router = useRouter();
-  const [mobileSelect, setMobileSelect] = useState(pathname);
   const [unreadCount, setUnreadCount] = useState(0);
   const profileHref = profilePathForRole(session?.user?.role);
 
@@ -82,6 +81,9 @@ export default function KQAppShell({ children }) {
   };
 
   const allNavItems = navSections.flatMap((s) => s.items);
+  const activeMobileHref = allNavItems.find((item) =>
+    pathname === item.href || pathname.startsWith(`${item.href}/`)
+  )?.href || "";
 
   const handleMobileNav = (e) => {
     const target = e.target.value;
@@ -89,12 +91,12 @@ export default function KQAppShell({ children }) {
       signOut({ callbackUrl: "/login" });
       return;
     }
-    setMobileSelect(target);
     router.push(target);
   };
 
   return (
     <div className="shell">
+      <a className="app-skip-link" href="#main-content">Skip to main content</a>
       {/* Sidebar Navigation */}
       <aside className="sidebar">
         <div className="flex items-center justify-between mb-5 px-1">
@@ -112,12 +114,13 @@ export default function KQAppShell({ children }) {
               </div>
               <div className="space-y-1">
                 {section.items.map((item) => {
-                  const isActive = pathname === item.href;
+                  const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       className={`sidebar-nav-item ${isActive ? "active" : ""}`}
+                      aria-current={isActive ? "page" : undefined}
                     >
                       <Icon name={item.icon} size={16} />
                       <span className="flex-1 truncate">{item.label}</span>
@@ -180,13 +183,16 @@ export default function KQAppShell({ children }) {
             <select
               aria-label="Navigate section"
               onChange={handleMobileNav}
-              value={mobileSelect}
+              value={activeMobileHref}
               className="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-700 outline-none max-w-[150px] sm:max-w-[200px]"
             >
-              {allNavItems.map((n) => (
-                <option key={n.href} value={n.href}>
-                  {n.label}
-                </option>
+              {!activeMobileHref && <option value="" disabled>Choose a section</option>}
+              {navSections.map((section) => (
+                <optgroup key={section.heading} label={section.heading}>
+                  {section.items.map((item) => (
+                    <option key={item.href} value={item.href}>{item.label}</option>
+                  ))}
+                </optgroup>
               ))}
               {session?.user && <option value="LOGOUT">➔ Log out</option>}
             </select>
@@ -194,6 +200,7 @@ export default function KQAppShell({ children }) {
               <button
                 type="button"
                 onClick={() => signOut({ callbackUrl: "/login" })}
+                aria-label="Log out"
                 className="p-1.5 text-slate-600 hover:text-[#c8102e] rounded-md transition hover:bg-slate-100"
                 title="Log out"
               >
@@ -219,6 +226,7 @@ export default function KQAppShell({ children }) {
             <Link
               href="/directory"
               className="icon-btn"
+              aria-label="Search stakeholder directory"
               title="Search Stakeholder Directory"
             >
               <Icon name="search" size={16} />
@@ -226,6 +234,7 @@ export default function KQAppShell({ children }) {
             <Link
               href="/notifications"
               className="icon-btn relative"
+              aria-label={unreadCount ? `Notifications, ${unreadCount} unread` : "Notifications"}
               title="Notifications"
             >
               <Icon name="bell" size={16} />
@@ -274,7 +283,7 @@ export default function KQAppShell({ children }) {
           </div>
         </header>
 
-        <main className="flex-1 bg-[#f8fafc]">{children}</main>
+        <main id="main-content" className="flex-1 bg-[#f8fafc]">{children}</main>
       </div>
     </div>
   );

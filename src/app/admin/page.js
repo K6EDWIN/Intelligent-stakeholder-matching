@@ -47,6 +47,8 @@ export default function AdminPage() {
   const [error, setError] = useState("");
   const [pendingUserId, setPendingUserId] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
+  const [toastKind, setToastKind] = useState("success");
+  const toastTimer = useRef(null);
   const [adminAccess, setAdminAccess] = useState({ admins: [], invitations: [], currentAdminId: "" });
   const [adminAccessLoading, setAdminAccessLoading] = useState(false);
   const [adminInviteEmail, setAdminInviteEmail] = useState("");
@@ -103,6 +105,8 @@ export default function AdminPage() {
       router.push("/login");
     }
   }, [status, router]);
+
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -315,9 +319,11 @@ export default function AdminPage() {
     setSimError("");
   };
 
-  const showToast = (msg) => {
+  const showToast = (msg, kind = "success") => {
+    clearTimeout(toastTimer.current);
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(""), 4000);
+    setToastKind(kind);
+    toastTimer.current = setTimeout(() => setToastMessage(""), 4000);
   };
 
   const runAction = async (userId, action) => {
@@ -334,7 +340,7 @@ export default function AdminPage() {
       setPendingUserId(null);
 
       if (!res.ok) {
-        alert(data.error || "Action failed");
+        showToast(data.error || "Could not complete that action.", "error");
         return;
       }
 
@@ -350,7 +356,7 @@ export default function AdminPage() {
       );
     } catch (err) {
       setPendingUserId(null);
-      alert("Error: " + err.message);
+      showToast(err.message || "Could not complete that action.", "error");
     }
   };
 
@@ -459,8 +465,8 @@ export default function AdminPage() {
     <div className="admin-console min-h-screen bg-[#f8fafc] text-slate-900 font-sans flex flex-col">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#071626] text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 text-xs flex items-center gap-2 animate-bounce">
-          <Icon name="check" size={16} className="text-emerald-400" />
+        <div role="status" aria-live="polite" className={`fixed bottom-6 right-6 z-50 max-w-[min(92vw,26rem)] text-white px-4 py-3 rounded-xl shadow-2xl border text-xs flex items-center gap-2 ${toastKind === "error" ? "bg-red-950 border-red-700" : "bg-[#071626] border-slate-700"}`}>
+          <Icon name={toastKind === "error" ? "close" : "check"} size={16} className={toastKind === "error" ? "text-red-300" : "text-emerald-400"} />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -493,14 +499,15 @@ export default function AdminPage() {
                 </span>
               </div>
 
-              <Link
-                href="/recommendations"
+              <button
+                type="button"
+                onClick={() => setActiveTab("recommender")}
                 className="admin-portal-link inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
-                title="Preview platform as an end-user stakeholder"
+                title="Open the live member recommendation simulator"
               >
                 <Icon name="sparkles" size={13} />
-                <span className="hidden sm:inline">Portal</span>
-              </Link>
+                <span className="hidden sm:inline">Test Matches</span>
+              </button>
 
               <Link
                 href="/admin/profile"
@@ -540,6 +547,7 @@ export default function AdminPage() {
         <button
           type="button"
           onClick={() => setActiveTab("model")}
+          aria-pressed={activeTab === "model"}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "model"
               ? "border-[#c8102e] text-white bg-slate-800/50"
               : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
@@ -552,6 +560,7 @@ export default function AdminPage() {
         <button
           type="button"
           onClick={() => setActiveTab("recommender")}
+          aria-pressed={activeTab === "recommender"}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "recommender"
               ? "border-[#c8102e] text-white bg-slate-800/50"
               : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
@@ -564,6 +573,7 @@ export default function AdminPage() {
         <button
           type="button"
           onClick={() => setActiveTab("stakeholders")}
+          aria-pressed={activeTab === "stakeholders"}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "stakeholders"
               ? "border-[#c8102e] text-white bg-slate-800/50"
               : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
@@ -592,6 +602,7 @@ export default function AdminPage() {
         <button
           type="button"
           onClick={() => setActiveTab("telemetry")}
+          aria-pressed={activeTab === "telemetry"}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "telemetry"
               ? "border-[#c8102e] text-white bg-slate-800/50"
               : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
@@ -604,6 +615,7 @@ export default function AdminPage() {
         <button
           type="button"
           onClick={() => setActiveTab("admins")}
+          aria-pressed={activeTab === "admins"}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "admins"
               ? "border-[#c8102e] text-white bg-slate-800/50"
               : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
@@ -616,6 +628,7 @@ export default function AdminPage() {
         <button
           type="button"
           onClick={() => setActiveTab("audit")}
+          aria-pressed={activeTab === "audit"}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "audit"
               ? "border-[#c8102e] text-white bg-slate-800/50"
               : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
@@ -679,7 +692,7 @@ export default function AdminPage() {
       {/* ============================================================== */}
       {/* 3. MAIN TAB CONTENT AREA                                      */}
       {/* ============================================================== */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8" aria-label="Administrator workspace content">
         {error && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-xs flex items-center justify-between shadow-xs">
             <span className="font-semibold">{error}</span>
