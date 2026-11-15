@@ -70,8 +70,8 @@ export default function DirectoryPage() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
-
-    async function load() {
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
       const params = new URLSearchParams();
       if (filters.role) params.set("role", filters.role);
       if (filters.skill) params.set("skill", filters.skill);
