@@ -8,6 +8,7 @@ import { KQLogo, Avatar } from "./KQBrand";
 import { Icon } from "./KQIcons";
 import { ViewModeToggle } from "./ViewMode";
 import { profilePathForRole } from "@/lib/profile-navigation";
+import { readApiResponse } from "@/lib/read-api-response";
 
 export default function KQAppShell({ children }) {
   const { data: session } = useSession();
@@ -21,7 +22,7 @@ export default function KQAppShell({ children }) {
     let active = true;
     const refresh = () =>
       fetch("/api/notifications", { cache: "no-store" })
-        .then((res) => (res.ok ? res.json() : null))
+        .then((res) => (res.ok ? readApiResponse(res, "Could not refresh notifications") : null))
         .then((data) => {
           if (active && data) setUnreadCount(data.unreadCount || 0);
         })

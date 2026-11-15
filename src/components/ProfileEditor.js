@@ -292,7 +292,7 @@ export default function ProfileEditor({ adminWorkspace = false, standalone = fal
     <Shell>
       <div className="app-page max-w-5xl">
         {/* Profile Header */}
-        <div className="card overflow-hidden mb-8">
+        <div className="card profile-hero overflow-hidden mb-8">
           <div className="h-28 bg-gradient-to-r from-[#071626] via-[#0e2740] to-[#1e3a5f] relative">
             <div className="absolute inset-0 opacity-15 pointer-events-none">
               <svg className="w-full h-full" viewBox="0 0 500 150" fill="none">

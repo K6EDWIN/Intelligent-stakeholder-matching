@@ -7,6 +7,7 @@ import Link from "next/link";
 import KQAppShell from "@/components/KQAppShell";
 import { Avatar, Button } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
+import { readApiResponse } from "@/lib/read-api-response";
 
 function shortDate(value) {
   if (!value) return "";
@@ -28,8 +29,7 @@ export default function MessagesPage() {
 
   const loadConversations = useCallback(async () => {
     const response = await fetch("/api/conversations", { cache: "no-store" });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Could not load conversations");
+    const data = await readApiResponse(response, "Could not load conversations");
     setConversations(data.conversations || []);
     setSelectedId((current) => {
       if (current && data.conversations?.some((conversation) => conversation.id === current)) return current;
@@ -54,8 +54,7 @@ export default function MessagesPage() {
     if (!selectedId) return;
     const requestVersion = ++messagesRequestVersion.current;
     const response = await fetch(`/api/conversations/${selectedId}/messages`, { cache: "no-store" });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Could not load messages");
+    const data = await readApiResponse(response, "Could not load messages");
     // Ignore older polling responses that arrive after a newer fetch or send.
     if (requestVersion === messagesRequestVersion.current && isActive()) setMessages(data.messages || []);
   }, [selectedId]);
@@ -91,8 +90,7 @@ export default function MessagesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ body }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Message could not be sent");
+      const data = await readApiResponse(response, "Message could not be sent");
       // Invalidate any poll that started while the POST was in flight so it
       // cannot replace this newly sent message with an older conversation.
       messagesRequestVersion.current++;

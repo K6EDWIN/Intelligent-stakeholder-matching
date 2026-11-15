@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { KQLogo } from "@/components/KQBrand";
+import { readApiResponse } from "@/lib/read-api-response";
 
 export default function AcceptAdminInvitationPage() {
   const tokenRef = useRef("");
@@ -26,8 +27,7 @@ export default function AcceptAdminInvitationPage() {
 
     fetch(`/api/admin/invitations/accept?token=${encodeURIComponent(inviteToken)}`)
       .then(async (response) => {
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "This invitation is invalid or expired.");
+        const data = await readApiResponse(response, "This invitation is invalid or expired");
         setEmail(data.email);
       })
       .catch((requestError) => setError(requestError.message))
@@ -45,8 +45,7 @@ export default function AcceptAdminInvitationPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: tokenRef.current, password: form.get("password"), confirmPassword: form.get("confirmPassword") }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not activate the administrator account.");
+      await readApiResponse(response, "Could not activate the administrator account");
       setActivated(true);
     } catch (requestError) {
       setError(requestError.message || "Could not activate the administrator account.");

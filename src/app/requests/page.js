@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import KQAppShell from "@/components/KQAppShell";
 import { Button, Avatar, Tag } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
+import { readApiResponse } from "@/lib/read-api-response";
 
 const ROLE_LABELS = {
   ALUMNI: "Pride Centre Alumni",
@@ -50,10 +51,10 @@ export default function RequestsPage() {
         fetch("/api/connection-requests"),
       ]);
 
-      const mData = await mRes.json();
-      const cData = await cRes.json();
-
-      if (!mRes.ok || !cRes.ok) throw new Error(mData.error || cData.error || "Could not refresh requests.");
+      const [mData, cData] = await Promise.all([
+        readApiResponse(mRes, "Could not load mentorship requests"),
+        readApiResponse(cRes, "Could not load connection requests"),
+      ]);
       setMentorship(mData);
       setConnections(cData);
       setLoading(false);
@@ -72,10 +73,11 @@ export default function RequestsPage() {
       fetch("/api/connection-requests"),
     ])
       .then(async ([mRes, cRes]) => {
-        const mData = await mRes.json();
-        const cData = await cRes.json();
+        const [mData, cData] = await Promise.all([
+          readApiResponse(mRes, "Could not load mentorship requests"),
+          readApiResponse(cRes, "Could not load connection requests"),
+        ]);
         if (!isCurrent) return;
-        if (!mRes.ok || !cRes.ok) throw new Error(mData.error || cData.error || "Could not load requests.");
         setMentorship(mData);
         setConnections(cData);
         setLoading(false);
@@ -114,11 +116,10 @@ export default function RequestsPage() {
         }
         await refreshRequests();
       } else {
-        const data = await res.json();
-        setActionError(data.error || "Could not update this request. Please try again.");
+        await readApiResponse(res, "Could not update this request");
       }
-    } catch {
-      setActionError("We could not reach the server. Check your connection and try again.");
+    } catch (error) {
+      setActionError(error.message || "We could not reach the server. Check your connection and try again.");
     } finally {
       setPendingRequestId(null);
     }
@@ -134,15 +135,15 @@ export default function RequestsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ completed: true }),
       });
-      const data = await response.json();
+      const data = await readApiResponse(response, "Could not mark mentorship complete");
       if (!response.ok) {
         setActionError(data.error || "Could not mark mentorship complete. Please try again.");
         return;
       }
       await refreshRequests();
       setRatingTarget({ id: req.id, kind: "mentorship", name });
-    } catch {
-      setActionError("We could not reach the server. Check your connection and try again.");
+    } catch (error) {
+      setActionError(error.message || "We could not reach the server. Check your connection and try again.");
     } finally {
       setPendingRequestId(null);
     }
@@ -174,11 +175,10 @@ export default function RequestsPage() {
           setFeedbackComment("");
         }, 1600);
       } else {
-        const data = await res.json();
-        setRatingError(data.error || "Could not save your rating. Please try again.");
+        await readApiResponse(res, "Could not save your rating");
       }
-    } catch {
-      setRatingError("We could not reach the server. Check your connection and try again.");
+    } catch (error) {
+      setRatingError(error.message || "We could not reach the server. Check your connection and try again.");
     } finally {
       setSubmittingFeedback(false);
     }
