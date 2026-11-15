@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import KQAppShell from "@/components/KQAppShell";
@@ -21,12 +22,17 @@ export default function EventsPage() {
     description: "",
     location: "",
     eventDate: "",
+    bannerUrl: "",
   });
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState("");
   const [postNotice, setPostNotice] = useState("");
   const [rsvpPendingId, setRsvpPendingId] = useState(null);
   const [rsvpError, setRsvpError] = useState("");
+  const [bannerUploading, setBannerUploading] = useState(false);
+  const [bannerError, setBannerError] = useState("");
+  const [bannerName, setBannerName] = useState("");
+  const [highlightedEventId, setHighlightedEventId] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -53,9 +59,42 @@ export default function EventsPage() {
     load();
   }, [status]);
 
+  useEffect(() => {
+    if (!events.length || typeof window === "undefined") return;
+    const eventId = new URLSearchParams(window.location.search).get("eventId");
+    if (!eventId || !events.some((event) => event.id === eventId)) return;
+    const highlightFrame = window.requestAnimationFrame(() => setHighlightedEventId(eventId));
+    const scrollTimer = window.setTimeout(() => document.getElementById(`event-${eventId}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
+    return () => {
+      window.cancelAnimationFrame(highlightFrame);
+      window.clearTimeout(scrollTimer);
+    };
+  }, [events]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
+  };
+
+  const handleBannerChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBannerError("");
+    setBannerName("");
+    setBannerUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("banner", file);
+      const response = await fetch("/api/events/banner", { method: "POST", body: formData });
+      const data = await readApiResponse(response, "Could not upload event banner");
+      setForm((current) => ({ ...current, bannerUrl: data.url }));
+      setBannerName(file.name);
+    } catch (err) {
+      setBannerError(err.message);
+      e.target.value = "";
+    } finally {
+      setBannerUploading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -85,8 +124,13 @@ export default function EventsPage() {
           ...prev,
         ].sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate))
       );
-      setForm({ title: "", description: "", location: "", eventDate: "" });
-      setPostNotice("Event scheduled successfully.");
+      setForm({ title: "", description: "", location: "", eventDate: "", bannerUrl: "" });
+      setBannerName("");
+      setPostNotice(data.announcement?.failed
+        ? `Event published, but its email announcement was incomplete (${data.announcement.recipientCount} of ${data.announcement.totalRecipients} sent). Check the email settings and contact an administrator to notify remaining members.`
+        : data.announcement?.recipientCount
+        ? `Event published. Email announcement sent to ${data.announcement.recipientCount} members.`
+        : "Event published. There were no other active members to notify.");
     } catch (err) {
       setPosting(false);
       setPostError(err.message);
@@ -234,16 +278,26 @@ export default function EventsPage() {
                   />
                 </div>
 
+                <div>
+                  <label htmlFor="event-banner" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Event Banner <span className="font-normal normal-case text-slate-500">(optional)</span></label>
+                  <input id="event-banner" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleBannerChange} disabled={bannerUploading || posting} className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:font-semibold file:text-slate-700 hover:file:bg-slate-200" aria-describedby="event-banner-help" />
+                  <p id="event-banner-help" className="mt-1 text-xs text-slate-500">JPG, PNG or WebP, up to 4 MB. It appears on the event and announcement email.</p>
+                  {bannerUploading && <p role="status" className="mt-2 text-xs text-slate-600">Uploading banner…</p>}
+                  {bannerName && <p role="status" className="mt-2 text-xs text-emerald-700">Banner ready: {bannerName}</p>}
+                  {bannerError && <p role="alert" className="mt-2 text-xs text-red-700">{bannerError}</p>}
+                  {form.bannerUrl && <Image src={form.bannerUrl} alt="Preview of event banner" width={1280} height={640} unoptimized className="mt-3 max-h-40 w-full rounded-lg border border-slate-200 object-cover" />}
+                </div>
+
                 {postError && (
                   <p role="alert" className="text-red-700 text-xs bg-red-50 border border-red-200 p-2.5 rounded-lg">
                     {postError}
                   </p>
                 )}
-                {postNotice && <p role="status" className="text-emerald-800 text-xs bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg">{postNotice}</p>}
+                {postNotice && <p role="status" className={`text-xs p-2.5 rounded-lg ${postNotice.startsWith("Event published, but") ? "text-amber-900 bg-amber-50 border border-amber-200" : "text-emerald-800 bg-emerald-50 border border-emerald-200"}`}>{postNotice}</p>}
 
                 <Button
                   type="submit"
-                  disabled={posting}
+                  disabled={posting || bannerUploading}
                   className="w-full"
                   icon="arrow"
                 >
@@ -278,8 +332,10 @@ export default function EventsPage() {
                   return (
                     <article
                       key={e.id}
-                      className="card p-5 hover:border-slate-300 transition"
+                      id={`event-${e.id}`}
+                      className={`card overflow-hidden p-5 transition ${highlightedEventId === e.id ? "border-[#c8102e] ring-2 ring-[#c8102e]/20" : "hover:border-slate-300"}`}
                     >
+                      {e.bannerUrl && <Image src={e.bannerUrl} alt={`${e.title} banner`} width={1280} height={640} unoptimized className="-mx-5 -mt-5 mb-4 max-h-72 w-[calc(100%+2.5rem)] object-cover" />}
                       <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
                         <div className="min-w-0 flex-1">
                           <h3 className="font-bold text-base text-slate-900">{e.title}</h3>
@@ -324,6 +380,7 @@ export default function EventsPage() {
                             ? "Cancel RSVP"
                             : "RSVP to Attend"}
                         </Button>
+                        <a href={`/events?eventId=${encodeURIComponent(e.id)}`} className="rounded-lg border border-slate-300 px-3 py-2 text-center font-semibold text-slate-700 hover:bg-slate-50">Event link</a>
                       </div>
                       <ReportButton targetType="EVENT" targetId={e.id} />
                     </article>
