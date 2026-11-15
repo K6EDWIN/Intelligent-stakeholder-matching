@@ -1,4 +1,4 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm test && npx prisma generate && npx next build --webpack"
+  "buildCommand": "npm test && npm run build"
 }
