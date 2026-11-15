@@ -15,6 +15,7 @@ export async function GET() {
   }
 
   const events = await prisma.event.findMany({
+    where: { isHidden: false, createdBy: { isDeleted: false } },
     include: {
       createdBy: { select: { id: true, profile: { select: { fullName: true } } } },
       participants: { select: { userId: true } },

@@ -61,6 +61,10 @@ export default function AdminPage() {
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState("");
   const [selectedAudit, setSelectedAudit] = useState(null);
+  const [reports, setReports] = useState([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportsError, setReportsError] = useState("");
+  const [reportActionId, setReportActionId] = useState(null);
 
   // Stakeholder Registry Filters
   const [userSearch, setUserSearch] = useState("");
@@ -190,6 +194,46 @@ export default function AdminPage() {
       Promise.resolve().then(loadAdminAccess);
     }
   }, [status, session?.user?.role, activeTab, loadAdminAccess]);
+
+  const loadReports = useCallback(async () => {
+    setReportsLoading(true);
+    setReportsError("");
+    try {
+      const response = await fetch("/api/admin/reports");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not load reports");
+      setReports(data.reports || []);
+    } catch (loadError) {
+      setReportsError(loadError.message || "Could not load reports");
+    } finally {
+      setReportsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user?.role === "ADMIN" && activeTab === "reports") {
+      Promise.resolve().then(loadReports);
+    }
+  }, [status, session?.user?.role, activeTab, loadReports]);
+
+  const reviewReport = async (report, action) => {
+    setReportActionId(report.id);
+    setReportsError("");
+    try {
+      const response = await fetch("/api/admin/reports", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId: report.id, action }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not review report");
+      await loadReports();
+    } catch (actionError) {
+      setReportsError(actionError.message || "Could not review report");
+    } finally {
+      setReportActionId(null);
+    }
+  };
 
   useEffect(() => {
     if (status !== "authenticated" || session?.user?.role !== "ADMIN" || activeTab !== "audit") return undefined;
@@ -459,7 +503,7 @@ export default function AdminPage() {
               </Link>
 
               <Link
-                href="/profile"
+                href="/admin/profile"
                 className="admin-profile-link inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/70 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
                 title="View and edit your administrator profile"
               >
@@ -480,7 +524,7 @@ export default function AdminPage() {
                 <summary><Avatar name={session?.user?.name || session?.user?.email} size="sm" role="ADMIN" /><span>Profile</span></summary>
                 <div className="admin-classic-menu-popover">
                   <Link href="/recommendations">Stakeholder Portal</Link>
-                  <Link href="/profile">Admin Profile</Link>
+                  <Link href="/admin/profile">Admin Profile</Link>
                   <div className="admin-classic-menu-layout"><span>Layout</span><ViewModeToggle compact /></div>
                   <button type="button" onClick={() => signOut({ callbackUrl: "/login" })}>Log out</button>
                 </div>
@@ -534,6 +578,19 @@ export default function AdminPage() {
 
         <button
           type="button"
+          onClick={() => setActiveTab("reports")}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "reports"
+              ? "border-[#c8102e] text-white bg-slate-800/50"
+              : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600"
+            }`}
+        >
+          <Icon name="shield" size={14} className={activeTab === "reports" ? "text-[#c8102e]" : ""} />
+          <span>Community Reports</span>
+          {reports.length > 0 && <span className="rounded-full bg-rose-700 px-1.5 text-[10px] text-white">{reports.length}</span>}
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab("telemetry")}
           className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold border-b-2 transition uppercase tracking-wider whitespace-nowrap ${activeTab === "telemetry"
               ? "border-[#c8102e] text-white bg-slate-800/50"
@@ -569,7 +626,7 @@ export default function AdminPage() {
         </button>
         <div className="admin-sidebar-footer">
           <Link href="/recommendations" className="admin-sidebar-link"><Icon name="sparkles" size={15} /> Stakeholder Portal</Link>
-          <Link href="/profile" className="admin-sidebar-link"><Icon name="profile" size={15} /> Admin Profile</Link>
+          <Link href="/admin/profile" className="admin-sidebar-link"><Icon name="profile" size={15} /> Admin Profile</Link>
           <div className="admin-sidebar-layout"><span>Layout</span><ViewModeToggle compact /></div>
           <button type="button" className="admin-sidebar-link" onClick={() => signOut({ callbackUrl: "/login" })}><Icon name="logout" size={15} /> Log out</button>
         </div>
@@ -597,6 +654,7 @@ export default function AdminPage() {
                 {activeTab === "telemetry" && "Community Interactions & Engagement Funnel"}
                 {activeTab === "admins" && "Administrator Access & Invitations"}
                 {activeTab === "audit" && "Member & Administrator Activity Log"}
+                {activeTab === "reports" && "Community Reports & Moderation"}
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
                 {activeTab === "model" && "Compare baseline ranking methods and monitor the adaptive recommender."}
@@ -605,6 +663,7 @@ export default function AdminPage() {
                 {activeTab === "telemetry" && "Real-time mentorship handshakes, bilateral connections, and route co-travel metrics."}
                 {activeTab === "admins" && "Invite trusted administrators by email, track setup, and manage elevated access."}
                 {activeTab === "audit" && "Review who performed each action, when it happened, and the recorded details."}
+                {activeTab === "reports" && "Review member reports and dismiss them or take action on the reported account or content."}
               </p>
             </div>
 
@@ -628,6 +687,44 @@ export default function AdminPage() {
               Retry
             </Button>
           </div>
+        )}
+
+        {activeTab === "reports" && (
+          <section className="space-y-4">
+            {reportsError && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{reportsError}</p>}
+            {reportsLoading ? (
+              <div className="card p-8 text-center text-sm text-slate-500">Loading community reports...</div>
+            ) : reports.length === 0 ? (
+              <div className="card p-10 text-center text-sm text-slate-500">There are no open community reports.</div>
+            ) : reports.map((report) => (
+              <article key={report.id} className="card p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-rose-50 px-2.5 py-1 text-[10px] font-bold uppercase text-rose-800">{report.targetType}</span>
+                      <span className="text-sm font-bold text-slate-900">{report.reason.replaceAll("_", " ")}</span>
+                      <span className="text-xs text-slate-500">{new Date(report.createdAt).toLocaleString()}</span>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">
+                      Reported by {report.reporter?.isDeleted ? "Deleted member" : report.reporter?.profile?.fullName || "Community member"}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-600">About: {report.targetLabel || "Unavailable target"}</p>
+                    {report.description && <p className="mt-3 whitespace-pre-wrap text-sm text-slate-700">{report.description}</p>}
+                    <p className="mt-2 break-all text-[10px] text-slate-400">Target reference: {report.targetId}</p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    {report.targetType === "USER" && (
+                      <Button size="sm" variant="secondary" disabled={reportActionId === report.id} onClick={() => reviewReport(report, "SUSPEND_USER")}>Suspend user</Button>
+                    )}
+                    {["EVENT", "OPPORTUNITY"].includes(report.targetType) && (
+                      <Button size="sm" variant="secondary" disabled={reportActionId === report.id} onClick={() => reviewReport(report, "HIDE_CONTENT")}>Hide content</Button>
+                    )}
+                    <Button size="sm" disabled={reportActionId === report.id} onClick={() => reviewReport(report, "DISMISS")}>Dismiss</Button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </section>
         )}
 
         {/* ============================================================ */}

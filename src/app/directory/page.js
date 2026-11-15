@@ -7,6 +7,7 @@ import KQAppShell from "@/components/KQAppShell";
 import { Button, Tag, Avatar } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
 import RequestActions from "@/components/RequestActions";
+import ReportButton from "@/components/ReportButton";
 
 const ROLE_LABELS = {
   ALUMNI: "Pride Centre Alumni",
@@ -30,12 +31,14 @@ export default function DirectoryPage() {
 
   const [meta, setMeta] = useState({ skills: [], interests: [] });
   const [profiles, setProfiles] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState({
     role: "",
     skill: "",
     interest: "",
+    department: "",
     q: "",
   });
 
@@ -55,12 +58,24 @@ export default function DirectoryPage() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
+    fetch("/api/directory?departments=true")
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Could not load departments");
+        setDepartments(data.departments || []);
+      })
+      .catch((err) => setError(err.message));
+  }, [status]);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
 
     async function load() {
       const params = new URLSearchParams();
       if (filters.role) params.set("role", filters.role);
       if (filters.skill) params.set("skill", filters.skill);
       if (filters.interest) params.set("interest", filters.interest);
+      if (filters.department) params.set("department", filters.department);
       if (filters.q) params.set("q", filters.q);
 
       try {
@@ -131,7 +146,7 @@ export default function DirectoryPage() {
         <div className="card p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
             {/* Search Input */}
-            <div className="lg:col-span-5 relative">
+            <div className="lg:col-span-4 relative">
               <Icon
                 name="search"
                 size={16}
@@ -146,7 +161,7 @@ export default function DirectoryPage() {
             </div>
 
             {/* Role Filter */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-2">
               <select
                 value={filters.role}
                 onChange={(e) => handleFilterChange("role", e.target.value)}
@@ -157,6 +172,18 @@ export default function DirectoryPage() {
                     {opt.label}
                   </option>
                 ))}
+              </select>
+            </div>
+
+            <div className="lg:col-span-2">
+              <select
+                aria-label="Filter by department"
+                value={filters.department}
+                onChange={(e) => handleFilterChange("department", e.target.value)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none focus:border-[#c8102e] text-slate-700"
+              >
+                <option value="">All Departments</option>
+                {departments.map((department) => <option key={department} value={department}>{department}</option>)}
               </select>
             </div>
 
@@ -199,9 +226,7 @@ export default function DirectoryPage() {
             </span>
             <button
               type="button"
-              onClick={() =>
-                setFilters({ role: "", skill: "", interest: "", q: "" })
-              }
+              onClick={() => setFilters({ role: "", skill: "", interest: "", department: "", q: "" })}
               className="text-[#c8102e] font-semibold hover:underline cursor-pointer"
             >
               Reset Filters
@@ -282,6 +307,7 @@ export default function DirectoryPage() {
                     userId={p.userId}
                     mentorshipRole={p.mentorshipRole}
                   />
+                  <ReportButton targetType="USER" targetId={p.userId} />
                 </div>
               </article>
             ))}

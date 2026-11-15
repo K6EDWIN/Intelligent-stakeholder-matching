@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import KQAppShell from "@/components/KQAppShell";
 import { Button, Tag } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
+import ReportButton from "@/components/ReportButton";
 
 export default function EventsPage() {
   const { status } = useSession();
@@ -316,6 +317,7 @@ export default function EventsPage() {
                             : "RSVP to Attend"}
                         </Button>
                       </div>
+                      <ReportButton targetType="EVENT" targetId={e.id} />
                     </article>
                   );
                 })}

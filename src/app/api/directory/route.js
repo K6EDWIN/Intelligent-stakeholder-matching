@@ -17,7 +17,22 @@ export async function GET(request) {
   const role = searchParams.get("role") || "";
   const skillId = searchParams.get("skill") || "";
   const interestId = searchParams.get("interest") || "";
+  const department = searchParams.get("department")?.trim() || "";
   const q = searchParams.get("q")?.trim() || "";
+  const publicMemberWhere = {
+    isPublic: true,
+    user: { isVerified: true, isSuspended: false, isDeleted: false, isDemo: false },
+  };
+
+  if (searchParams.get("departments") === "true") {
+    const departments = await prisma.profile.findMany({
+      where: { ...publicMemberWhere, department: { not: null } },
+      select: { department: true },
+      distinct: ["department"],
+      orderBy: { department: "asc" },
+    });
+    return NextResponse.json({ departments: departments.map((item) => item.department).filter(Boolean) });
+  }
 
   const profiles = await prisma.profile.findMany({
     where: {
@@ -26,11 +41,13 @@ export async function GET(request) {
       user: {
         isVerified: true,
         isSuspended: false,
+        isDeleted: false,
         isDemo: false,
         ...(role ? { role } : {}),
       },
       ...(skillId ? { skills: { some: { skillId } } } : {}),
       ...(interestId ? { interests: { some: { interestId } } } : {}),
+      ...(department ? { department: { equals: department, mode: "insensitive" } } : {}),
       ...(q
         ? {
             OR: [
