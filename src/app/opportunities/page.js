@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import KQAppShell from "@/components/KQAppShell";
 import { Button, Tag } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
+import ReportButton from "@/components/ReportButton";
 
 const TYPE_OPTIONS = [
   "Career Opening",
@@ -246,6 +247,7 @@ export default function OpportunitiesPage() {
                         <Icon name="check" size={13} /> Verified Community Post
                       </span>
                     </div>
+                    <ReportButton targetType="OPPORTUNITY" targetId={o.id} />
                   </article>
                 ))}
               </div>

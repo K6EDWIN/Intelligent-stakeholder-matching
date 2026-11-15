@@ -29,29 +29,29 @@ export async function GET() {
     feedbackAgg,
     totalFlightReconnects,
   ] = await Promise.all([
-    prisma.user.count({ where: { isDemo: false } }),
-    prisma.user.count({ where: { isVerified: true, isDemo: false } }),
-    prisma.user.count({ where: { isSuspended: true, isDemo: false } }),
+    prisma.user.count({ where: { isDemo: false, isDeleted: false } }),
+    prisma.user.count({ where: { isVerified: true, isDemo: false, isDeleted: false } }),
+    prisma.user.count({ where: { isSuspended: true, isDemo: false, isDeleted: false } }),
     typeof prisma.user.groupBy === "function"
-      ? prisma.user.groupBy({ by: ["role"], where: { isDemo: false }, _count: true })
+      ? prisma.user.groupBy({ by: ["role"], where: { isDemo: false, isDeleted: false }, _count: true })
       : Promise.resolve([]),
     typeof prisma.mentorshipRequest?.groupBy === "function"
-      ? prisma.mentorshipRequest.groupBy({ by: ["status"], where: { sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } }, _count: true })
+      ? prisma.mentorshipRequest.groupBy({ by: ["status"], where: { sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } }, _count: true })
       : Promise.resolve([]),
     typeof prisma.connectionRequest?.groupBy === "function"
-      ? prisma.connectionRequest.groupBy({ by: ["status"], where: { sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } }, _count: true })
+      ? prisma.connectionRequest.groupBy({ by: ["status"], where: { sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } }, _count: true })
       : Promise.resolve([]),
     typeof prisma.event?.count === "function" ? prisma.event.count() : Promise.resolve(0),
     typeof prisma.opportunity?.count === "function"
       ? prisma.opportunity.count()
       : Promise.resolve(0),
     typeof prisma.recommendation?.count === "function"
-      ? prisma.recommendation.count({ where: { owner: { isDemo: false }, matchedUser: { isDemo: false } } })
+      ? prisma.recommendation.count({ where: { owner: { isDemo: false, isDeleted: false }, matchedUser: { isDemo: false, isDeleted: false } } })
       : Promise.resolve(0),
     typeof prisma.recommendation?.aggregate === "function"
       ? prisma.recommendation.aggregate({
           _avg: { hybridScore: true, contentScore: true, collaborativeScore: true },
-          where: { owner: { isDemo: false }, matchedUser: { isDemo: false } },
+          where: { owner: { isDemo: false, isDeleted: false }, matchedUser: { isDemo: false, isDeleted: false } },
         })
       : Promise.resolve({ _avg: {} }),
     typeof prisma.feedback?.aggregate === "function"
@@ -59,13 +59,13 @@ export async function GET() {
           _count: true,
           _avg: { rating: true },
           where: {
-            user: { isDemo: false },
+            user: { isDemo: false, isDeleted: false },
             feedbackType: { in: ["MENTORSHIP_USEFULNESS", "CONNECTION_USEFULNESS"] },
           },
         })
       : Promise.resolve({ _count: 0, _avg: { rating: 0 } }),
     typeof prisma.flightReconnect?.count === "function"
-      ? prisma.flightReconnect.count({ where: { user: { isDemo: false } } })
+      ? prisma.flightReconnect.count({ where: { user: { isDemo: false, isDeleted: false } } })
       : Promise.resolve(0),
   ]);
 

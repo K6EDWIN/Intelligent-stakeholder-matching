@@ -8,6 +8,7 @@ export default withAuth({
 
       // Suspended accounts are immediately denied and redirected to login
       if (token.isSuspended) return false;
+      if (token.isDeleted) return false;
 
       // Admin route guard: only administrators can access /admin
       if (req.nextUrl.pathname.startsWith("/admin") && token.role !== "ADMIN") {

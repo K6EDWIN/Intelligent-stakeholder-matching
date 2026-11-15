@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, KQLogo } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
@@ -8,10 +9,14 @@ import { ViewModeToggle } from "@/components/ViewMode";
 
 export default function AdminProfileShell({ children }) {
   const { data: session } = useSession();
+  const router = useRouter();
 
   return (
     <div className="admin-profile-workspace">
       <header className="admin-profile-header">
+        <button type="button" onClick={() => router.back()} className="admin-profile-back">
+          Back
+        </button>
         <Link href="/admin" className="admin-profile-brand" aria-label="Return to PrideConnect admin console">
           <KQLogo light />
           <span className="admin-profile-brand-copy">

@@ -169,7 +169,7 @@ export async function GET(req) {
 
     const [profiles, acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections, relevanceFeedback, modelArtifacts, recommendationEvents] = await Promise.all([
       prisma.profile.findMany({
-        where: { user: { isVerified: true, isSuspended: false, isDemo: false } },
+        where: { user: { isVerified: true, isSuspended: false, isDeleted: false, isDemo: false } },
         include: {
           user: { select: { id: true, role: true } },
           skills: { include: { skill: true } },
@@ -178,26 +178,26 @@ export async function GET(req) {
         },
       }),
       prisma.mentorshipRequest.findMany({
-        where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+        where: { status: "ACCEPTED", sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } },
         select: { senderId: true, receiverId: true },
       }),
       prisma.connectionRequest.findMany({
-        where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+        where: { status: "ACCEPTED", sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } },
         select: { senderId: true, receiverId: true },
       }),
       prisma.mentorshipRequest.findMany({
-        where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+        where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } },
         select: { status: true, modelFeatures: true, createdAt: true },
       }),
       prisma.connectionRequest.findMany({
-        where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+        where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } },
         select: { status: true, modelFeatures: true, createdAt: true },
       }),
       prisma.feedback.findMany({
         where: {
           feedbackType: "MATCH_RELEVANCE",
-          user: { isDemo: false },
-          recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } },
+          user: { isDemo: false, isDeleted: false },
+          recommendation: { is: { owner: { isDemo: false, isDeleted: false }, matchedUser: { isDemo: false, isDeleted: false } } },
         },
         select: {
           rating: true,
@@ -215,8 +215,8 @@ export async function GET(req) {
       prisma.recommendationEvent.findMany({
         where: {
           eventType: "SERVED",
-          owner: { is: { isDemo: false } },
-          recommendation: { is: { matchedUser: { is: { isDemo: false } } } },
+          owner: { is: { isDemo: false, isDeleted: false } },
+          recommendation: { is: { matchedUser: { is: { isDemo: false, isDeleted: false } } } },
         },
         orderBy: { createdAt: "asc" },
         select: {

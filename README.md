@@ -31,6 +31,9 @@ Acceptance training requires at least 12 resolved requests with at least four ac
 - View recommended mentors and professional peers, including the shared skills and interests that explain a match.
 - Send, receive, accept, or decline mentorship and connection requests.
 - Share aviation opportunities and events, and RSVP to events.
+- Report a member, event, or opportunity for administrator review; administrators can dismiss reports, suspend a reported member, or hide reported content.
+- Delete a member account through Profile settings; the account is anonymized and removed from sign-in/discovery while linked activity records needed for integrity are retained.
+- Filter the stakeholder directory by department as well as role, skill, interest, and search text.
 - Opt in to Flight Reconnect by recording a route and date. A route match is shown only when both people consent to sharing.
 - Let administrators verify accounts, suspend accounts, inspect platform activity, and view recommendation diagnostics.
 
@@ -152,6 +155,8 @@ Key limitations to keep in mind:
 
 To evaluate real recommendation quality, the project needs consented real usage data, a time-aware or otherwise leakage-resistant evaluation split, relevance judgments from members, baseline comparisons, and a user study. Until then, present the current metrics as prototype diagnostics.
 
+The repository includes a participant questionnaire, manual baseline protocol, and a bounded localhost-only performance smoke harness in [`docs/EVALUATION_PROTOCOL.md`](docs/EVALUATION_PROTOCOL.md). These are procedures, not evidence that a participant study or load test has already been completed. Run `node scripts/performance-smoke.mjs http://localhost:3000 20 2` against a running local app; set `PERF_PATH` and (for authenticated APIs) `PERF_COOKIE` in the local process environment as described in the protocol.
+
 ## System overview
 
 ```text
@@ -261,6 +266,7 @@ Open <http://localhost:3000>. Sign in with a seeded stakeholder or the seeded ad
 npm run lint       # Check JavaScript and React code
 npm test           # Run unit and integration tests
 npm run build      # Generate Prisma client and build the Next.js app
+npm run test:performance -- http://localhost:3000 20 2 # Bounded localhost smoke test
 npm run start      # Serve a previously built app
 ```
 
@@ -270,6 +276,8 @@ The database separates accounts from stakeholder profiles. Profiles link to skil
 
 Registration and sign-in are authenticated flows. Public profile visibility, verification, and suspension affect eligibility. Flight Reconnect requires consent from both people before a match is exposed. This is a research prototype, so it should not be used to store real passenger itineraries or other sensitive operational data without an appropriate privacy and security review.
 
+Member account deletion is a soft-delete/anonymization workflow, not a physical row deletion: sign-in and public discovery are disabled, profile fields and selected personal text are anonymized or cleared, and certain linked records remain for relationship integrity and moderation history. Community reports can contain sensitive descriptions, are restricted to administrators, and are redacted when the reporter deletes their account. Apply the Prisma schema changes before deploying these features.
+
 ## Documentation guide
 
 - [Machine-learning model report](docs/ML_MODEL.md): NCF design, experiment, measured results, and limitations.
@@ -277,6 +285,7 @@ Registration and sign-in are authenticated flows. Public profile visibility, ver
 - [Data guide](docs/DATA.md): source, shape, synthetic nature, and seeding behavior of the CSV files.
 - [AI development disclosure](docs/AI_USAGE.md): how AI tools were used during development.
 - [Project roadmap](docs/ROADMAP.md): current implementation status and remaining work.
+- [Recommendation evaluation protocol](docs/EVALUATION_PROTOCOL.md): participant questionnaire, manual baseline protocol, and bounded local performance smoke test.
 
 ## Academic information
 

@@ -57,7 +57,7 @@ export async function GET() {
     where: {
       isPublic: true,
       userId: { not: session.user.id, notIn: dismissedUserIds },
-      user: { isVerified: true, isSuspended: false, isDemo: false },
+      user: { isVerified: true, isSuspended: false, isDeleted: false, isDemo: false },
     },
     include: {
       user: { select: { id: true, role: true } },
@@ -70,19 +70,19 @@ export async function GET() {
 
   const [acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections] = await Promise.all([
     prisma.mentorshipRequest.findMany({
-      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } },
       select: { senderId: true, receiverId: true },
     }),
     prisma.connectionRequest.findMany({
-      where: { status: "ACCEPTED", sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+      where: { status: "ACCEPTED", sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } },
       select: { senderId: true, receiverId: true },
     }),
     prisma.mentorshipRequest.findMany({
-      where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+      where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } },
       select: { status: true, modelFeatures: true },
     }),
     prisma.connectionRequest.findMany({
-      where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+      where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } },
       select: { status: true, modelFeatures: true },
     }),
   ]);
@@ -100,8 +100,8 @@ export async function GET() {
     where: {
       feedbackType: "MATCH_RELEVANCE",
       userId: session.user.id,
-      user: { isDemo: false },
-      recommendation: { is: { owner: { isDemo: false }, matchedUser: { isDemo: false } } },
+      user: { isDemo: false, isDeleted: false },
+      recommendation: { is: { owner: { isDemo: false, isDeleted: false }, matchedUser: { isDemo: false, isDeleted: false } } },
     },
     select: { rating: true, modelFeatures: true, recommendation: { select: { matchedUserId: true } } },
   });
@@ -194,18 +194,18 @@ export async function GET() {
     prisma.recommendationEvent.count({
       where: {
         eventType: "SERVED",
-        owner: { is: { isDemo: false } },
-        recommendation: { is: { matchedUser: { is: { isDemo: false } } } },
+        owner: { is: { isDemo: false, isDeleted: false } },
+        recommendation: { is: { matchedUser: { is: { isDemo: false, isDeleted: false } } } },
       },
     }),
     prisma.feedback.count({
       where: {
-        user: { isDemo: false },
+        user: { isDemo: false, isDeleted: false },
         OR: [{ rating: { gte: 4 } }, { rating: { lte: 2 } }],
         AND: [{
           OR: [
-            { recommendation: { is: { owner: { is: { isDemo: false } }, matchedUser: { is: { isDemo: false } } } } },
-            { mentorshipRequest: { is: { sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } } } },
+            { recommendation: { is: { owner: { is: { isDemo: false, isDeleted: false } }, matchedUser: { is: { isDemo: false, isDeleted: false } } } } },
+            { mentorshipRequest: { is: { sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } } } },
           ],
         }],
       },
