@@ -7,6 +7,7 @@ import Link from "next/link";
 import { KQLogo, Button } from "@/components/KQBrand";
 import { Icon, GoogleIcon } from "@/components/KQIcons";
 import { ViewModeToggle } from "@/components/ViewMode";
+import { readApiResponse } from "@/lib/read-api-response";
 
 function LoginForm() {
   const router = useRouter();
@@ -35,7 +36,7 @@ function LoginForm() {
   useEffect(() => {
     let isMounted = true;
     fetch("/api/public-stats", { cache: "no-store" })
-      .then((response) => response.ok ? response.json() : null)
+      .then((response) => response.ok ? readApiResponse(response, "Could not load platform statistics") : null)
       .then((stats) => { if (isMounted && stats) setLiveStats(stats); })
       .catch(() => {});
     return () => { isMounted = false; };

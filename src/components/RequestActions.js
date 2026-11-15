@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Icon } from "@/components/KQIcons";
+import { readApiResponse } from "@/lib/read-api-response";
 
 const ENDPOINTS = {
   mentorship: "/api/mentorship-requests",
@@ -47,18 +48,13 @@ export default function RequestActions({
         }),
       });
 
-      const data = await res.json();
+      await readApiResponse(res, "Could not send request");
       setPendingKind(null);
-
-      if (!res.ok) {
-        setError(data.error || "Could not send request");
-        return;
-      }
 
       setSentKinds((s) => ({ ...s, [kind]: true }));
     } catch (err) {
       setPendingKind(null);
-      setError("Network error: " + err.message);
+      setError(err.message || "Could not send request. Please try again.");
     }
   };
 

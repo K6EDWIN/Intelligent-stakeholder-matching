@@ -7,6 +7,7 @@ import KQAppShell from "@/components/KQAppShell";
 import { Button, Tag } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
 import ReportButton from "@/components/ReportButton";
+import { readApiResponse } from "@/lib/read-api-response";
 
 const TYPE_OPTIONS = [
   "Career Opening",
@@ -43,13 +44,7 @@ export default function OpportunitiesPage() {
     async function load() {
       try {
         const res = await fetch("/api/opportunities");
-        const data = await res.json();
-
-        if (!res.ok) {
-          setError(data.error || "Could not load opportunities");
-          setLoading(false);
-          return;
-        }
+        const data = await readApiResponse(res, "Could not load opportunities");
 
         setOpportunities(data.opportunities || []);
         setLoading(false);
@@ -79,14 +74,9 @@ export default function OpportunitiesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
+      const data = await readApiResponse(res, "Could not post opportunity");
 
       setPosting(false);
-
-      if (!res.ok) {
-        setPostError(data.error || "Could not post opportunity");
-        return;
-      }
 
       setOpportunities((prev) => [
         { ...data.opportunity, postedBy: { profile: { fullName: "You" } } },

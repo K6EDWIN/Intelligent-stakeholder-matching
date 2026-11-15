@@ -8,6 +8,7 @@ import { Button, Tag, Avatar } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
 import RequestActions from "@/components/RequestActions";
 import ReportButton from "@/components/ReportButton";
+import { readApiResponse } from "@/lib/read-api-response";
 
 const ROLE_LABELS = {
   ALUMNI: "Pride Centre Alumni",
@@ -52,7 +53,7 @@ export default function DirectoryPage() {
   useEffect(() => {
     if (status !== "authenticated") return;
     fetch("/api/meta")
-      .then((res) => res.json())
+      .then((res) => readApiResponse(res, "Could not load profile filters"))
       .then(setMeta)
       .catch(() => {});
   }, [status]);
@@ -61,8 +62,7 @@ export default function DirectoryPage() {
     if (status !== "authenticated") return;
     fetch("/api/directory?departments=true")
       .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Could not load departments");
+        const data = await readApiResponse(res, "Could not load departments");
         setDepartments(data.departments || []);
       })
       .catch((err) => setError(err.message));
@@ -83,8 +83,7 @@ export default function DirectoryPage() {
         setLoading(true);
         setError("");
         const res = await fetch(`/api/directory?${params.toString()}`, { signal: controller.signal });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Could not load directory");
+        const data = await readApiResponse(res, "Could not load directory");
         setProfiles(data.profiles || []);
       } catch (err) {
         if (err.name !== "AbortError") setError(err.message || "Could not load directory. Try again.");

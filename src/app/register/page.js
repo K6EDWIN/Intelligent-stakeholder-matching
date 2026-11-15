@@ -6,6 +6,7 @@ import { getProviders, signIn } from "next-auth/react";
 import { KQLogo, Button } from "@/components/KQBrand";
 import { Icon, GoogleIcon } from "@/components/KQIcons";
 import { ViewModeToggle } from "@/components/ViewMode";
+import { readApiResponse } from "@/lib/read-api-response";
 
 const PERSONAS = [
   {
@@ -104,13 +105,8 @@ export default function RegisterPage() {
         }),
       });
 
-      const data = await res.json();
+      await readApiResponse(res, "Registration failed");
       setLoading(false);
-
-      if (!res.ok) {
-        setError(data.error || "Registration failed. Please verify your details.");
-        return;
-      }
 
       setSubmitted(true);
     } catch (err) {

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import KQAppShell from "@/components/KQAppShell";
 import { Button, Tag, Avatar } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
+import { readApiResponse } from "@/lib/read-api-response";
 
 const ROLE_LABELS = {
   ALUMNI: "Pride Centre Alumni",
@@ -88,13 +89,7 @@ export default function RecommendationsPage() {
     async function load() {
       try {
         const res = await fetch("/api/recommendations");
-        const data = await res.json();
-
-        if (!res.ok) {
-          setError(data.error || "Could not load recommendations");
-          setLoading(false);
-          return;
-        }
+        const data = await readApiResponse(res, "Could not load recommendations");
 
         setRecommendations(data.recommendations || []);
         setRecommendationFeedback(Object.fromEntries(
@@ -170,13 +165,7 @@ export default function RecommendationsPage() {
         }),
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setRequestError(data.error || "Could not send the mentorship request. Please try again.");
-        setSendingRequest(false);
-        return;
-      }
+      await readApiResponse(res, "Could not send the mentorship request");
 
       setFeedbackSuccess("Mentorship request dispatched successfully via KQ PrideConnect.");
       await recordRecommendationEvent(selectedMatch, "CONTACT");
@@ -185,8 +174,8 @@ export default function RecommendationsPage() {
         setSendingRequest(false);
         setFeedbackSuccess("");
       }, 1500);
-    } catch {
-      setRequestError("We could not reach the server. Check your connection and try again.");
+    } catch (error) {
+      setRequestError(error.message || "We could not reach the server. Check your connection and try again.");
       setSendingRequest(false);
     }
   }
@@ -203,8 +192,7 @@ export default function RecommendationsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ recommendationId: item.recommendationId, rating }),
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Feedback could not be saved");
+      await readApiResponse(response, "Feedback could not be saved");
       setRecommendationFeedback((current) => ({
         ...current,
         [item.recommendationId]: { rating, saving: false, error: "" },

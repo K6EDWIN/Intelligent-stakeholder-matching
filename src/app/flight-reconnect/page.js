@@ -215,7 +215,7 @@ export default function FlightReconnectPage() {
     <KQAppShell>
       <div className="app-page space-y-6">
         {/* Banner */}
-        <section className="rounded-xl overflow-hidden bg-[#0e2740] text-white p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
+        <section className="app-dark-hero rounded-xl overflow-hidden bg-[#0e2740] text-white p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
           <div className="space-y-2 max-w-xl">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-white/10 text-[#c59b27] text-xs font-bold uppercase tracking-wider">
               <Icon name="flight" size={13} />

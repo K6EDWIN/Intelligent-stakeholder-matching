@@ -7,6 +7,7 @@ import KQAppShell from "@/components/KQAppShell";
 import { Button, Tag } from "@/components/KQBrand";
 import { Icon } from "@/components/KQIcons";
 import ReportButton from "@/components/ReportButton";
+import { readApiResponse } from "@/lib/read-api-response";
 
 export default function EventsPage() {
   const { status } = useSession();
@@ -39,13 +40,7 @@ export default function EventsPage() {
     async function load() {
       try {
         const res = await fetch("/api/events");
-        const data = await res.json();
-
-        if (!res.ok) {
-          setError(data.error || "Could not load events");
-          setLoading(false);
-          return;
-        }
+        const data = await readApiResponse(res, "Could not load events");
 
         setEvents(data.events || []);
         setLoading(false);
@@ -75,14 +70,9 @@ export default function EventsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await res.json();
+      const data = await readApiResponse(res, "Could not create event");
 
       setPosting(false);
-
-      if (!res.ok) {
-        setPostError(data.error || "Could not create event");
-        return;
-      }
 
       setEvents((prev) =>
         [
@@ -115,7 +105,7 @@ export default function EventsPage() {
       setRsvpPendingId(null);
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
+        const data = await readApiResponse(res, "Could not update your RSVP");
         setRsvpError(data.error || "Could not update your RSVP. Please try again.");
         return;
       }
@@ -131,8 +121,8 @@ export default function EventsPage() {
             : e
         )
       );
-    } catch {
-      setRsvpError("We could not reach the server. Check your connection and try again.");
+    } catch (error) {
+      setRsvpError(error.message || "We could not reach the server. Check your connection and try again.");
     } finally {
       setRsvpPendingId(null);
     }

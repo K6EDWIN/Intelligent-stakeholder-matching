@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { readApiResponse } from "@/lib/read-api-response";
 
 const REASONS = [
   ["HARASSMENT", "Harassment"],
@@ -29,8 +30,7 @@ export default function ReportButton({ targetType, targetId }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ targetType, targetId, reason, description }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not submit report");
+      await readApiResponse(response, "Could not submit report");
       setMessage("Report sent to the administrators.");
       setDescription("");
       setOpen(false);
