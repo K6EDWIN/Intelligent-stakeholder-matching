@@ -48,6 +48,18 @@ enum FeedbackType {
   CONNECTION_USEFULNESS
 }
 
+enum ReportTargetType {
+  USER
+  OPPORTUNITY
+  EVENT
+}
+
+enum ReportStatus {
+  OPEN
+  ACTIONED
+  DISMISSED
+}
+
 // ---------- CORE USER & PROFILE ----------
 
 model User {
@@ -58,6 +70,8 @@ model User {
   isVerified    Boolean  @default(false)
   isSuspended   Boolean  @default(false)
   isDemo        Boolean  @default(false)
+  isDeleted     Boolean  @default(false)
+  deletedAt     DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -90,6 +104,8 @@ model User {
   messagesSent                  Message[]
 
   adminActions AdminAction[]
+  submittedReports Report[] @relation("ReportReporter")
+  moderatedReports Report[] @relation("ReportModerator")
 }
 
 model Profile {
@@ -289,6 +305,7 @@ model Opportunity {
   title       String
   description String
   type        String
+  isHidden    Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   postedBy    User @relation(fields: [postedById], references: [id], onDelete: Cascade)
@@ -301,6 +318,7 @@ model Event {
   description String?
   location    String?
   eventDate   DateTime
+  isHidden    Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   createdBy   User               @relation(fields: [createdById], references: [id], onDelete: Cascade)
@@ -407,4 +425,25 @@ model Message {
   sender       User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
+}
+
+model Report {
+  id            String           @id @default(cuid())
+  reporterId    String
+  targetType    ReportTargetType
+  targetId      String
+  reason        String
+  description   String?          @db.VarChar(1000)
+  status        ReportStatus     @default(OPEN)
+  moderatorId   String?
+  moderatorNote String?          @db.VarChar(1000)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  resolvedAt    DateTime?
+
+  reporter  User  @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  moderator User? @relation("ReportModerator", fields: [moderatorId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
 }

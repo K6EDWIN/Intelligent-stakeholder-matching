@@ -1,6 +1,10 @@
 /* Administrator profile workspace: keep administrator identity and navigation
    when the account profile is opened from the admin console. */
 .admin-profile-workspace {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow-y: auto;
   min-height: 100vh;
   min-height: 100svh;
   background: #f1f5f9;
@@ -21,6 +25,7 @@
   color: #f8fafc;
 }
 .admin-profile-brand,
+.admin-profile-back,
 .admin-profile-header-actions,
 .admin-profile-identity,
 .admin-profile-logout,
@@ -34,6 +39,21 @@
   gap: 12px;
   color: inherit;
   text-decoration: none;
+}
+.admin-profile-back {
+  min-height: 38px;
+  flex: 0 0 auto;
+  padding: 0 12px;
+  border: 1px solid #334155;
+  border-radius: 9px;
+  background: #0c1f33;
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 700;
+}
+.admin-profile-back:hover {
+  background: #102b45;
+  color: #fff;
 }
 .admin-profile-brand-copy {
   display: flex;
@@ -132,6 +152,48 @@
   background: #071626;
   color: #cbd5e1;
   font: 600 14px/1.5 var(--font-sans);
+}
+.standalone-profile {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  overflow-y: auto;
+  min-height: 100vh;
+  min-height: 100svh;
+  background: #f1f5f9;
+}
+.standalone-profile-header {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px clamp(16px, 3vw, 48px);
+  background: #071626;
+  border-bottom: 1px solid #1e3a5f;
+}
+.standalone-profile-back {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid #334155;
+  border-radius: 9px;
+  background: #0c1f33;
+  color: #e2e8f0;
+  font-size: 12px;
+  font-weight: 700;
+}
+.standalone-profile-back:hover {
+  background: #102b45;
+  color: #fff;
+}
+.standalone-profile-main {
+  width: min(100%, 1500px);
+  min-width: 0;
+  margin-inline: auto;
+}
+.standalone-profile-main > .app-page {
+  max-width: none;
+  padding: clamp(18px, 3vw, 40px) clamp(12px, 3vw, 40px) 56px;
 }
 html[data-view-mode="modern"] .admin-profile-workspace {
   background: #071626;
@@ -246,6 +308,9 @@ body {
     gap: 10px;
     padding: 10px 12px;
   }
+  .admin-profile-back {
+    min-height: 36px;
+  }
   .admin-profile-brand-copy small {
     font-size: 10px;
   }
@@ -253,6 +318,10 @@ body {
     width: 100%;
     justify-content: space-between;
     gap: 6px;
+  }
+  .standalone-profile-header {
+    min-height: 0;
+    padding: 10px 12px;
   }
   .admin-profile-identity {
     flex: 1 1 auto;

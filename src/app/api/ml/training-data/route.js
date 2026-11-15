@@ -15,13 +15,13 @@ export async function GET(request) {
   try {
     const [mentorship, connections, feedback] = await Promise.all([
       prisma.mentorshipRequest.findMany({
-        where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+        where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } },
         select: { status: true, modelFeatures: true, senderId: true, receiverId: true, updatedAt: true },
         orderBy: { updatedAt: "desc" },
         take: 10000,
       }),
       prisma.connectionRequest.findMany({
-        where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false } }, receiver: { is: { isDemo: false } } },
+        where: { status: { in: ["ACCEPTED", "DECLINED"] }, sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } },
         select: { status: true, modelFeatures: true, senderId: true, receiverId: true, updatedAt: true },
         orderBy: { updatedAt: "desc" },
         take: 10000,
@@ -29,7 +29,7 @@ export async function GET(request) {
       prisma.feedback.findMany({
         where: {
           feedbackType: "MATCH_RELEVANCE",
-          user: { isDemo: false },
+          user: { isDemo: false, isDeleted: false },
           OR: [{ rating: { gte: 4 } }, { rating: { lte: 2 } }],
         },
         select: { rating: true, modelFeatures: true, createdAt: true },

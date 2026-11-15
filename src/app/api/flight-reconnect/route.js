@@ -52,7 +52,7 @@ export async function GET() {
         travelDate: flight.travelDate,
         consentToShare: true,
         userId: { not: session.user.id },
-        user: { isVerified: true, isSuspended: false, isDemo: false, role: { not: "ADMIN" } },
+        user: { isVerified: true, isSuspended: false, isDeleted: false, isDemo: false, role: { not: "ADMIN" } },
       },
       include: {
         user: {

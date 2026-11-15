@@ -211,6 +211,41 @@ describe("Authentication Hardening & Role Authorization Security", () => {
       expect(result).toBe(false);
     });
 
+    it("rejects Google OAuth sign-in for an anonymized account", async () => {
+      prisma.user.findUnique.mockResolvedValueOnce({
+        id: "deleted-google-user",
+        email: "deleted@account.invalid",
+        isDeleted: true,
+        isSuspended: true,
+        role: "STAFF",
+      });
+
+      const result = await authOptions.callbacks.signIn({
+        user: { email: "deleted@account.invalid" },
+        account: { provider: "google" },
+      });
+
+      expect(result).toBe(false);
+    });
+
+    it("invalidates an existing JWT when its account is deleted", async () => {
+      prisma.user.findUnique.mockResolvedValueOnce({
+        isDeleted: true,
+        isSuspended: true,
+        role: "STAFF",
+      });
+
+      const token = await authOptions.callbacks.jwt({
+        token: { id: "deleted-user", role: "STAFF", isDeleted: false, isSuspended: false },
+      });
+
+      expect(token.isDeleted).toBe(true);
+      expect(await authOptions.callbacks.session({
+        session: { user: { name: "Deleted member" } },
+        token,
+      })).toBeNull();
+    });
+
     it("invalidates active JWT sessions when user becomes suspended in database", async () => {
       // User is marked as suspended in DB during active session
       prisma.user.findUnique.mockResolvedValueOnce({

@@ -14,6 +14,7 @@ export async function GET() {
   }
 
   const opportunities = await prisma.opportunity.findMany({
+    where: { isHidden: false, postedBy: { isDeleted: false } },
     include: {
       postedBy: { select: { id: true, profile: { select: { fullName: true } } } },
     },
