@@ -37,6 +37,7 @@ export const authOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email },
+          include: { frequentFlyerVerification: { select: { status: true } } },
         });
 
         if (!user) {
@@ -75,6 +76,11 @@ export const authOptions = {
           );
         }
 
+        if (user.role === "FREQUENT_FLYER" && user.frequentFlyerVerification
+          && user.frequentFlyerVerification.status !== "RECORDS_MATCHED") {
+          throw new Error("Your Asante membership review is pending or could not be confirmed. Contact a PrideConnect administrator.");
+        }
+
         await logActivity({
           actorId: user.id,
           targetId: user.id,
@@ -87,6 +93,7 @@ export const authOptions = {
           id: user.id,
           email: user.email,
           role: user.role,
+          sessionVersion: user.sessionVersion || 0,
         };
       },
     }),
@@ -99,6 +106,7 @@ export const authOptions = {
 
         let existingUser = await prisma.user.findUnique({
           where: { email: googleEmail },
+          include: { frequentFlyerVerification: { select: { status: true } } },
         });
 
         if (!existingUser) {
@@ -135,8 +143,14 @@ export const authOptions = {
           return false;
         }
 
+        if (existingUser.role === "FREQUENT_FLYER" && existingUser.frequentFlyerVerification
+          && existingUser.frequentFlyerVerification.status !== "RECORDS_MATCHED") {
+          return false;
+        }
+
         user.id = existingUser.id;
         user.role = existingUser.role;
+        user.sessionVersion = existingUser.sessionVersion || 0;
         await logActivity({
           actorId: existingUser.id,
           targetId: existingUser.id,
@@ -152,6 +166,7 @@ export const authOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.sessionVersion = user.sessionVersion || 0;
         token.isSuspended = Boolean(user.isSuspended);
         token.isDeleted = Boolean(user.isDeleted);
       }
@@ -161,7 +176,7 @@ export const authOptions = {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.id },
-            select: { isSuspended: true, isDemo: true, isDeleted: true, role: true },
+            select: { isSuspended: true, isDemo: true, isDeleted: true, role: true, passwordChangedAt: true, sessionVersion: true },
           });
 
           if (dbUser) {
@@ -169,6 +184,10 @@ export const authOptions = {
             token.isDemo = dbUser.isDemo;
             token.isDeleted = dbUser.isDeleted;
             token.role = dbUser.role;
+            token.passwordResetRequired = Boolean(
+              (token.sessionVersion ?? 0) !== (dbUser.sessionVersion ?? 0)
+              || (dbUser.passwordChangedAt && token.iat && token.iat * 1000 < dbUser.passwordChangedAt.getTime())
+            );
           } else {
             token.isSuspended = true;
           }
@@ -181,7 +200,7 @@ export const authOptions = {
     },
     async session({ session, token }) {
       // Immediately invalidate session if the account has been suspended by an admin
-      if (token?.isSuspended || token?.isDeleted || (process.env.NODE_ENV === "production" && token?.isDemo)) {
+      if (token?.isSuspended || token?.isDeleted || token?.passwordResetRequired || (process.env.NODE_ENV === "production" && token?.isDemo)) {
         return null;
       }
 

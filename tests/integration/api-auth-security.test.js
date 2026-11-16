@@ -163,6 +163,24 @@ describe("Authentication Hardening & Role Authorization Security", () => {
   });
 
   describe("Suspended Account Enforcement in NextAuth", () => {
+    it("blocks Frequent Flyer sign-in while a membership review is pending", async () => {
+      const credentialsProvider = authOptions.providers.find((p) => p.name === "Credentials");
+      prisma.user.findUnique.mockResolvedValueOnce({
+        id: "pending-flyer",
+        email: "flyer@example.com",
+        passwordHash: await bcrypt.hash("validpassword", 10),
+        isVerified: true,
+        isSuspended: false,
+        isDeleted: false,
+        isDemo: false,
+        role: "FREQUENT_FLYER",
+        frequentFlyerVerification: { status: "PENDING" },
+      });
+
+      await expect(credentialsProvider.options.authorize({ email: "flyer@example.com", password: "validpassword" }))
+        .rejects.toThrow(/membership review is pending or could not be confirmed/i);
+    });
+
     it("rejects Credentials login when account is suspended (isSuspended: true)", async () => {
       const credentialsProvider = authOptions.providers.find(
         (p) => p.name === "Credentials"
@@ -265,6 +283,28 @@ describe("Authentication Hardening & Role Authorization Security", () => {
         token,
       });
 
+      expect(session).toBeNull();
+    });
+
+    it("invalidates sessions issued before a password reset", async () => {
+      prisma.user.findUnique.mockReset();
+      const passwordChangedAt = new Date();
+      prisma.user.findUnique.mockResolvedValueOnce({
+        isSuspended: false,
+        isDemo: false,
+        isDeleted: false,
+        role: "STAFF",
+        passwordChangedAt,
+      });
+      const token = await authOptions.callbacks.jwt({
+        token: { id: "reset-member", role: "STAFF", iat: Math.floor((passwordChangedAt.getTime() - 60_000) / 1000) },
+      });
+
+      expect(token.passwordResetRequired).toBe(true);
+      const session = await authOptions.callbacks.session({
+        session: { user: { name: "Member" } },
+        token,
+      });
       expect(session).toBeNull();
     });
 

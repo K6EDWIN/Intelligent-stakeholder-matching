@@ -69,6 +69,7 @@ export default function KQAppShell({ children }) {
       heading: "Governance & Ops",
       items: [
         { href: "/admin", icon: "shield", label: "Ops Command / Admin", badge: "Secured" },
+        { href: "/admin/frequent-flyers", icon: "flight", label: "Asante Member Reviews" },
       ],
     });
   }

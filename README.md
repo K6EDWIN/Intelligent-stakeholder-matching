@@ -89,10 +89,13 @@ Optional integrations:
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google sign-in |
 | `GMAIL_USER`, `GMAIL_APP_PASSWORD` | Verification, invitation, and event announcement emails; use a Google App Password. |
 | `BLOB_READ_WRITE_TOKEN` | Optional Vercel Blob storage for event banner uploads. |
+| `FREQUENT_FLYER_VERIFICATION_KEY` | Required to collect Asante membership evidence; use a private, stable, base64-encoded 32-byte key. Never rotate it without a planned re-encryption of pending review records. |
 | `ML_SERVICE_URL`, `ML_SERVICE_TOKEN` | Optional hosted Python inference service. |
 | `ML_COLAB_SYNC_TOKEN`, `ML_COLAB_USER_SALT` | Protected Colab data export and artifact publishing. Keep the pseudonym salt stable and private. |
 
 Never commit `.env` or real secrets. For production, configure secrets in the hosting provider and set `APP_URL` to the public HTTPS site URL. Event banners require a public Vercel Blob store and its read/write token; events can still be posted without a banner.
+
+Frequent Flyer registration encrypts Asante Rewards and recent-flight details for restricted administrator review. Generate `FREQUENT_FLYER_VERIFICATION_KEY` with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` and set the same private value locally and in the hosting environment. No airline verification service is connected, so an administrator must compare submissions with records they are authorized to access. Password reset uses the configured Gmail email service and one-time links that expire after 30 minutes.
 
 ### 3. Create the local database schema
 
@@ -110,7 +113,7 @@ npm run seed
 
 The seed data is fabricated and marked as demo data. Use it only with a local or dedicated demo database; do not seed a production database. For a live database, review and apply the required SQL migrations to the intended database before deploying. For example, the event banner migration is in [`prisma/migrations/20261115150000_add_event_banner/migration.sql`](prisma/migrations/20261115150000_add_event_banner/migration.sql).
 
-To add clearly marked aviation sample events and opportunities for local page testing, run `npm run seed:aviation-content` after the standard seed. It creates three sample events with local SVG banners and three sample opportunity listings without sending announcement emails. This command refuses to run against production or a non-local database.
+To add clearly marked aviation sample events for local page testing, run `npm run seed:aviation-content` after the standard seed. It creates three sample events with local SVG banners and does not send announcement emails. It does not invent job listings; import a current opening from the official Kenya Airways Careers portal through the Opportunities page. This command refuses to run against production or a non-local database and removes the old local-only `TEST LISTING` fixture rows when rerun.
 
 ### 4. Start the application
 

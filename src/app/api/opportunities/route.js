@@ -14,7 +14,11 @@ export async function GET() {
   }
 
   const opportunities = await prisma.opportunity.findMany({
-    where: { isHidden: false, postedBy: { isDeleted: false } },
+    where: {
+      isHidden: false,
+      postedBy: { isDeleted: false },
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    },
     include: {
       postedBy: { select: { id: true, profile: { select: { fullName: true } } } },
     },
@@ -34,17 +38,53 @@ export async function POST(request) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const { title, description, type } = await request.json();
+  const payload = await request.json().catch(() => ({}));
+  const { title, description, type, sourceUrl, expiresAt, division, employmentType } = payload;
 
-  if (!title || !description || !type) {
+  if (typeof title !== "string" || !title.trim() || title.length > 180
+    || typeof description !== "string" || !description.trim() || description.length > 12000
+    || typeof type !== "string" || !type.trim() || type.length > 80) {
     return NextResponse.json(
       { error: "title, description, and type are required" },
       { status: 400 }
     );
   }
 
+  let parsedSourceUrl = null;
+  if (sourceUrl) {
+    if (session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Only administrators can publish listings sourced from Kenya Airways Careers." }, { status: 403 });
+    }
+    try {
+      const url = new URL(sourceUrl);
+      if (url.protocol !== "https:" || url.hostname !== "careers.kenya-airways.com" || (url.port && url.port !== "443") || url.username || url.password || !/^\/anonymous\/listing\/[\da-f-]{36}\/details\/?$/i.test(url.pathname)) throw new Error();
+      parsedSourceUrl = url.toString();
+    } catch {
+      return NextResponse.json({ error: "Source link must be an official Kenya Airways Careers job details link." }, { status: 400 });
+    }
+  }
+  const parsedExpiry = expiresAt ? new Date(expiresAt) : null;
+  if (parsedSourceUrl && !parsedExpiry) {
+    return NextResponse.json({ error: "Add the official application deadline before publishing a Kenya Airways listing." }, { status: 400 });
+  }
+  if (expiresAt && Number.isNaN(parsedExpiry.getTime())) {
+    return NextResponse.json({ error: "The application deadline is invalid." }, { status: 400 });
+  }
+  if (parsedExpiry && parsedExpiry <= new Date()) {
+    return NextResponse.json({ error: "This opportunity has passed its application deadline." }, { status: 400 });
+  }
+
   const opportunity = await prisma.opportunity.create({
-    data: { postedById: session.user.id, title, description, type },
+    data: {
+      postedById: session.user.id,
+      title: title.trim(),
+      description: description.trim(),
+      type: type.trim(),
+      sourceUrl: parsedSourceUrl,
+      expiresAt: parsedExpiry,
+      division: typeof division === "string" ? division.trim().slice(0, 120) || null : null,
+      employmentType: typeof employmentType === "string" ? employmentType.trim().slice(0, 120) || null : null,
+    },
   });
 
   await logActivity({

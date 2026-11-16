@@ -276,7 +276,7 @@ function LoginForm() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-slate-600 pt-1">
+                <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-slate-600 pt-1">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
@@ -286,9 +286,10 @@ function LoginForm() {
                     />
                     <span>Remember this session</span>
                   </label>
-                  <Link href="/register" className="text-[#c8102e] hover:underline font-semibold">
-                    Need an account?
-                  </Link>
+                  <div className="flex items-center gap-4">
+                    <Link href="/forgot-password" className="text-[#c8102e] hover:underline font-semibold">Forgot password?</Link>
+                    <Link href="/register" className="text-[#c8102e] hover:underline font-semibold">Need an account?</Link>
+                  </div>
                 </div>
 
                 <Button
