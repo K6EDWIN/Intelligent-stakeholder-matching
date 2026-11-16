@@ -518,9 +518,10 @@ export default function RecommendationsPage() {
                         <b className="font-mono text-slate-900">{item.relevanceProbability == null ? "Gathering ratings" : `${item.relevanceProbability}%`}</b>
                       </div>
                       <div className="flex items-center justify-between text-slate-600 pt-1">
-                        <span className="font-medium">NCF shadow estimate (not used for ranking):</span>
-                        <b className="font-mono text-slate-900">{item.ncfAcceptanceProbability == null ? "Not available" : `${item.ncfAcceptanceProbability}%`}</b>
+                        <span className="font-medium">NCF acceptance estimate (ranking contribution {item.ncfInfluence ?? 0}%):</span>
+                        <b className="font-mono text-slate-900">{item.ncfAcceptanceProbability == null ? (meta.ncfModel?.active ? "No estimate for this pair" : "Model not published") : `${item.ncfAcceptanceProbability}%`}</b>
                       </div>
+                      <p className="text-[11px] leading-relaxed text-slate-500">NCF can influence who appears higher when it has a prediction. The match score above remains based on profile fit and member relevance.</p>
 
                       <div className="flex items-center justify-between text-slate-600 pt-1">
                         <span className="font-medium">Profile &amp; competency overlap:</span>

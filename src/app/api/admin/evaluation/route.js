@@ -12,6 +12,7 @@ import { diversifyRankedCandidates } from "@/lib/profile-vectors";
 import { getMlUserKey } from "@/lib/ml-sync-auth";
 import { isEligibleMentorshipMatch } from "@/lib/matching-eligibility";
 import { adminApiErrorResponse } from "@/lib/admin-api-error";
+import { withNcfRankingSignal } from "@/lib/ncf-ranking";
 
 const BENCHMARK_SAMPLE_SIZE = 150;
 const eligibleProfileWhere = {
@@ -409,14 +410,14 @@ export async function GET(req) {
       simResults.forEach((item, index) => {
         item.mlAcceptanceProbability = hostedPredictions.predictions[index];
         item.ncfProbability = simulationNcfPredictions[index];
-        item.ncfInfluence = 0;
         item.relevanceProbability = simulationRelevancePredictions[index];
         const relevanceInfluence = item.relevanceProbability === null ? 0 : simulationRelevanceModel.confidence;
         item.matchScore = item.relevanceProbability === null
           ? item.baselineScore
           : item.baselineScore * (1 - relevanceInfluence) + item.relevanceProbability * relevanceInfluence;
+        Object.assign(item, withNcfRankingSignal(item, item.ncfProbability));
       });
-      const rankedSimResults = diversifyRankedCandidates(simResults.sort((a, b) => b.matchScore - a.matchScore), 5);
+      const rankedSimResults = diversifyRankedCandidates(simResults.sort((a, b) => b.rankingScore - a.rankingScore), 5);
 
       return NextResponse.json({
         simulation: {
@@ -432,6 +433,7 @@ export async function GET(req) {
               ? null
               : +(item.mlAcceptanceProbability * 100).toFixed(1),
             matchScore: +(item.matchScore * 100).toFixed(1),
+            rankingScore: +(item.rankingScore * 100).toFixed(1),
             relevanceProbability: item.relevanceProbability === null ? null : +(item.relevanceProbability * 100).toFixed(1),
             ncfAcceptanceProbability: item.ncfProbability === null ? null : +(item.ncfProbability * 100).toFixed(1),
             ncfInfluence: +(item.ncfInfluence * 100).toFixed(1),
@@ -468,6 +470,7 @@ export async function GET(req) {
               holdoutCoverage: simulationNcfModel.metrics?.holdoutCoverage ?? latestNcfArtifact?.metrics?.holdoutCoverage ?? null,
               holdoutCount: simulationNcfModel.metrics?.holdoutCount ?? latestNcfArtifact?.metrics?.holdoutCount ?? null,
               holdoutNdcgAt5: simulationNcfModel.metrics?.["ndcg@5"] ?? latestNcfArtifact?.metrics?.["ndcg@5"] ?? null,
+              rankingInfluence: simulationNcfModel.active ? 10 : 0,
               knownMembers: ncfKnownMembers,
               unseenMembers: Math.max(0, totalStakeholders - ncfKnownMembers),
             },

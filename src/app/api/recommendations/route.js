@@ -14,6 +14,7 @@ import { getAdaptivePredictions } from "@/lib/hosted-ml";
 import { diversifyRankedCandidates, explainProfileMatch } from "@/lib/profile-vectors";
 import { getMlUserKey } from "@/lib/ml-sync-auth";
 import { isEligibleMentorshipMatch } from "@/lib/matching-eligibility";
+import { withNcfRankingSignal } from "@/lib/ncf-ranking";
 import { randomInt } from "node:crypto";
 
 // GET /api/recommendations
@@ -189,9 +190,6 @@ export async function GET() {
     item.mlAcceptanceProbability = hostedPredictions.predictions[index];
     item.mlConfidence = hostedPredictions.model.confidence;
     item.ncfProbability = ncfPredictions[index];
-    // Keep NCF in shadow: compute and expose predictions for monitoring, but
-    // do not let them affect member rankings until repeated holdouts support it.
-    item.ncfInfluence = 0;
     item.mlRelevanceProbability = relevancePredictions[index];
     item.relevanceInfluence = item.mlRelevanceProbability === null
       ? 0
@@ -202,10 +200,11 @@ export async function GET() {
       ? item.baselineScore
       : item.baselineScore * (1 - item.relevanceInfluence) +
         item.mlRelevanceProbability * item.relevanceInfluence;
+    Object.assign(item, withNcfRankingSignal(item, item.ncfProbability));
   });
 
   const diversifiedAll = diversifyRankedCandidates(
-    [...scored].sort((a, b) => b.matchScore - a.matchScore),
+    [...scored].sort((a, b) => b.rankingScore - a.rankingScore),
     scored.length
   );
   let rankedCandidates = diversifiedAll.slice(0, 12).map((item) => ({ ...item, exploration: false, selectionProbability: 1 }));
@@ -269,7 +268,7 @@ export async function GET() {
       recommendationId: recommendationIds.get(item.candidate.user.id),
       eventType: "SERVED",
       rank: index + 1,
-      policy: item.exploration ? "RANDOM_QUALIFIED_LAST_SLOT_V1" : "DETERMINISTIC_PROFILE_RELEVANCE_V3",
+      policy: item.exploration ? "RANDOM_QUALIFIED_LAST_SLOT_V1" : item.ncfInfluence > 0 ? "NCF_ASSISTED_PROFILE_RANKING_V1" : "DETERMINISTIC_PROFILE_RELEVANCE_V3",
       selectionProbability: item.selectionProbability,
       scores: {
         content: item.contentScore,
@@ -279,7 +278,8 @@ export async function GET() {
         acceptanceProbability: item.mlAcceptanceProbability,
         relevanceProbability: item.mlRelevanceProbability,
         ncfAcceptanceProbability: item.ncfProbability,
-        rankingScore: item.matchScore,
+        rankingScore: item.rankingScore,
+        ncfRankingInfluence: item.ncfInfluence,
       },
     })),
   });
@@ -295,7 +295,7 @@ export async function GET() {
       bio: item.candidate.bio,
       mentorshipRole: item.candidate.mentorshipRole,
       matchPercent: Math.round(item.matchScore * 100),
-      rankAdjustedPercent: Math.round((item.matchScore - item.diversityAdjustment) * 100),
+      rankAdjustedPercent: Math.round((item.rankingScore - item.diversityAdjustment) * 100),
       contentScore: Math.round(item.contentScore * 100),
       semanticScore: Math.round(item.semanticScore * 100),
       collaborativeScore: Math.round(item.collaborativeScore * 100),
@@ -350,7 +350,8 @@ export async function GET() {
         semanticProfileSignal: true,
         diversityReranking: true,
         acceptanceUsedForRanking: false,
-        ncfStatus: "SHADOW",
+        ncfStatus: ncfOutput.active ? "ASSISTED_RANKING" : "WAITING_FOR_ACTIVE_ARTIFACT",
+        ncfRankingInfluence: ncfOutput.active ? 10 : 0,
         explorationEnabled,
         explorationHistory: { servedImpressions: servedHistoryCount, usefulFeedback: usefulFeedbackCount },
         version: "profile-feedback-ranker-v4",
