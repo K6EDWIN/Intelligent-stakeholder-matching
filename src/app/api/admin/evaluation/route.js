@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { computeContentScore } from "@/lib/recommendation";
-import { buildConnectionsByUser, computeCollaborativeScore } from "@/lib/collaborative";
+import { buildConnectionsByUser, computeCollaborativeScores } from "@/lib/collaborative";
 import { computeHybridWeights, computeHybridScore } from "@/lib/hybrid";
 import { buildTrainingExamples, evaluateTemporalModel, evaluateTemporalRelevance, scoreCandidate, trainAcceptanceModel, trainRelevanceModel } from "@/lib/adaptive-recommender";
 import { getAdaptivePredictions } from "@/lib/hosted-ml";
@@ -11,6 +12,41 @@ import { diversifyRankedCandidates } from "@/lib/profile-vectors";
 import { getMlUserKey } from "@/lib/ml-sync-auth";
 import { isEligibleMentorshipMatch } from "@/lib/matching-eligibility";
 import { adminApiErrorResponse } from "@/lib/admin-api-error";
+
+const BENCHMARK_SAMPLE_SIZE = 150;
+const eligibleProfileWhere = {
+  user: { isVerified: true, isSuspended: false, isDeleted: false, isDemo: false },
+};
+const profileIncludes = {
+  user: { select: { id: true, role: true } },
+  skills: { include: { skill: true } },
+  interests: { include: { interest: true } },
+  mentorshipTopics: { include: { skill: { select: { id: true, name: true } } } },
+};
+
+function stableProfileSample(profileIds, sampleSize) {
+  return profileIds
+    .map((id) => ({ id, key: createHash("sha256").update(id).digest("hex") }))
+    .sort((left, right) => left.key.localeCompare(right.key))
+    .slice(0, sampleSize)
+    .map(({ id }) => id);
+}
+
+function candidateSignals(profile) {
+  const skillIds = (profile.skills || []).map(({ skillId }) => skillId);
+  const interestIds = (profile.interests || []).map(({ interestId }) => interestId);
+  return [
+    skillIds.length ? { skills: { some: { skillId: { in: skillIds } } } } : null,
+    interestIds.length ? { interests: { some: { interestId: { in: interestIds } } } } : null,
+    profile.department ? { department: profile.department } : null,
+  ].filter(Boolean);
+}
+
+function compatibleMentorshipRoleFilter(profile) {
+  if (profile.mentorshipRole === "MENTOR") return [{ mentorshipRole: { in: ["MENTEE", "BOTH"] } }, { mentorshipRole: null }];
+  if (profile.mentorshipRole === "MENTEE") return [{ mentorshipRole: { in: ["MENTOR", "BOTH"] } }, { mentorshipRole: null }];
+  return null;
+}
 
 // Helper: Discounted Cumulative Gain
 function computeDCG(relevanceList) {
@@ -168,15 +204,10 @@ export async function GET(req) {
     const url = new URL(req.url);
     const simulateUserId = url.searchParams.get("simulateUserId");
 
-    const [profiles, acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections, relevanceFeedback, modelArtifacts, recommendationEvents] = await Promise.all([
+    const [eligibleProfileIndex, acceptedMentorships, acceptedConnections, resolvedMentorships, resolvedConnections, relevanceFeedback, modelArtifacts, recommendationEvents] = await Promise.all([
       prisma.profile.findMany({
-        where: { user: { isVerified: true, isSuspended: false, isDeleted: false, isDemo: false } },
-        include: {
-          user: { select: { id: true, role: true } },
-          skills: { include: { skill: true } },
-          interests: { include: { interest: true } },
-          mentorshipTopics: { include: { skill: { select: { id: true, name: true } } } },
-        },
+        where: eligibleProfileWhere,
+        select: { userId: true, department: true },
       }),
       prisma.mentorshipRequest.findMany({
         where: { status: "ACCEPTED", sender: { is: { isDemo: false, isDeleted: false } }, receiver: { is: { isDemo: false, isDeleted: false } } },
@@ -233,6 +264,13 @@ export async function GET(req) {
       }),
     ]);
 
+    const totalStakeholders = eligibleProfileIndex.length;
+    const sampleIds = stableProfileSample(eligibleProfileIndex.map(({ userId }) => userId), BENCHMARK_SAMPLE_SIZE);
+    const profiles = sampleIds.length ? await prisma.profile.findMany({
+      where: { userId: { in: sampleIds }, ...eligibleProfileWhere },
+      include: profileIncludes,
+    }) : [];
+
     const totalInteractions = acceptedMentorships.length + acceptedConnections.length;
     const connectionsByUser = buildConnectionsByUser([
       ...acceptedMentorships,
@@ -246,7 +284,7 @@ export async function GET(req) {
     const relevanceModel = trainRelevanceModel(relevanceFeedback);
     const latestNcfArtifact = modelArtifacts.find((artifact) => artifact.type === "NCF") || null;
     const ncfMemberKeys = new Set(Object.keys(latestNcfArtifact?.weights?.userEmbeddings || {}));
-    const ncfKnownMembers = profiles.filter((profile) => ncfMemberKeys.has(getMlUserKey(profile.user.id))).length;
+    const ncfKnownMembers = eligibleProfileIndex.filter(({ userId }) => ncfMemberKeys.has(getMlUserKey(userId))).length;
     const temporalEvaluation = evaluateTemporalModel([
       ...resolvedMentorships,
       ...resolvedConnections,
@@ -255,7 +293,7 @@ export async function GET(req) {
     const memberJudgedRanking = evaluateMemberJudgedRanking(recommendationEvents, relevanceFeedback);
     const recommendationExposure = summarizeRecommendationExposure(
       recommendationEvents,
-      profiles,
+      eligibleProfileIndex.map(({ userId, department }) => ({ user: { id: userId }, department })),
       [...acceptedMentorships, ...acceptedConnections]
     );
     const hybridWeights = computeHybridWeights(totalInteractions);
@@ -272,7 +310,10 @@ export async function GET(req) {
 
     // Live recommendation simulation for a selected stakeholder
     if (simulateUserId) {
-      const targetProfile = profiles.find((p) => p.user.id === simulateUserId);
+      const targetProfile = profiles.find((p) => p.user.id === simulateUserId) || await prisma.profile.findFirst({
+        where: { userId: simulateUserId, ...eligibleProfileWhere },
+        include: profileIncludes,
+      });
       if (!targetProfile) {
         return NextResponse.json({ error: "Target stakeholder not found" }, { status: 404 });
       }
@@ -286,8 +327,27 @@ export async function GET(req) {
       const skillMap = Object.fromEntries(skillLookup.map((s) => [s.id, s.name]));
       const targetSkillIds = new Set(targetAttrs.skillIds);
 
-      const simResults = profiles
-        .filter((p) => p.user.id !== simulateUserId && isEligibleMentorshipMatch(targetProfile, p))
+      const signalFilters = candidateSignals(targetProfile);
+      const roleFilters = compatibleMentorshipRoleFilter(targetProfile);
+      const simulationPool = await prisma.profile.findMany({
+        where: {
+          isPublic: true,
+          userId: { not: simulateUserId },
+          user: { isVerified: true, isSuspended: false, isDeleted: false, isDemo: false },
+          ...(signalFilters.length ? { OR: signalFilters } : {}),
+          ...(roleFilters ? { AND: [{ OR: roleFilters }] } : {}),
+        },
+        orderBy: { userId: "asc" },
+        take: 250,
+        include: profileIncludes,
+      });
+      const simEligibleProfiles = simulationPool.filter((p) => isEligibleMentorshipMatch(targetProfile, p));
+      const simulationCollaborativeScores = computeCollaborativeScores(
+        connectionsByUser,
+        simulateUserId,
+        simEligibleProfiles.map((profile) => profile.user.id)
+      );
+      const simResults = simEligibleProfiles
         .map((cand) => {
           const candAttrs = {
             skillIds: cand.skills.map((s) => s.skillId),
@@ -295,13 +355,14 @@ export async function GET(req) {
           };
 
           const cbf = computeContentScore(targetAttrs, candAttrs);
-          const cf = computeCollaborativeScore(connectionsByUser, simulateUserId, cand.user.id);
+          const cf = simulationCollaborativeScores.get(cand.user.id) || 0;
           const adaptive = scoreCandidate({
             owner: targetProfile,
             candidate: cand,
             ownerAttrs: targetAttrs,
             candidateAttrs: candAttrs,
             connectionsByUser,
+            collaborativeScoreOverride: simulationCollaborativeScores.get(cand.user.id),
             model,
             totalAcceptedInteractions: totalInteractions,
           });
@@ -408,7 +469,7 @@ export async function GET(req) {
               holdoutCount: simulationNcfModel.metrics?.holdoutCount ?? latestNcfArtifact?.metrics?.holdoutCount ?? null,
               holdoutNdcgAt5: simulationNcfModel.metrics?.["ndcg@5"] ?? latestNcfArtifact?.metrics?.["ndcg@5"] ?? null,
               knownMembers: ncfKnownMembers,
-              unseenMembers: Math.max(0, profiles.length - ncfKnownMembers),
+              unseenMembers: Math.max(0, totalStakeholders - ncfKnownMembers),
             },
           },
           latencyMs: Date.now() - startTime,
@@ -417,7 +478,7 @@ export async function GET(req) {
     }
 
     // Run benchmark across users with at least 2 candidates
-    if (profiles.length < 3) {
+    if (totalStakeholders < 3 || profiles.length < 3) {
       return NextResponse.json({
         message: "Not enough profiles to run benchmark",
         benchmark: null,
@@ -433,6 +494,11 @@ export async function GET(req) {
     for (const userProfile of profiles) {
       const userId = userProfile.user.id;
       const candidates = profiles.filter((p) => p.user.id !== userId);
+      const collaborativeScores = computeCollaborativeScores(
+        connectionsByUser,
+        userId,
+        candidates.map((candidate) => candidate.user.id)
+      );
 
       const userSkillIds = new Set(userProfile.skills.map((s) => s.skillId));
 
@@ -464,7 +530,7 @@ export async function GET(req) {
         };
 
         const cbf = computeContentScore(ownerAttrs, candAttrs);
-        const cf = computeCollaborativeScore(connectionsByUser, userId, cand.user.id);
+        const cf = collaborativeScores.get(cand.user.id) || 0;
         const hybrid = computeHybridScore(cbf, cf, hybridWeights);
 
         return {
@@ -520,7 +586,10 @@ export async function GET(req) {
 
     const benchmark = {
       evaluatedUsers: evaluatedUsersCount,
-      totalStakeholders: profiles.length,
+      totalStakeholders,
+      sampledProfiles: profiles.length,
+      benchmarkSampleSize: BENCHMARK_SAMPLE_SIZE,
+      benchmarkSampling: "Deterministic SHA-256 sample of eligible real profiles",
       totalInteractions,
       adaptiveModel: {
         active: modelState.model.active,
@@ -553,7 +622,7 @@ export async function GET(req) {
           holdoutCount: modelState.ncfModel.metrics?.holdoutCount ?? latestNcfArtifact?.metrics?.holdoutCount ?? null,
           holdoutNdcgAt5: modelState.ncfModel.metrics?.["ndcg@5"] ?? latestNcfArtifact?.metrics?.["ndcg@5"] ?? null,
           knownMembers: ncfKnownMembers,
-          unseenMembers: Math.max(0, profiles.length - ncfKnownMembers),
+          unseenMembers: Math.max(0, totalStakeholders - ncfKnownMembers),
         },
       },
       temporalEvaluation,

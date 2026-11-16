@@ -141,6 +141,8 @@ model Profile {
 
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
+
+  @@index([isPublic, department])
 }
 
 model Skill {
@@ -170,6 +172,7 @@ model ProfileSkill {
   skill     Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
   @@id([profileId, skillId])
+  @@index([skillId])
 }
 
 model Interest {
@@ -186,6 +189,7 @@ model ProfileInterest {
   interest   Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
 
   @@id([profileId, interestId])
+  @@index([interestId])
 }
 
 // ---------- MENTORSHIP & NETWORKING ----------
