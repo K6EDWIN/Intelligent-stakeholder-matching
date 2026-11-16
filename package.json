@@ -17,6 +17,7 @@
     "db:push": "prisma db push",
     "db:seed": "node prisma/seed.cjs",
     "seed": "node prisma/seed.cjs",
+    "seed:aviation-content": "node prisma/seed-aviation-content.cjs",
     "prepare": "husky"
   },
   "prisma": {

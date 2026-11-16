@@ -216,7 +216,7 @@ export default function KQAppShell({ children }) {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="font-semibold text-slate-700">JKIA Hub • Kenya Airways Pride Centre</span>
+            <span className="font-semibold text-slate-700">Kenya Airways Pride Centre</span>
             <span className="text-slate-300">|</span>
             <span className="text-slate-500">Enterprise Network</span>
           </div>

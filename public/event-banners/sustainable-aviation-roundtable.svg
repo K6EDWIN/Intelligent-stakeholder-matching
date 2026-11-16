@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="480" viewBox="0 0 1280 480" role="img" aria-labelledby="title desc">
+  <title id="title">Sustainable Aviation and Operations Roundtable</title>
+  <desc id="desc">A green and navy aviation banner about responsible operations and sustainable flight.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071626"/><stop offset=".62" stop-color="#123c46"/><stop offset="1" stop-color="#102c3f"/></linearGradient>
+    <radialGradient id="orb"><stop stop-color="#47c7a1" stop-opacity=".35"/><stop offset="1" stop-color="#47c7a1" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1280" height="480" rx="28" fill="url(#bg)"/>
+  <circle cx="1000" cy="245" r="330" fill="url(#orb)"/>
+  <g fill="none" stroke="#80d6bd" stroke-opacity=".22"><circle cx="1024" cy="245" r="180" stroke-width="2"/><circle cx="1024" cy="245" r="130" stroke-width="1.5"/><path d="M844 245h360M1024 65v360M896 117l256 256M1152 117 896 373"/></g>
+  <path d="M768 365C875 365 883 308 962 280s134-22 231-106" fill="none" stroke="#e9a93b" stroke-width="3" stroke-dasharray="9 12"/>
+  <g transform="translate(1000 145) rotate(-12) scale(.68)" fill="#f3f7fc" opacity=".9"><path d="M5 41 103 3c9-3 15 2 9 9L75 48l78 24c8 3 8 9 0 12l-8 3-111-19-43 42-11-3 21-48-30-12 3-8 32 9Z"/></g>
+  <rect x="76" y="70" width="7" height="340" rx="3.5" fill="#49c7a1"/>
+  <text x="112" y="120" fill="#80d6bd" font-family="Arial,sans-serif" font-size="18" font-weight="700" letter-spacing="4">SUSTAINABILITY • OPERATIONS • FUTURE</text>
+  <text x="108" y="220" fill="#fff" font-family="Arial,sans-serif" font-size="48" font-weight="700">Sustainable Aviation</text>
+  <text x="108" y="280" fill="#fff" font-family="Arial,sans-serif" font-size="48" font-weight="700">&amp; Operations Roundtable</text>
+  <text x="112" y="338" fill="#c7d7e8" font-family="Arial,sans-serif" font-size="22">Ideas for safer, smarter and more responsible travel</text>
+  <text x="112" y="390" fill="#e9a93b" font-family="Arial,sans-serif" font-size="15" font-weight="700" letter-spacing="3">KENYA AIRWAYS COMMUNITY • SAMPLE BANNER</text>
+</svg>
