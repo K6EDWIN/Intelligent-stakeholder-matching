@@ -214,15 +214,23 @@ export default function EventsPage() {
               Pride Centre seminars, crew workshops, alumni reunions, and technical masterclasses.
             </p>
           </div>
-          <a href="#event-list" className="shrink-0 rounded-lg border border-slate-300 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50">Browse all events</a>
+          <div className="flex flex-wrap gap-2 sm:justify-end">
+            <a href="#event-list" className="rounded-lg bg-[#c8102e] px-4 py-2 text-center text-sm font-semibold text-white hover:bg-[#a90d27]">Explore events</a>
+            <a href="#event-post" className="rounded-lg border border-slate-300 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50">Post an event</a>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
+        <div className="mt-8 flex flex-col gap-12">
           {/* Create an Event Card */}
-          <div className="lg:col-span-5">
+          <section id="event-post" className="order-2 scroll-mt-24">
+            <div className="mb-4">
+              <div className="eyebrow">CONTRIBUTE TO THE COMMUNITY</div>
+              <h2 className="text-2xl font-bold text-slate-900">Events Post</h2>
+              <p className="mt-1 text-sm text-slate-600">Create an event, add a banner, and invite members to RSVP.</p>
+            </div>
             <form
               onSubmit={handleSubmit}
-              className="card p-6 sticky top-24 space-y-4"
+              className="card max-w-4xl p-6 space-y-4"
             >
               <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
                 <span className="p-2 bg-[#c8102e]/10 text-[#c8102e] rounded-lg">
@@ -323,10 +331,18 @@ export default function EventsPage() {
                 </Button>
               </div>
             </form>
-          </div>
+          </section>
 
           {/* List of Events */}
-          <div id="event-list" className="lg:col-span-7 space-y-4 scroll-mt-24">
+          <section id="event-list" className="order-1 space-y-5 scroll-mt-24">
+            <div className="flex flex-col gap-1 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <div className="eyebrow">DISCOVER COMMUNITY &amp; LEARNING</div>
+                <h2 className="text-2xl font-bold text-slate-900">Events Available</h2>
+                <p className="mt-1 text-sm text-slate-600">Find upcoming aviation events, view details, and RSVP.</p>
+              </div>
+              <span className="text-sm font-semibold text-slate-600">{filteredEvents.length} {filteredEvents.length === 1 ? "event" : "events"}</span>
+            </div>
             <div className="flex items-center justify-between pb-2 border-b border-slate-200">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Community Events ({filteredEvents.length})
@@ -351,7 +367,7 @@ export default function EventsPage() {
             ) : filteredEvents.length === 0 ? (
               <div className="card p-8 text-center text-sm text-slate-600">No events match these filters. Try a different search or date range.</div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {visibleEvents.map((e) => {
                   const d = new Date(e.eventDate);
                   const isPending = rsvpPendingId === e.id;
@@ -415,7 +431,7 @@ export default function EventsPage() {
                 })}
               </div>
             )}
-          </div>
+          </section>
         </div>
       </div>
     </KQAppShell>
