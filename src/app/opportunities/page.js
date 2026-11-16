@@ -42,6 +42,7 @@ export default function OpportunitiesPage() {
   const [importUrl, setImportUrl] = useState("");
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState("");
+  const [careersRefreshedAt, setCareersRefreshedAt] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -51,21 +52,45 @@ export default function OpportunitiesPage() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
-
-    async function load() {
+    let cancelled = false;
+    let saved = [];
+    const loadSaved = async () => {
       try {
-        const res = await fetch("/api/opportunities");
-        const data = await readApiResponse(res, "Could not load opportunities");
-
-        setOpportunities(data.opportunities || []);
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
+        const response = await fetch("/api/opportunities");
+        const data = await readApiResponse(response, "Could not load saved opportunities");
+        saved = data.opportunities || [];
+        if (!cancelled) setOpportunities((current) => {
+          const merged = new Map(current.map((item) => [item.sourceUrl || item.id, item]));
+          saved.forEach((item) => { if (!merged.has(item.sourceUrl || item.id)) merged.set(item.sourceUrl || item.id, item); });
+          return [...merged.values()];
+        });
+      } catch (loadError) {
+        if (!cancelled) setError(loadError.message || "Saved opportunities are temporarily unavailable.");
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    }
-
-    load();
+    };
+    const refreshCareers = async () => {
+      try {
+        const response = await fetch("/api/opportunities/live", { cache: "no-store" });
+        const data = await readApiResponse(response, "Could not refresh Kenya Airways Careers listings");
+        if (!cancelled) {
+          const merged = new Map(saved.map((item) => [item.sourceUrl || item.id, item]));
+          (data.opportunities || []).forEach((item) => merged.set(item.sourceUrl, item));
+          setOpportunities([...merged.values()].sort((a, b) => new Date(b.createdAt || b.expiresAt || 0) - new Date(a.createdAt || a.expiresAt || 0)));
+          setCareersRefreshedAt(data.refreshedAt ? new Date(data.refreshedAt).toLocaleTimeString("en-KE", { timeZone: "Africa/Nairobi", hour: "2-digit", minute: "2-digit" }) : "");
+          setError("");
+        }
+      } catch (refreshError) {
+        if (!cancelled && saved.length === 0) setError(refreshError.message || "Could not load opportunities.");
+      }
+    };
+    loadSaved();
+    refreshCareers();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") refreshCareers();
+    }, 5000);
+    return () => { cancelled = true; window.clearInterval(timer); };
   }, [status]);
 
   const handleChange = (e) => {
@@ -153,8 +178,9 @@ export default function OpportunitiesPage() {
             <div className="eyebrow">CAREER &amp; GROWTH</div>
             <h1>Opportunities Hub</h1>
             <p>
-              Career openings, cadet internships, technical workshops, and alumni reunions across Kenya Airways.
+              Current Kenya Airways careers listings refresh automatically, alongside community opportunities.
             </p>
+            {careersRefreshedAt && <p className="mt-1 text-xs text-slate-500">Careers feed checked {careersRefreshedAt}. The feed refreshes while this page is open.</p>}
           </div>
           <a href="#opportunity-list" className="shrink-0 rounded-lg border border-slate-300 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50">Browse all opportunities</a>
         </div>
@@ -317,7 +343,7 @@ export default function OpportunitiesPage() {
 
                     <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
                       <span className="flex items-center gap-1.5 text-emerald-700 font-semibold">
-                        <Icon name="check" size={13} /> {o.sourceUrl ? "Source: Kenya Airways Careers" : "Community post"}
+                        <Icon name="check" size={13} /> {o.sourceUrl ? "Source: Kenya Airways Careers" : "Community post"}{o.liveSource ? " · Live feed" : ""}
                       </span>
                       {o.sourceUrl && <a href={o.sourceUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50">View original &amp; apply</a>}
                     </div>
