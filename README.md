@@ -89,10 +89,13 @@ Optional integrations:
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google sign-in |
 | `GMAIL_USER`, `GMAIL_APP_PASSWORD` | Verification, invitation, and event announcement emails; use a Google App Password. |
 | `BLOB_READ_WRITE_TOKEN` | Optional Vercel Blob storage for event banner uploads. |
+| `FREQUENT_FLYER_VERIFICATION_KEY` | Required to collect Asante membership evidence; use a private, stable, base64-encoded 32-byte key. Never rotate it without a planned re-encryption of pending review records. |
 | `ML_SERVICE_URL`, `ML_SERVICE_TOKEN` | Optional hosted Python inference service. |
 | `ML_COLAB_SYNC_TOKEN`, `ML_COLAB_USER_SALT` | Protected Colab data export and artifact publishing. Keep the pseudonym salt stable and private. |
 
 Never commit `.env` or real secrets. For production, configure secrets in the hosting provider and set `APP_URL` to the public HTTPS site URL. Event banners require a public Vercel Blob store and its read/write token; events can still be posted without a banner.
+
+Frequent Flyer registration encrypts Asante Rewards and recent-flight details for restricted administrator review. Generate `FREQUENT_FLYER_VERIFICATION_KEY` with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` and set the same private value locally and in the hosting environment. No airline verification service is connected, so an administrator must compare submissions with records they are authorized to access. Password reset uses the configured Gmail email service and one-time links that expire after 30 minutes.
 
 ### 3. Create the local database schema
 

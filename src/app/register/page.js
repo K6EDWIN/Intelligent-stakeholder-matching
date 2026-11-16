@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { getProviders, signIn } from "next-auth/react";
 import { KQLogo, Button } from "@/components/KQBrand";
 import { Icon, GoogleIcon } from "@/components/KQIcons";
@@ -39,17 +40,28 @@ const PERSONAS = [
   },
 ];
 
-export default function RegisterPage() {
+function RegisterForm() {
+  const searchParams = useSearchParams();
+  const frequentFlyerEntry = searchParams.get("role") === "FREQUENT_FLYER";
   const [googleAvailable, setGoogleAvailable] = useState(false);
   const [form, setForm] = useState({
     email: "",
     password: "",
     fullName: "",
-    role: "",
+    role: frequentFlyerEntry ? "FREQUENT_FLYER" : "",
     department: "",
     bio: "",
     mentorshipRole: "",
     identifier: "",
+  });
+  const [frequentFlyerEvidence, setFrequentFlyerEvidence] = useState({
+    asanteRewardsNumber: "",
+    lastFlightAirline: "Kenya Airways",
+    lastFlightNumber: "",
+    origin: "",
+    destination: "",
+    lastFlightDate: "",
+    consent: false,
   });
   const [consent, setConsent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -86,6 +98,10 @@ export default function RegisterPage() {
       setError("Please accept the privacy and stakeholder consent agreement.");
       return;
     }
+    if (form.role === "FREQUENT_FLYER" && !frequentFlyerEvidence.consent) {
+      setError("Consent is required to send your Asante Rewards and recent-flight details for a private membership review.");
+      return;
+    }
 
     setError("");
     setLoading(true);
@@ -102,6 +118,7 @@ export default function RegisterPage() {
           department: form.department,
           bio: form.bio,
           mentorshipRole: form.mentorshipRole,
+          ...(form.role === "FREQUENT_FLYER" ? { frequentFlyerEvidence } : {}),
         }),
       });
 
@@ -121,6 +138,7 @@ export default function RegisterPage() {
       <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between">
         <KQLogo light />
         <div className="flex items-center gap-3">
+          <Link href="/register?role=FREQUENT_FLYER" className="hidden sm:inline text-xs font-semibold text-emerald-300 hover:text-white hover:underline">Asante member? Register here</Link>
           <ViewModeToggle compact />
           <span className="hidden sm:inline-block text-xs font-medium text-slate-400">
             Already registered?
@@ -201,6 +219,11 @@ export default function RegisterPage() {
                   <p className="text-sm text-slate-600 max-w-md mx-auto">
                     We sent a secure activation link to <b>{form.email}</b>. Please check your inbox to confirm your Kenya Airways stakeholder registration.
                   </p>
+                  {form.role === "FREQUENT_FLYER" && (
+                    <p className="text-sm text-slate-600 max-w-md mx-auto">
+                      Your Asante Rewards and recent-flight details are encrypted and awaiting administrator review against available membership records. This review does not replace email verification.
+                    </p>
+                  )}
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 max-w-md mx-auto text-left">
                     <b className="text-slate-800 block mb-1">Developer Testing Note:</b>
                     If testing locally without live SMTP credentials, the activation link is also printed in your dev server terminal.
@@ -236,7 +259,7 @@ export default function RegisterPage() {
                     </div>
                   </div>
 
-                  {googleAvailable && (
+                  {googleAvailable && form.role !== "FREQUENT_FLYER" && (
                     <>
                       <div className="mt-5">
                         <button
@@ -341,8 +364,46 @@ export default function RegisterPage() {
                         </div>
 
                         <p className="text-[11px] text-slate-600 italic">
-                          {selectedPersona?.subtitle || "Choose your stakeholder type above. Your profile details are entered by you."}
+                          {form.role === "FREQUENT_FLYER"
+                            ? "Asante Rewards members have a separate identity-review step. Add your recent flight details and your mentorship preference."
+                            : selectedPersona?.subtitle || "Choose your stakeholder type above. Your profile details are entered by you."}
                         </p>
+
+                        {form.role === "FREQUENT_FLYER" && (
+                          <div className="space-y-3 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3">
+                            <div>
+                              <label htmlFor="asante-rewards-number" className="block text-[11px] font-semibold text-slate-700 mb-1">Asante Rewards membership number</label>
+                              <input id="asante-rewards-number" name="asanteRewardsNumber" autoComplete="off" value={frequentFlyerEvidence.asanteRewardsNumber} onChange={(event) => setFrequentFlyerEvidence((current) => ({ ...current, asanteRewardsNumber: event.target.value }))} className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-sm text-slate-900 outline-none focus:border-[#c8102e] focus:ring-1 focus:ring-[#c8102e]/20" minLength={4} maxLength={32} required placeholder="Enter your membership number" />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div>
+                                <label htmlFor="last-flight-airline" className="block text-[11px] font-semibold text-slate-700 mb-1">Airline</label>
+                                <input id="last-flight-airline" name="lastFlightAirline" value={frequentFlyerEvidence.lastFlightAirline} onChange={(event) => setFrequentFlyerEvidence((current) => ({ ...current, lastFlightAirline: event.target.value }))} className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-sm text-slate-900 outline-none focus:border-[#c8102e]" maxLength={60} required />
+                              </div>
+                              <div>
+                                <label htmlFor="last-flight-number" className="block text-[11px] font-semibold text-slate-700 mb-1">Flight number</label>
+                                <input id="last-flight-number" name="lastFlightNumber" value={frequentFlyerEvidence.lastFlightNumber} onChange={(event) => setFrequentFlyerEvidence((current) => ({ ...current, lastFlightNumber: event.target.value }))} className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-sm text-slate-900 outline-none focus:border-[#c8102e]" maxLength={12} required placeholder="e.g. KQ 102" />
+                              </div>
+                              <div>
+                                <label htmlFor="last-flight-origin" className="block text-[11px] font-semibold text-slate-700 mb-1">Origin airport code</label>
+                                <input id="last-flight-origin" name="origin" value={frequentFlyerEvidence.origin} onChange={(event) => setFrequentFlyerEvidence((current) => ({ ...current, origin: event.target.value.toUpperCase() }))} className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-sm text-slate-900 outline-none focus:border-[#c8102e]" minLength={3} maxLength={3} pattern="[A-Za-z]{3}" required placeholder="NBO" />
+                              </div>
+                              <div>
+                                <label htmlFor="last-flight-destination" className="block text-[11px] font-semibold text-slate-700 mb-1">Destination airport code</label>
+                                <input id="last-flight-destination" name="destination" value={frequentFlyerEvidence.destination} onChange={(event) => setFrequentFlyerEvidence((current) => ({ ...current, destination: event.target.value.toUpperCase() }))} className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-sm text-slate-900 outline-none focus:border-[#c8102e]" minLength={3} maxLength={3} pattern="[A-Za-z]{3}" required placeholder="MBA" />
+                              </div>
+                            </div>
+                            <div>
+                              <label htmlFor="last-flight-date" className="block text-[11px] font-semibold text-slate-700 mb-1">Approximate travel date</label>
+                              <input id="last-flight-date" type="date" name="lastFlightDate" value={frequentFlyerEvidence.lastFlightDate} onChange={(event) => setFrequentFlyerEvidence((current) => ({ ...current, lastFlightDate: event.target.value }))} className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-2 text-sm text-slate-900 outline-none focus:border-[#c8102e]" required />
+                            </div>
+                            <label className="flex items-start gap-2 text-xs text-slate-700">
+                              <input type="checkbox" checked={frequentFlyerEvidence.consent} onChange={(event) => setFrequentFlyerEvidence((current) => ({ ...current, consent: event.target.checked }))} className="mt-0.5 accent-[#c8102e]" required />
+                              <span>I consent to these details being encrypted and reviewed by an authorized administrator against available Asante Rewards and flight records. They are not shown on my public profile.</span>
+                            </label>
+                            <p className="text-[11px] leading-relaxed text-slate-600">Membership review is manual because no Kenya Airways or Asante Rewards verification service is connected to this app. Your account still requires email verification.</p>
+                          </div>
+                        )}
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
                           <div>
@@ -500,5 +561,13 @@ export default function RegisterPage() {
         Kenya Airways PrideConnect · Intelligent Stakeholder Matching Framework · Strathmore University Research
       </footer>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#071626]" />}>
+      <RegisterForm />
+    </Suspense>
   );
 }

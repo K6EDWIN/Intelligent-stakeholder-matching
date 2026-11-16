@@ -120,45 +120,56 @@ export async function POST(request) {
       const lastFlightDate = typeof submittedEvidence.lastFlightDate === "string"
         ? submittedEvidence.lastFlightDate.trim()
         : "";
-      const hasEvidence = Boolean(asanteRewardsNumber || lastFlightNumber || lastFlightDate);
+      const lastFlightAirline = typeof submittedEvidence.lastFlightAirline === "string"
+        ? submittedEvidence.lastFlightAirline.trim().toUpperCase()
+        : "";
+      const origin = typeof submittedEvidence.origin === "string"
+        ? submittedEvidence.origin.trim().toUpperCase()
+        : "";
+      const destination = typeof submittedEvidence.destination === "string"
+        ? submittedEvidence.destination.trim().toUpperCase()
+        : "";
 
-      if (asanteRewardsNumber && !/^[A-Z0-9-]{4,32}$/.test(asanteRewardsNumber)) {
+      if (!/^[A-Z0-9-]{4,32}$/.test(asanteRewardsNumber)) {
         return NextResponse.json({ error: "Enter a valid Asante Rewards number (4–32 letters, numbers, or hyphens)." }, { status: 400 });
       }
-      if (Boolean(lastFlightNumber) !== Boolean(lastFlightDate)) {
-        return NextResponse.json({ error: "Enter both the last flight number and travel date, or leave both blank." }, { status: 400 });
+      if (!lastFlightAirline || lastFlightAirline.length > 60) {
+        return NextResponse.json({ error: "Enter the airline for your most recent flight." }, { status: 400 });
       }
-      if (lastFlightNumber && !/^KQ ?\d{1,4}[A-Z]?$/.test(lastFlightNumber)) {
-        return NextResponse.json({ error: "Enter a valid Kenya Airways flight number, such as KQ 102." }, { status: 400 });
+      if (!/^[A-Z0-9]{2,3}\s?\d{1,4}[A-Z]?$/.test(lastFlightNumber)) {
+        return NextResponse.json({ error: "Enter a valid flight number, such as KQ 102." }, { status: 400 });
       }
-
-      let parsedLastFlightDate = null;
-      if (lastFlightDate) {
-        parsedLastFlightDate = new Date(`${lastFlightDate}T00:00:00.000Z`);
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(lastFlightDate)
-          || Number.isNaN(parsedLastFlightDate.getTime())
-          || parsedLastFlightDate.toISOString().slice(0, 10) !== lastFlightDate
-          || parsedLastFlightDate > new Date()) {
-          return NextResponse.json({ error: "Enter a valid date for a completed flight." }, { status: 400 });
-        }
+      if (!/^[A-Z]{3}$/.test(origin) || !/^[A-Z]{3}$/.test(destination) || origin === destination) {
+        return NextResponse.json({ error: "Enter different three-letter airport codes for the flight route." }, { status: 400 });
       }
 
-      if (hasEvidence && submittedEvidence.consent !== true) {
+      const parsedLastFlightDate = new Date(`${lastFlightDate}T00:00:00.000Z`);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(lastFlightDate)
+        || Number.isNaN(parsedLastFlightDate.getTime())
+        || parsedLastFlightDate.toISOString().slice(0, 10) !== lastFlightDate
+        || parsedLastFlightDate > new Date()
+        || parsedLastFlightDate < new Date(Date.now() - 10 * 365 * 24 * 60 * 60 * 1000)) {
+        return NextResponse.json({ error: "Enter an approximate date within the last ten years for a completed flight." }, { status: 400 });
+      }
+
+      if (submittedEvidence.consent !== true) {
         return NextResponse.json({ error: "Consent is required to send these details for administrator review." }, { status: 400 });
       }
-      if (hasEvidence) {
-        try {
-          encryptedFrequentFlyerEvidence = encryptFrequentFlyerEvidence({
-            asanteRewardsNumber: asanteRewardsNumber || null,
-            lastFlightNumber: lastFlightNumber || null,
-            lastFlightDate: lastFlightDate || null,
-          });
-        } catch (error) {
-          if (error?.code === "VERIFICATION_ENCRYPTION_NOT_CONFIGURED" || error?.code === "VERIFICATION_ENCRYPTION_MISCONFIGURED") {
-            return NextResponse.json({ error: "Frequent Flyer record review is not configured yet. You can register without submitting these optional details." }, { status: 503 });
-          }
-          throw error;
+
+      try {
+        encryptedFrequentFlyerEvidence = encryptFrequentFlyerEvidence({
+          asanteRewardsNumber,
+          lastFlightAirline,
+          lastFlightNumber,
+          origin,
+          destination,
+          lastFlightDate,
+        });
+      } catch (error) {
+        if (error?.code === "VERIFICATION_ENCRYPTION_NOT_CONFIGURED" || error?.code === "VERIFICATION_ENCRYPTION_MISCONFIGURED") {
+          return NextResponse.json({ error: "Frequent Flyer record review is not configured yet. Contact the administrator before registering with this account type." }, { status: 503 });
         }
+        throw error;
       }
     }
 

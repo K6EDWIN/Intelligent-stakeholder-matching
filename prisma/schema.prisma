@@ -78,12 +78,15 @@ model User {
   isDemo        Boolean  @default(false)
   isDeleted     Boolean  @default(false)
   deletedAt     DateTime?
+  passwordChangedAt DateTime?
+  sessionVersion Int      @default(0)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   profile       Profile?
   sessions      AuthSession[]
   verificationTokens VerificationToken[]
+  passwordResetToken PasswordResetToken?
 
   sentMentorshipRequests     MentorshipRequest[] @relation("MentorshipSender")
   receivedMentorshipRequests MentorshipRequest[] @relation("MentorshipReceiver")
@@ -381,6 +384,19 @@ model VerificationToken {
   user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
 model FrequentFlyerVerification {
   id                 String                          @id @default(cuid())
   userId             String                          @unique
@@ -388,6 +404,7 @@ model FrequentFlyerVerification {
   evidenceCiphertext String
   status             FrequentFlyerVerificationStatus @default(PENDING)
   reviewedAt         DateTime?
+  reviewNote         String?
   createdAt          DateTime                        @default(now())
   updatedAt          DateTime                        @updatedAt
 
