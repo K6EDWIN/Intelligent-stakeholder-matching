@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { sendAppEmail } from "@/lib/gmail";
 import { logActivity } from "@/lib/audit-log";
 import { buildAppUrl, escapeHtml } from "@/lib/app-url";
+import { encryptFrequentFlyerEvidence } from "@/lib/frequent-flyer-verification";
 
 const ALLOWED_REGISTRATION_ROLES = [
   "ALUMNI",
@@ -107,7 +108,61 @@ export async function POST(request) {
         ? body.mentorshipRole
         : null;
 
-    const user = await prisma.user.create({
+    let encryptedFrequentFlyerEvidence = null;
+    if (role === "FREQUENT_FLYER") {
+      const submittedEvidence = body.frequentFlyerEvidence || {};
+      const asanteRewardsNumber = typeof submittedEvidence.asanteRewardsNumber === "string"
+        ? submittedEvidence.asanteRewardsNumber.trim().toUpperCase().replace(/\s+/g, "")
+        : "";
+      const lastFlightNumber = typeof submittedEvidence.lastFlightNumber === "string"
+        ? submittedEvidence.lastFlightNumber.trim().toUpperCase().replace(/\s+/g, " ")
+        : "";
+      const lastFlightDate = typeof submittedEvidence.lastFlightDate === "string"
+        ? submittedEvidence.lastFlightDate.trim()
+        : "";
+      const hasEvidence = Boolean(asanteRewardsNumber || lastFlightNumber || lastFlightDate);
+
+      if (asanteRewardsNumber && !/^[A-Z0-9-]{4,32}$/.test(asanteRewardsNumber)) {
+        return NextResponse.json({ error: "Enter a valid Asante Rewards number (4–32 letters, numbers, or hyphens)." }, { status: 400 });
+      }
+      if (Boolean(lastFlightNumber) !== Boolean(lastFlightDate)) {
+        return NextResponse.json({ error: "Enter both the last flight number and travel date, or leave both blank." }, { status: 400 });
+      }
+      if (lastFlightNumber && !/^KQ ?\d{1,4}[A-Z]?$/.test(lastFlightNumber)) {
+        return NextResponse.json({ error: "Enter a valid Kenya Airways flight number, such as KQ 102." }, { status: 400 });
+      }
+
+      let parsedLastFlightDate = null;
+      if (lastFlightDate) {
+        parsedLastFlightDate = new Date(`${lastFlightDate}T00:00:00.000Z`);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(lastFlightDate)
+          || Number.isNaN(parsedLastFlightDate.getTime())
+          || parsedLastFlightDate.toISOString().slice(0, 10) !== lastFlightDate
+          || parsedLastFlightDate > new Date()) {
+          return NextResponse.json({ error: "Enter a valid date for a completed flight." }, { status: 400 });
+        }
+      }
+
+      if (hasEvidence && submittedEvidence.consent !== true) {
+        return NextResponse.json({ error: "Consent is required to send these details for administrator review." }, { status: 400 });
+      }
+      if (hasEvidence) {
+        try {
+          encryptedFrequentFlyerEvidence = encryptFrequentFlyerEvidence({
+            asanteRewardsNumber: asanteRewardsNumber || null,
+            lastFlightNumber: lastFlightNumber || null,
+            lastFlightDate: lastFlightDate || null,
+          });
+        } catch (error) {
+          if (error?.code === "VERIFICATION_ENCRYPTION_NOT_CONFIGURED" || error?.code === "VERIFICATION_ENCRYPTION_MISCONFIGURED") {
+            return NextResponse.json({ error: "Frequent Flyer record review is not configured yet. You can register without submitting these optional details." }, { status: 503 });
+          }
+          throw error;
+        }
+      }
+    }
+
+    const userData = {
       data: {
         email: normalizedEmail,
         passwordHash,
@@ -122,6 +177,15 @@ export async function POST(request) {
           },
         },
       },
+    };
+    if (encryptedFrequentFlyerEvidence) {
+      userData.data.frequentFlyerVerification = {
+        create: { evidenceCiphertext: encryptedFrequentFlyerEvidence },
+      };
+    }
+
+    const user = await prisma.user.create({
+      ...userData,
       include: { profile: true },
     });
 

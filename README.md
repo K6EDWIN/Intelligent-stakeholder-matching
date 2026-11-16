@@ -110,6 +110,8 @@ npm run seed
 
 The seed data is fabricated and marked as demo data. Use it only with a local or dedicated demo database; do not seed a production database. For a live database, review and apply the required SQL migrations to the intended database before deploying. For example, the event banner migration is in [`prisma/migrations/20261115150000_add_event_banner/migration.sql`](prisma/migrations/20261115150000_add_event_banner/migration.sql).
 
+To add clearly marked aviation sample events and opportunities for local page testing, run `npm run seed:aviation-content` after the standard seed. It creates three sample events with local SVG banners and three sample opportunity listings without sending announcement emails. This command refuses to run against production or a non-local database.
+
 ### 4. Start the application
 
 ```bash

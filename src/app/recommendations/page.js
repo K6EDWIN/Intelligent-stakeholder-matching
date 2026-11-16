@@ -485,7 +485,7 @@ export default function RecommendationsPage() {
                         </p>
                         <div className="flex items-center gap-2 pt-1 text-slate-500 text-xs">
                           <span className="flex items-center gap-1 font-mono text-[11px]">
-                            <span>JKIA Hub</span>
+                            <span>Kenya Airways Community</span>
                           </span>
                           <span>•</span>
                           <span className="text-xs font-medium text-[#c8102e]">

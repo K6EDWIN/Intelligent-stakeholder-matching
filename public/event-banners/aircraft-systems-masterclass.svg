@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="480" viewBox="0 0 1280 480" role="img" aria-labelledby="title desc">
+  <title id="title">Aircraft Systems and Safety Masterclass</title>
+  <desc id="desc">A Kenya Airways themed aviation banner with an aircraft silhouette and flight path.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071626"/><stop offset="1" stop-color="#173d5a"/></linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c8102e" stop-opacity=".88"/><stop offset="1" stop-color="#e9a93b" stop-opacity=".7"/></linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#d5e4fa" stroke-opacity=".08"/></pattern>
+  </defs>
+  <rect width="1280" height="480" rx="28" fill="url(#bg)"/>
+  <rect width="1280" height="480" rx="28" fill="url(#grid)"/>
+  <circle cx="1050" cy="230" r="260" fill="url(#glow)" opacity=".2"/>
+  <path d="M740 380C870 350 885 285 975 250s139-25 248-122" fill="none" stroke="#e8b548" stroke-width="3" stroke-dasharray="10 12" opacity=".8"/>
+  <g transform="translate(942 112) rotate(-16)" fill="#edf5ff" opacity=".92"><path d="M5 41 103 3c9-3 15 2 9 9L75 48l78 24c8 3 8 9 0 12l-8 3-111-19-43 42-11-3 21-48-30-12 3-8 32 9Z"/></g>
+  <rect x="72" y="72" width="8" height="336" rx="4" fill="#c8102e"/>
+  <text x="112" y="116" fill="#80d6bd" font-family="Arial,sans-serif" font-size="19" font-weight="700" letter-spacing="4">AVIATION • SAFETY • LEARNING</text>
+  <text x="108" y="218" fill="#fff" font-family="Arial,sans-serif" font-size="52" font-weight="700">Aircraft Systems</text>
+  <text x="108" y="280" fill="#fff" font-family="Arial,sans-serif" font-size="52" font-weight="700">&amp; Safety Masterclass</text>
+  <text x="112" y="338" fill="#c7d7e8" font-family="Arial,sans-serif" font-size="23">Knowledge sharing for aviation professionals</text>
+  <text x="112" y="390" fill="#e9a93b" font-family="Arial,sans-serif" font-size="16" font-weight="700" letter-spacing="3">KENYA AIRWAYS COMMUNITY • SAMPLE BANNER</text>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="480" viewBox="0 0 1280 480" role="img" aria-labelledby="title desc">
+  <title id="title">Aviation Career Pathways Forum</title>
+  <desc id="desc">An aviation careers banner with a runway perspective and aircraft silhouette.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0b233b"/><stop offset=".55" stop-color="#174768"/><stop offset="1" stop-color="#0a1828"/></linearGradient>
+    <linearGradient id="runway" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#45647a" stop-opacity=".25"/><stop offset="1" stop-color="#07111e" stop-opacity=".9"/></linearGradient>
+  </defs>
+  <rect width="1280" height="480" rx="28" fill="url(#sky)"/>
+  <circle cx="1030" cy="120" r="86" fill="#e9a93b" opacity=".14"/>
+  <path d="M650 480 876 300h198l206 180Z" fill="url(#runway)"/>
+  <path d="M956 480h28l22-102h-20Zm90 0h28l-30-102h-20Z" fill="#e9a93b" opacity=".75"/>
+  <path d="M0 366h1280" stroke="#80d6bd" stroke-opacity=".22" stroke-width="2"/>
+  <path d="M90 95h435M90 112h290" stroke="#c8102e" stroke-width="6" stroke-linecap="round" opacity=".9"/>
+  <g transform="translate(976 163) scale(.72)" fill="#f3f7fc" opacity=".9"><path d="M5 41 103 3c9-3 15 2 9 9L75 48l78 24c8 3 8 9 0 12l-8 3-111-19-43 42-11-3 21-48-30-12 3-8 32 9Z"/></g>
+  <text x="90" y="170" fill="#80d6bd" font-family="Arial,sans-serif" font-size="18" font-weight="700" letter-spacing="4">CAREERS • MENTORSHIP • CONNECTION</text>
+  <text x="86" y="260" fill="#fff" font-family="Arial,sans-serif" font-size="54" font-weight="700">Aviation Career</text>
+  <text x="86" y="322" fill="#fff" font-family="Arial,sans-serif" font-size="54" font-weight="700">Pathways Forum</text>
+  <text x="90" y="375" fill="#d1deea" font-family="Arial,sans-serif" font-size="22">Discover opportunities across flight, ground and engineering</text>
+  <text x="90" y="425" fill="#e9a93b" font-family="Arial,sans-serif" font-size="15" font-weight="700" letter-spacing="3">KENYA AIRWAYS COMMUNITY • SAMPLE BANNER</text>
+</svg>
