@@ -821,8 +821,8 @@ export default function AdminPage() {
                   </p>
                 </div>
 
-                <div className="admin-included-count px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold" title="Profiles without any peers matching the benchmark's proxy relevance rule are not included.">
-                  {benchmark?.evaluatedUsers ? `${benchmark.evaluatedUsers} of ${benchmark.totalStakeholders} profiles included` : "No benchmark data available"}
+                <div className="admin-included-count px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold" title="The proxy benchmark uses a deterministic sample of eligible profiles. Profiles without a relevant match under the proxy rule are excluded from metric averaging.">
+                  {benchmark?.sampledProfiles ? `${benchmark.evaluatedUsers} evaluated · ${benchmark.sampledProfiles} sampled of ${benchmark.totalStakeholders} eligible profiles` : "No benchmark data available"}
                 </div>
               </div>
 

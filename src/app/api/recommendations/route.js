@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sharedAttributes } from "@/lib/recommendation";
-import { buildConnectionsByUser } from "@/lib/collaborative";
+import { buildConnectionsByUser, computeCollaborativeScores } from "@/lib/collaborative";
 import {
   buildTrainingExamples,
   scoreCandidate,
@@ -53,12 +53,26 @@ export async function GET() {
     select: { recommendation: { select: { matchedUserId: true } } },
   });
   const dismissedUserIds = [...new Set(dismissedEvents.map((event) => event.recommendation.matchedUserId))];
+  const candidateSignals = [
+    ownerAttrs.skillIds.length ? { skills: { some: { skillId: { in: ownerAttrs.skillIds } } } } : null,
+    ownerAttrs.interestIds.length ? { interests: { some: { interestId: { in: ownerAttrs.interestIds } } } } : null,
+    ownerProfile.department ? { department: ownerProfile.department } : null,
+  ].filter(Boolean);
+  const roleEligibility = ownerProfile.mentorshipRole === "MENTOR"
+    ? [{ mentorshipRole: { in: ["MENTEE", "BOTH"] } }, { mentorshipRole: null }]
+    : ownerProfile.mentorshipRole === "MENTEE"
+      ? [{ mentorshipRole: { in: ["MENTOR", "BOTH"] } }, { mentorshipRole: null }]
+      : null;
   const candidates = await prisma.profile.findMany({
     where: {
       isPublic: true,
       userId: { not: session.user.id, notIn: dismissedUserIds },
       user: { isVerified: true, isSuspended: false, isDeleted: false, isDemo: false },
+      ...(candidateSignals.length ? { OR: candidateSignals } : {}),
+      ...(roleEligibility ? { AND: [{ OR: roleEligibility }] } : {}),
     },
+    orderBy: { userId: "asc" },
+    take: 250,
     include: {
       user: { select: { id: true, role: true } },
       skills: { include: { skill: true } },
@@ -111,6 +125,11 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
   const totalInteractions = acceptedMentorships.length + acceptedConnections.length;
+  const collaborativeScores = computeCollaborativeScores(
+    connectionsByUser,
+    session.user.id,
+    eligibleCandidates.map((candidate) => candidate.user.id)
+  );
 
   const scored = eligibleCandidates.map((candidate) => {
     const candidateAttrs = {
@@ -123,6 +142,7 @@ export async function GET() {
       ownerAttrs,
       candidateAttrs,
       connectionsByUser,
+      collaborativeScoreOverride: collaborativeScores.get(candidate.user.id),
       model,
       totalAcceptedInteractions: totalInteractions,
     });

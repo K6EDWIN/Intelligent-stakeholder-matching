@@ -48,6 +48,39 @@ export function computeCollaborativeScore(connectionsByUser, ownerId, candidateI
 }
 
 /**
+ * Computes collaborative scores for a candidate set in one pass over users.
+ * The original score has the same denominator for every candidate belonging
+ * to an owner, so calculate peer similarity once instead of once per pair.
+ * @param {Map<string, Set<string>>} connectionsByUser
+ * @param {string} ownerId
+ * @param {string[]} candidateIds
+ * @returns {Map<string, number>}
+ */
+export function computeCollaborativeScores(connectionsByUser, ownerId, candidateIds) {
+  const candidates = new Set(candidateIds);
+  const weightedVotes = new Map(candidateIds.map((id) => [id, 0]));
+  const ownerConnections = connectionsByUser.get(ownerId) || new Set();
+  let totalSimilarity = 0;
+
+  for (const [otherId, otherConnections] of connectionsByUser) {
+    if (otherId === ownerId) continue;
+    const similarity = jaccard(ownerConnections, otherConnections);
+    if (similarity === 0) continue;
+    totalSimilarity += similarity;
+    for (const candidateId of otherConnections) {
+      if (candidates.has(candidateId)) {
+        weightedVotes.set(candidateId, weightedVotes.get(candidateId) + similarity);
+      }
+    }
+  }
+
+  return new Map(candidateIds.map((id) => [
+    id,
+    totalSimilarity ? weightedVotes.get(id) / totalSimilarity : 0,
+  ]));
+}
+
+/**
  * Builds the connectionsByUser map from ACCEPTED MentorshipRequest and
  * ConnectionRequest rows. A connection is treated as undirected -- an
  * accepted request means both parties are now "connected," regardless of

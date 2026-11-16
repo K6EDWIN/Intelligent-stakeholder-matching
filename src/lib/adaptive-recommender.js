@@ -272,15 +272,14 @@ export function scoreCandidate({
   ownerAttrs,
   candidateAttrs,
   connectionsByUser,
+  collaborativeScoreOverride,
   model,
   totalAcceptedInteractions = 0,
 }) {
   const contentScore = computeContentScore(ownerAttrs, candidateAttrs);
-  const collaborativeScore = computeCollaborativeScore(
-    connectionsByUser,
-    owner.userId,
-    candidate.user.id
-  );
+  const collaborativeScore = Number.isFinite(collaborativeScoreOverride)
+    ? collaborativeScoreOverride
+    : computeCollaborativeScore(connectionsByUser, owner.userId, candidate.user.id);
   const baselineWeights = computeHybridWeights(totalAcceptedInteractions);
   const semanticScore = profileSemanticSimilarity(owner, candidate);
   const modelFeatures = extractPairFeatures(owner, candidate, "MENTORSHIP", collaborativeScore);
