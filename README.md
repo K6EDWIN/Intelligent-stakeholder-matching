@@ -1,14 +1,8 @@
-<p align="center">
-  <img src="public/prideconnect-logo.svg" alt="KQ PrideConnect — Kenya Airways ecosystem" width="420">
-</p>
+# PrideConnect
 
-<h1 align="center">PrideConnect</h1>
+**Intelligent stakeholder matching for mentorship and professional networking in the Kenya Airways community.**
 
-<p align="center"><strong>Intelligent stakeholder matching for mentorship and professional networking in the Kenya Airways community.</strong></p>
-
-<p align="center">A Strathmore University capstone prototype. Not an official Kenya Airways service.</p>
-
-PrideConnect helps members discover potential mentors and professional peers. Members can create profiles, receive explainable recommendations, connect with one another, and share community events and career opportunities.
+PrideConnect is a student-built web application that helps members discover potential mentors and professional peers. Members can create profiles, receive explainable recommendations, connect with one another, and share community events and career opportunities. The project was developed as a Strathmore University capstone; it is not an official Kenya Airways service.
 
 ## Project at a glance
 
