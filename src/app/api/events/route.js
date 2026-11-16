@@ -32,6 +32,7 @@ export async function GET() {
     location: e.location,
     bannerUrl: e.bannerUrl,
     eventDate: e.eventDate,
+    isPast: e.eventDate < new Date(),
     createdByName: e.createdBy?.profile?.fullName || "Unknown",
     participantCount: e.participants.length,
     isJoined: e.participants.some((p) => p.userId === session.user.id),
@@ -67,6 +68,9 @@ export async function POST(request) {
   const parsedDate = new Date(eventDate);
   if (Number.isNaN(parsedDate.getTime())) {
     return NextResponse.json({ error: "eventDate is invalid" }, { status: 400 });
+  }
+  if (parsedDate <= new Date()) {
+    return NextResponse.json({ error: "Choose a future date and time for the event." }, { status: 400 });
   }
   if (bannerUrl) {
     let parsedBanner;

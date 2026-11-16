@@ -50,24 +50,6 @@ const events = [
   },
 ];
 
-const opportunities = [
-  {
-    title: "TEST LISTING · Graduate Flight Operations Trainee",
-    description: "SAMPLE FOR PAGE TESTING ONLY — not a live vacancy. A fictional early-career opportunity to learn about flight dispatch, operational planning, safety procedures, and coordination between airport teams. Requirements and application details are illustrative.",
-    type: "Career Opening",
-  },
-  {
-    title: "TEST LISTING · Aircraft Maintenance Engineering Intern",
-    description: "SAMPLE FOR PAGE TESTING ONLY — not a live vacancy. A fictional internship listing for an aviation engineering student interested in maintenance planning, technical records, quality processes, and safe aircraft operations. No applications are being accepted.",
-    type: "Internship",
-  },
-  {
-    title: "TEST LISTING · Aviation Safety & Human Factors Workshop",
-    description: "SAMPLE FOR PAGE TESTING ONLY — not a live opportunity. A fictional workshop listing focused on safety management systems, human factors, incident learning, and practical communication across flight and ground teams.",
-    type: "Industry Workshop",
-  },
-];
-
 function eventDate(daysAhead, hour) {
   const date = new Date();
   date.setDate(date.getDate() + daysAhead);
@@ -100,21 +82,12 @@ async function main() {
     }
   }
 
-  for (const data of opportunities) {
-    const existing = await prisma.opportunity.findFirst({
-      where: { postedById: admin.id, title: data.title },
-      select: { id: true },
-    });
+  await prisma.opportunity.deleteMany({
+    where: { postedById: admin.id, title: { startsWith: "TEST LISTING ·" } },
+  });
 
-    if (existing) {
-      await prisma.opportunity.update({ where: { id: existing.id }, data: { ...data, isHidden: false } });
-    } else {
-      await prisma.opportunity.create({ data: { ...data, postedById: admin.id } });
-    }
-  }
-
-  console.log(`Seeded ${events.length} sample events and ${opportunities.length} sample opportunities locally.`);
-  console.log("Sample events use local SVG banners and do not send announcement emails.");
+  console.log(`Seeded ${events.length} sample events locally; no fictional opportunities were added.`);
+  console.log("Sample events use local SVG banners and do not send announcement emails. Import genuine openings from the official careers portal in the app.");
 }
 
 main()

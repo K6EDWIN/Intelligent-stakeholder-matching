@@ -316,6 +316,10 @@ model Opportunity {
   title       String
   description String
   type        String
+  sourceUrl   String?
+  expiresAt   DateTime?
+  division    String?
+  employmentType String?
   isHidden    Boolean  @default(false)
   createdAt   DateTime @default(now())
 

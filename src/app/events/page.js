@@ -33,6 +33,10 @@ export default function EventsPage() {
   const [bannerError, setBannerError] = useState("");
   const [bannerName, setBannerName] = useState("");
   const [highlightedEventId, setHighlightedEventId] = useState("");
+  const [search, setSearch] = useState("");
+  const [timeFilter, setTimeFilter] = useState("upcoming");
+  const [formatFilter, setFormatFilter] = useState("");
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -120,6 +124,7 @@ export default function EventsPage() {
             createdByName: "You",
             participantCount: 0,
             isJoined: false,
+            isPast: false,
           },
           ...prev,
         ].sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate))
@@ -172,6 +177,18 @@ export default function EventsPage() {
     }
   };
 
+  const filteredEvents = events.filter((event) => {
+    const query = search.trim().toLowerCase();
+    const matchesSearch = !query || [event.title, event.description, event.location, event.createdByName]
+      .some((value) => String(value || "").toLowerCase().includes(query));
+    const eventIsPast = Boolean(event.isPast);
+    const matchesTime = timeFilter === "all" || (timeFilter === "past" ? eventIsPast : !eventIsPast);
+    const isOnline = /online|virtual|teams|zoom/i.test(event.location || "");
+    const matchesFormat = !formatFilter || (formatFilter === "online" ? isOnline : !isOnline);
+    return matchesSearch && matchesTime && matchesFormat;
+  });
+  const visibleEvents = showAll ? filteredEvents : filteredEvents.slice(0, 6);
+
   if (status === "loading" || loading) {
     return (
       <KQAppShell>
@@ -189,7 +206,7 @@ export default function EventsPage() {
     <KQAppShell>
       <div className="app-page">
         {/* Title */}
-        <div className="page-title">
+        <div className="page-title flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="eyebrow">COMMUNITY &amp; LEARNING</div>
             <h1>Aviation Events &amp; Masterclasses</h1>
@@ -197,6 +214,7 @@ export default function EventsPage() {
               Pride Centre seminars, crew workshops, alumni reunions, and technical masterclasses.
             </p>
           </div>
+          <a href="#event-list" className="shrink-0 rounded-lg border border-slate-300 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50">Browse all events</a>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
@@ -308,11 +326,18 @@ export default function EventsPage() {
           </div>
 
           {/* List of Events */}
-          <div className="lg:col-span-7 space-y-4">
+          <div id="event-list" className="lg:col-span-7 space-y-4 scroll-mt-24">
             <div className="flex items-center justify-between pb-2 border-b border-slate-200">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Upcoming Community Events ({events.length})
+                Community Events ({filteredEvents.length})
               </span>
+              {events.length > 6 && <button type="button" onClick={() => setShowAll((value) => !value)} className="text-sm font-semibold text-[#c8102e] hover:underline">{showAll ? "Show fewer" : `View all ${filteredEvents.length}`}</button>}
+            </div>
+
+            <div className="card grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
+              <input aria-label="Search events" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search event, topic, or location…" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 sm:col-span-2" />
+              <select aria-label="Filter events by date" value={timeFilter} onChange={(event) => { setTimeFilter(event.target.value); setShowAll(false); }} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"><option value="upcoming">Upcoming events</option><option value="past">Past events</option><option value="all">All dates</option></select>
+              <select aria-label="Filter by event format" value={formatFilter} onChange={(event) => setFormatFilter(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"><option value="">All formats</option><option value="inperson">In person</option><option value="online">Online</option></select>
             </div>
 
             {rsvpError && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{rsvpError}</p>}
@@ -323,9 +348,11 @@ export default function EventsPage() {
               <div className="p-12 text-center card text-slate-500">
                 No events scheduled yet. Create an event to gather peers and mentees!
               </div>
+            ) : filteredEvents.length === 0 ? (
+              <div className="card p-8 text-center text-sm text-slate-600">No events match these filters. Try a different search or date range.</div>
             ) : (
               <div className="space-y-4">
-                {events.map((e) => {
+                {visibleEvents.map((e) => {
                   const d = new Date(e.eventDate);
                   const isPending = rsvpPendingId === e.id;
 

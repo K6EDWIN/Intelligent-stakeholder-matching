@@ -17,7 +17,7 @@ const TYPE_OPTIONS = [
 ];
 
 export default function OpportunitiesPage() {
-  const { status } = useSession();
+  const { status, data: session } = useSession();
   const router = useRouter();
 
   const [opportunities, setOpportunities] = useState([]);
@@ -27,10 +27,21 @@ export default function OpportunitiesPage() {
     title: "",
     description: "",
     type: TYPE_OPTIONS[0],
+    sourceUrl: "",
+    expiresAt: "",
+    division: "",
+    employmentType: "",
   });
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState("");
   const [postNotice, setPostNotice] = useState("");
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
+  const [showAll, setShowAll] = useState(false);
+  const [importUrl, setImportUrl] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState("");
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -62,6 +73,25 @@ export default function OpportunitiesPage() {
     setForm((f) => ({ ...f, [name]: value }));
   };
 
+  const importCareerListing = async () => {
+    setImporting(true);
+    setImportError("");
+    try {
+      const response = await fetch("/api/opportunities/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: importUrl }),
+      });
+      const data = await readApiResponse(response, "Could not import careers listing");
+      setForm((current) => ({ ...current, ...data.opportunity }));
+      setPostNotice("Listing details imported. Review them and publish when ready.");
+    } catch (err) {
+      setImportError(err.message || "Could not read that Kenya Airways Careers listing.");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setPosting(true);
@@ -82,13 +112,24 @@ export default function OpportunitiesPage() {
         { ...data.opportunity, postedBy: { profile: { fullName: "You" } } },
         ...prev,
       ]);
-      setForm({ title: "", description: "", type: TYPE_OPTIONS[0] });
+      setForm({ title: "", description: "", type: TYPE_OPTIONS[0], sourceUrl: "", expiresAt: "", division: "", employmentType: "" });
+      setImportUrl("");
       setPostNotice("Your opportunity has been published.");
     } catch (err) {
       setPosting(false);
       setPostError(err.message);
     }
   };
+
+  const filteredOpportunities = opportunities.filter((opportunity) => {
+    const query = search.trim().toLowerCase();
+    const matchesSearch = !query || [opportunity.title, opportunity.description, opportunity.type, opportunity.division, opportunity.employmentType, opportunity.postedBy?.profile?.fullName]
+      .some((value) => String(value || "").toLowerCase().includes(query));
+    const matchesType = !typeFilter || opportunity.type === typeFilter;
+    const matchesSource = !sourceFilter || (sourceFilter === "official" ? Boolean(opportunity.sourceUrl) : !opportunity.sourceUrl);
+    return matchesSearch && matchesType && matchesSource;
+  });
+  const visibleOpportunities = showAll ? filteredOpportunities : filteredOpportunities.slice(0, 6);
 
   if (status === "loading" || loading) {
     return (
@@ -107,7 +148,7 @@ export default function OpportunitiesPage() {
     <KQAppShell>
       <div className="app-page">
         {/* Title */}
-        <div className="page-title">
+        <div className="page-title flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="eyebrow">CAREER &amp; GROWTH</div>
             <h1>Opportunities Hub</h1>
@@ -115,6 +156,7 @@ export default function OpportunitiesPage() {
               Career openings, cadet internships, technical workshops, and alumni reunions across Kenya Airways.
             </p>
           </div>
+          <a href="#opportunity-list" className="shrink-0 rounded-lg border border-slate-300 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50">Browse all opportunities</a>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
@@ -124,6 +166,17 @@ export default function OpportunitiesPage() {
               onSubmit={handleSubmit}
               className="card p-6 sticky top-24 space-y-4"
             >
+              {session?.user?.role === "ADMIN" && <div className="rounded-xl border border-sky-200 bg-sky-50 p-4">
+                <label htmlFor="kq-careers-url" className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-700">Import an official KQ Careers listing</label>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input id="kq-careers-url" type="url" value={importUrl} onChange={(event) => setImportUrl(event.target.value)} placeholder="Paste a Kenya Airways job details link" className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800" />
+                  <Button type="button" variant="secondary" disabled={importing || !importUrl.trim()} onClick={importCareerListing}>{importing ? "Reading…" : "Import details"}</Button>
+                </div>
+                <p className="mt-2 text-xs leading-relaxed text-slate-600">We’ll fill a draft from the official listing. Check the details and deadline before publishing.</p>
+                {importError && <p role="alert" className="mt-2 text-xs text-red-700">{importError}</p>}
+                {form.sourceUrl && <p className="mt-2 break-all text-xs text-sky-800">Source: {form.sourceUrl}</p>}
+              </div>}
+
               <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
                 <span className="p-2 bg-[#c8102e]/10 text-[#c8102e] rounded-lg">
                   <Icon name="opportunity" size={16} />
@@ -135,6 +188,12 @@ export default function OpportunitiesPage() {
               </div>
 
               <div className="space-y-4">
+                {form.sourceUrl && (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div><label htmlFor="opportunity-division" className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-slate-700">Division</label><input id="opportunity-division" name="division" value={form.division || ""} onChange={handleChange} maxLength={120} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800" /></div>
+                    <div><label htmlFor="opportunity-employment" className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-slate-700">Employment type</label><input id="opportunity-employment" name="employmentType" value={form.employmentType || ""} onChange={handleChange} maxLength={120} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800" /></div>
+                  </div>
+                )}
                 <div>
                   <label htmlFor="opportunity-title" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
                     Title
@@ -185,6 +244,12 @@ export default function OpportunitiesPage() {
                   </select>
                 </div>
 
+                {session?.user?.role === "ADMIN" && <div>
+                  <label htmlFor="opportunity-source" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">Official source / application link <span className="font-normal normal-case text-slate-500">(optional)</span></label>
+                  <input id="opportunity-source" name="sourceUrl" type="url" value={form.sourceUrl || ""} onChange={handleChange} placeholder="https://careers.kenya-airways.com/…" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800" />
+                </div>}
+                {form.sourceUrl && <div><label htmlFor="opportunity-deadline" className="mb-1 block text-[11px] font-bold uppercase tracking-wider text-slate-700">Application deadline</label><input id="opportunity-deadline" type="date" required value={form.expiresAt ? String(form.expiresAt).slice(0, 10) : ""} onChange={(event) => setForm((current) => ({ ...current, expiresAt: event.target.value }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800" /></div>}
+
                 {postError && (
                   <p role="alert" className="text-red-700 text-xs bg-red-50 border border-red-200 p-2.5 rounded-lg">
                     {postError}
@@ -205,22 +270,31 @@ export default function OpportunitiesPage() {
           </div>
 
           {/* List of Opportunities */}
-          <div className="lg:col-span-7 space-y-4">
+          <div id="opportunity-list" className="lg:col-span-7 space-y-4 scroll-mt-24">
             <div className="flex items-center justify-between pb-2 border-b border-slate-200">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Active Listings ({opportunities.length})
+                Active Listings ({filteredOpportunities.length})
               </span>
+              {opportunities.length > 6 && <button type="button" onClick={() => setShowAll((value) => !value)} className="text-sm font-semibold text-[#c8102e] hover:underline">{showAll ? "Show fewer" : `View all ${filteredOpportunities.length}`}</button>}
+            </div>
+
+            <div className="card grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
+              <input aria-label="Search opportunities" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search title, skills, division…" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 sm:col-span-2" />
+              <select aria-label="Filter by opportunity type" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"><option value="">All opportunity types</option>{[...new Set(opportunities.map((item) => item.type))].sort().map((type) => <option key={type} value={type}>{type}</option>)}</select>
+              <select aria-label="Filter by listing source" value={sourceFilter} onChange={(event) => setSourceFilter(event.target.value)} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"><option value="">All sources</option><option value="official">Kenya Airways Careers</option><option value="community">Community posts</option></select>
             </div>
 
             {error ? (
               <p className="text-red-600 text-sm">{error}</p>
             ) : opportunities.length === 0 ? (
               <div className="p-12 text-center card text-slate-500">
-                No opportunities posted yet. Be the first to share an opening!
+                No current opportunities are listed yet.
               </div>
+            ) : filteredOpportunities.length === 0 ? (
+              <div className="card p-8 text-center text-sm text-slate-600">No opportunities match these filters. Clear a filter or try another search.</div>
             ) : (
               <div className="space-y-4">
-                {opportunities.map((o) => (
+                {visibleOpportunities.map((o) => (
                   <article
                     key={o.id}
                     className="card p-5 hover:border-slate-300 transition"
@@ -239,10 +313,13 @@ export default function OpportunitiesPage() {
                       {o.description}
                     </p>
 
+                    {(o.division || o.employmentType || o.expiresAt) && <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">{o.division && <span className="rounded-full bg-slate-100 px-2.5 py-1">{o.division}</span>}{o.employmentType && <span className="rounded-full bg-slate-100 px-2.5 py-1">{o.employmentType}</span>}{o.expiresAt && <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-900">Closes {new Date(o.expiresAt).toLocaleDateString("en-KE", { timeZone: "Africa/Nairobi" })}</span>}</div>}
+
                     <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
                       <span className="flex items-center gap-1.5 text-emerald-700 font-semibold">
-                        <Icon name="check" size={13} /> Verified Community Post
+                        <Icon name="check" size={13} /> {o.sourceUrl ? "Source: Kenya Airways Careers" : "Community post"}
                       </span>
+                      {o.sourceUrl && <a href={o.sourceUrl} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-700 hover:bg-slate-50">View original &amp; apply</a>}
                     </div>
                     <ReportButton targetType="OPPORTUNITY" targetId={o.id} />
                   </article>
